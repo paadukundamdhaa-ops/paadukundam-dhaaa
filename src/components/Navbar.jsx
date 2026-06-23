@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Search, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -55,13 +57,22 @@ export default function Navbar() {
           <button className="text-white hover:text-secondary transition-colors">
             <Search size={20} />
           </button>
-          <button className="text-white hover:text-secondary transition-colors relative">
-            <ShoppingBag size={20} />
-            <span className="absolute -top-2 -right-2 bg-secondary text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
-          </button>
-          <Link to="/login" className="bg-primary/20 border border-primary text-white hover:bg-primary px-5 py-2 rounded-full text-sm font-semibold transition-colors">
-            Login / Register
-          </Link>
+          
+          
+          {user ? (
+            <Link to="/dashboard" className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-full transition-colors group">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center font-bold text-xs text-white">
+                {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+              <span className="text-sm font-semibold text-white group-hover:text-secondary transition-colors">
+                {user.user_metadata?.full_name?.split(' ')[0] || 'Dashboard'}
+              </span>
+            </Link>
+          ) : (
+            <Link to="/login" className="bg-primary/20 border border-primary text-white hover:bg-primary px-5 py-2 rounded-full text-sm font-semibold transition-colors">
+              Login / Register
+            </Link>
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -94,12 +105,21 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="h-px bg-white/10 my-2"></div>
-              <div className="flex items-center justify-between">
-                <button className="text-white flex items-center"><ShoppingBag className="mr-2" /> Cart (2)</button>
-              </div>
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="bg-primary text-center text-white px-6 py-3 rounded-full font-medium border border-primary">
-                Login / Register
-              </Link>
+              
+              {user ? (
+                <>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="bg-white/10 text-center text-white px-6 py-3 rounded-full font-medium border border-white/20">
+                    Dashboard
+                  </Link>
+                  <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="bg-red-500/10 text-center text-red-400 px-6 py-3 rounded-full font-medium border border-red-500/20">
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="bg-primary text-center text-white px-6 py-3 rounded-full font-medium border border-primary">
+                  Login / Register
+                </Link>
+              )}
             </div>
           </motion.div>
         )}

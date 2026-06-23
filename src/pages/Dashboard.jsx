@@ -1,7 +1,28 @@
 import { Ticket, User, Heart, Settings, LogOut, Download } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from 'react';
 
 export default function Dashboard() {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  if (!user) return null;
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const initial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0)?.toUpperCase() || 'U';
+  const name = user.user_metadata?.full_name || 'User';
+  const email = user.email;
   const tabs = [
     { name: 'My Tickets', icon: <Ticket size={20} />, active: true },
     { name: 'Profile', icon: <User size={20} /> },
@@ -15,12 +36,16 @@ export default function Dashboard() {
       <aside className="w-full md:w-64 shrink-0">
         <div className="glass p-6 rounded-2xl border border-white/5 bg-dark">
           <div className="flex items-center space-x-4 mb-8 pb-8 border-b border-white/10">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-xl font-bold">
-              JD
-            </div>
-            <div>
-              <h3 className="font-bold">John Doe</h3>
-              <p className="text-xs text-pale">john@example.com</p>
+            {user.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="Profile" className="w-12 h-12 rounded-full object-cover border border-white/10" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-xl font-bold">
+                {initial}
+              </div>
+            )}
+            <div className="overflow-hidden">
+              <h3 className="font-bold truncate" title={name}>{name}</h3>
+              <p className="text-xs text-pale truncate" title={email}>{email}</p>
             </div>
           </div>
           
@@ -31,7 +56,7 @@ export default function Dashboard() {
                 <span className="font-medium">{tab.name}</span>
               </button>
             ))}
-            <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors mt-8">
+            <button onClick={handleLogout} className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors mt-8">
               <LogOut size={20} />
               <span className="font-medium">Logout</span>
             </button>

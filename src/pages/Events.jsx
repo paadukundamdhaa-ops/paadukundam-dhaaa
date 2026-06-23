@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, MapPin, Calendar, SlidersHorizontal, Grid, List, ChevronLeft, ChevronRight, Heart, ChevronDown } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { allEvents, categories } from '../data/mockData';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { categories } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 
 export default function Events() {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // State Management
   const [view, setView] = useState('grid');
@@ -18,10 +20,57 @@ export default function Events() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 8;
+  const [allEvents, setAllEvents] = useState([]);
   
-  // Scroll to top on mount
+  // Scroll to top on mount and route change
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  // Fetch from Supabase
+  useEffect(() => {
+    const fetchAllEvents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .order('event_date', { ascending: true });
+
+        if (error) throw error;
+        
+        if (data) {
+          const formatted = data.map(event => {
+            const d = new Date(event.event_date || Date.now());
+            
+            // Try to extract a city name from the venue (e.g. "Stadium, Mumbai" -> "Mumbai")
+            const venueString = event.venue || 'TBA';
+            const venueParts = venueString.split(',');
+            const city = venueParts.length > 1 ? venueParts[venueParts.length - 1].trim() : venueString;
+
+            return {
+              id: event.id,
+              title: event.title || 'Untitled Event',
+              date: isNaN(d.getTime()) ? 'TBA' : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+              dateBadge: {
+                day: isNaN(d.getTime()) ? '--' : d.getDate().toString().padStart(2, '0'),
+                month: isNaN(d.getTime()) ? 'TBA' : d.toLocaleString('en-US', { month: 'short' }).toUpperCase()
+              },
+              time: event.event_time || 'TBA',
+              venue: venueString,
+              city: city,
+              category: event.category || 'Uncategorized',
+              price: 999, // default fallback price
+              img: event.img_url || '/images/arijit.png',
+              tag: event.status || 'Draft'
+            };
+          });
+          setAllEvents(formatted);
+        }
+      } catch (err) {
+        console.error('Error fetching all events:', err);
+      }
+    };
+    fetchAllEvents();
   }, []);
 
   // Logic: Filter & Sort Events
@@ -62,7 +111,7 @@ export default function Events() {
     // "Latest First" keeps the original array order based on ID (dummy assumption)
     
     return result;
-  }, [searchQuery, selectedCity, selectedCategories, sortOption, selectedDate, minPrice, maxPrice]);
+  }, [allEvents, searchQuery, selectedCity, selectedCategories, sortOption, selectedDate, minPrice, maxPrice]);
 
   // Logic: Pagination
   const totalPages = Math.max(1, Math.ceil(filteredEvents.length / itemsPerPage));
@@ -91,8 +140,8 @@ export default function Events() {
       {/* HERO BANNER */}
       <section className="relative pt-32 pb-24 border-b border-black/10 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src="https://images.unsplash.com/photo-1540039155732-68ee23e15b51?auto=format&fit=crop&q=80&w=2000" alt="Concerts" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/30"></div>
+          <img src="/images/sunburn.png" alt="Concerts" className="w-full h-full object-cover opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-transparent"></div>
         </div>
         <div className="container mx-auto px-6 relative z-10 flex flex-col md:flex-row md:items-end justify-between">
           <div className="mb-6 md:mb-0">
@@ -353,7 +402,7 @@ export default function Events() {
                           View
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); navigate('/checkout'); }} 
+                          onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} 
                           className={`bg-secondary hover:bg-[#e0b51f] text-black font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 md:px-6 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
                         >
                           Book

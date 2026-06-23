@@ -1,0 +1,176 @@
+import React, { useState } from 'react';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Users, 
+  Music, 
+  Ticket, 
+  ShoppingBag, 
+  Image as ImageIcon, 
+  Home, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  Bell,
+  Search,
+  X
+} from 'lucide-react';
+
+const navItems = [
+  { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
+  { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
+  { name: 'Events', path: '/admin/events', icon: <Music size={20} /> },
+  { name: 'Tickets', path: '/admin/tickets', icon: <Ticket size={20} /> },
+  { name: 'Bookings', path: '/admin/bookings', icon: <ShoppingBag size={20} /> },
+  { name: 'Gallery', path: '/admin/gallery', icon: <ImageIcon size={20} /> },
+  { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
+  { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
+];
+
+export default function AdminLayout() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // In the future, clear auth tokens here
+    navigate('/admin/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar - Desktop */}
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20">
+        <div className="p-6 border-b border-gray-200 flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <Music size={18} className="text-white" />
+          </div>
+          <div>
+            <h1 className="font-black text-lg leading-tight uppercase tracking-wide text-black">Paadukundam<span className="text-primary">Dhaa</span></h1>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Admin Panel</p>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 hide-scrollbar">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.name}
+              to={item.path}
+              end={item.path === '/admin'}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-primary text-white shadow-md' 
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-black'
+                }`
+              }
+            >
+              {item.icon}
+              <span>{item.name}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-gray-200">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl font-semibold text-gray-600 hover:bg-red-50 hover:text-primary transition-all duration-200"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-30" onClick={() => setIsMobileMenuOpen(false)}>
+          <div 
+            className="w-64 bg-white h-full shadow-2xl flex flex-col"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <Music size={18} className="text-white" />
+                </div>
+                <h1 className="font-black text-lg uppercase text-black">PaadukundamDhaa Admin</h1>
+              </div>
+              <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 hover:text-primary">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  end={item.path === '/admin'}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-primary text-white shadow-md' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-black'
+                    }`
+                  }
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <main className="flex-1 md:ml-64 flex flex-col min-h-screen">
+        {/* Topbar */}
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <button 
+              className="md:hidden text-gray-600 hover:text-primary"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            
+            {/* Search Bar */}
+            <div className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64 focus-within:ring-2 ring-primary/20 transition-all">
+              <Search size={18} className="text-gray-400 mr-2 shrink-0" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className="bg-transparent border-none outline-none w-full text-sm text-black placeholder-gray-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <button className="relative text-gray-500 hover:text-black transition-colors">
+              <Bell size={20} />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-white"></span>
+            </button>
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <img 
+                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150" 
+                alt="Admin" 
+                className="w-8 h-8 rounded-full object-cover border-2 border-transparent group-hover:border-primary transition-all"
+              />
+              <div className="hidden sm:block text-sm">
+                <p className="font-bold text-black leading-tight">Admin User</p>
+                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Superadmin</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Dynamic Page Content */}
+        <div className="flex-1 p-6">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  );
+}

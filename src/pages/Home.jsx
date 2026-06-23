@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ days: 2, hours: 14, minutes: 36, seconds: 48 });
@@ -53,13 +54,42 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  const featuredEvents = [
-    { id: 1, title: 'Arijit Singh Live', date: '28', month: 'MAY', venue: 'Eden Gardens, Kolkata', price: '999', img: '/images/arijit.png' },
-    { id: 2, title: 'Sunburn Arena', date: '05', month: 'JUN', venue: 'Huda Grounds, Gurugram', price: '1,499', img: '/images/sunburn.png' },
-    { id: 3, title: 'Atif Aslam Live', date: '14', month: 'JUN', venue: 'JLN Stadium, Delhi', price: '1,299', img: '/images/script.png' },
-    { id: 4, title: 'The Local Train', date: '21', month: 'JUN', venue: 'BKC, Mumbai', price: '799', img: '/images/script.png' },
-    { id: 5, title: 'Martin Garrix', date: '30', month: 'JUN', venue: 'Bengaluru Palace, Bangalore', price: '1,999', img: '/images/garrix.png' },
-  ];
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+
+  useEffect(() => {
+    const fetchHomeEvents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .in('status', ['Live', 'Upcoming'])
+          .order('event_date', { ascending: true })
+          .limit(8);
+
+        if (error) throw error;
+        
+        if (data) {
+          const formattedEvents = data.map(event => {
+            const d = new Date(event.event_date);
+            return {
+              id: event.id,
+              title: event.title,
+              date: d.getDate().toString().padStart(2, '0'),
+              month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+              venue: event.venue,
+              price: '999',
+              img: event.img_url || '/images/arijit.png'
+            };
+          });
+          setFeaturedEvents(formattedEvents);
+        }
+      } catch (err) {
+        console.error('Error fetching events:', err);
+      }
+    };
+
+    fetchHomeEvents();
+  }, []);
 
 
 
@@ -322,12 +352,12 @@ export default function Home() {
       {/* UPCOMING CONCERTS TIMELINE */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center mb-16">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 sm:gap-0 mb-16">
             <div className="flex items-center">
-              <div className="w-1.5 h-6 bg-primary mr-3"></div>
-              <h2 className="text-black text-2xl font-black uppercase tracking-wider">Upcoming Concerts</h2>
+              <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
+              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">Upcoming Concerts</h2>
             </div>
-            <Link to="/events" className="text-primary font-semibold text-sm hover:underline">View All</Link>
+            <Link to="/events" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View All</Link>
           </div>
 
           <div className="relative flex justify-between items-center overflow-x-auto hide-scrollbar pb-8">
@@ -357,12 +387,12 @@ export default function Home() {
       <section className="bg-white py-20 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-white via-primary/5 to-white"></div>
         <div className="container mx-auto px-6 relative z-10">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 sm:gap-0 mb-12">
             <div className="flex items-center">
-              <div className="w-1.5 h-6 bg-primary mr-3"></div>
-              <h2 className="text-black text-2xl font-black uppercase tracking-wider">Artist Spotlight</h2>
+              <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
+              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">Artist Spotlight</h2>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 shrink-0">
               <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-black transition-colors"><ChevronLeft size={16} /></button>
               <button className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"><ChevronRight size={16} /></button>
             </div>
@@ -390,7 +420,7 @@ export default function Home() {
             </div>
 
             {/* Other Artists */}
-            <div className="lg:w-1/2 grid grid-cols-3 gap-4">
+            <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-8 lg:mt-0">
               {[
                 { name: 'Atif Aslam', date: '14 Jun 2026', img: '/images/script.png' },
                 { name: 'The Local Train', date: '21 Jun 2026', img: '/images/sunburn.png' },
@@ -413,12 +443,12 @@ export default function Home() {
       {/* GALLERY SECTION */}
       <section className="py-20 bg-white border-b border-gray-200">
         <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 sm:gap-0 mb-12">
             <div className="flex items-center">
-              <div className="w-1.5 h-6 bg-primary mr-3"></div>
-              <h2 className="text-black text-2xl font-black uppercase tracking-wider">PaadukundamDhaa Gallery</h2>
+              <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
+              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">PaadukundamDhaa Gallery</h2>
             </div>
-            <Link to="/" className="text-primary font-semibold text-sm hover:underline">View Full Gallery</Link>
+            <Link to="/" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View Full Gallery</Link>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -515,35 +545,60 @@ export default function Home() {
       {/* WHAT OUR FANS SAY */}
       <section className="py-20 bg-white border-b border-gray-200">
         <div className="container mx-auto px-6">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 sm:gap-0 mb-12">
             <div className="flex items-center">
-              <div className="w-1.5 h-6 bg-primary mr-3"></div>
-              <h2 className="text-black text-2xl font-black uppercase tracking-wider">What Our Fans Say</h2>
+              <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
+              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">What Our Fans Say</h2>
             </div>
-            <Link to="/" className="text-primary font-semibold text-sm hover:underline">View All</Link>
+            <Link to="/" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View All</Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:text-black shrink-0"><ChevronLeft size={20} /></button>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-              {[
-                { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
-                { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
-                { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
-              ].map((review, idx) => (
-                <div key={idx} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4">
-                  <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
-                  <div>
-                    <p className="text-gray-600 text-xs mb-3 italic">"{review.text}"</p>
-                    <h4 className="font-bold text-sm text-black">{review.name}</h4>
-                    <div className="flex text-secondary mt-1">
-                      {[...Array(5)].map((_, i) => <Star key={i} size={10} fill="currentColor" />)}
+          <div className="relative overflow-hidden w-full py-4 -mx-4 px-4 md:mx-0 md:px-0" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)' }}>
+            <motion.div 
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ ease: "linear", duration: 25, repeat: Infinity }}
+              className="flex w-max space-x-6"
+            >
+              {/* First Group */}
+              <div className="flex space-x-6">
+                {[
+                  { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+                  { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
+                  { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
+                ].map((review, idx) => (
+                  <div key={idx} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4 w-[320px] shrink-0">
+                    <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                    <div>
+                      <p className="text-gray-600 text-sm mb-3 italic leading-relaxed">"{review.text}"</p>
+                      <h4 className="font-bold text-sm text-black">{review.name}</h4>
+                      <div className="flex text-secondary mt-1">
+                        {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:text-black shrink-0"><ChevronRight size={20} /></button>
+                ))}
+              </div>
+              
+              {/* Duplicate Group for Seamless Looping */}
+              <div className="flex space-x-6">
+                {[
+                  { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+                  { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
+                  { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
+                ].map((review, idx) => (
+                  <div key={`dup-${idx}`} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4 w-[320px] shrink-0">
+                    <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                    <div>
+                      <p className="text-gray-600 text-sm mb-3 italic leading-relaxed">"{review.text}"</p>
+                      <h4 className="font-bold text-sm text-black">{review.name}</h4>
+                      <div className="flex text-secondary mt-1">
+                        {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

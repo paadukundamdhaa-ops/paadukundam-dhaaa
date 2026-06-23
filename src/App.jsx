@@ -1,4 +1,6 @@
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SplashScreen from './components/SplashScreen';
 import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import Events from './pages/Events';
@@ -13,8 +15,20 @@ import Contact from './pages/Contact';
 import About from './pages/About';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Session storage check temporarily disabled so the animation plays on every refresh!
+  }, []);
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+  };
+
   return (
-    <Router>
+    <>
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+      <Router>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
@@ -31,7 +45,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>
-    </Router>
+      </Router>
+    </>
   );
 }
 

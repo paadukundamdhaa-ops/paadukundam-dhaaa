@@ -29,18 +29,8 @@ export default function Footer() {
       <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-5 gap-10 mb-12 border-b border-white/10 pb-12">
         {/* Brand Column */}
         <div className="md:col-span-1">
-          <Link to="/" className="flex items-center space-x-2 mb-6">
-            <div className="flex items-end space-x-[2px] h-6">
-              <div className="w-1 bg-primary h-3"></div>
-              <div className="w-1 bg-primary h-5"></div>
-              <div className="w-1 bg-primary h-6"></div>
-              <div className="w-1 bg-primary h-4"></div>
-              <div className="w-1 bg-primary h-3"></div>
-            </div>
-            <div className="flex flex-col uppercase tracking-wider leading-none font-black text-lg">
-              <span className="text-white">Paadukundam</span>
-              <span className="text-white">Dhaa</span>
-            </div>
+          <Link to="/" className="flex items-center mb-6">
+            <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa Logo" className="h-16 object-contain" />
           </Link>
           <p className="text-pale text-xs leading-relaxed mb-6 pr-4">
             Your gateway to the best live music experiences. Book, Enjoy, Repeat!

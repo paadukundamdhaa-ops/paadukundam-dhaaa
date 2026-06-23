@@ -27,19 +27,8 @@ export default function Navbar() {
       <div className="container mx-auto px-6 flex items-center justify-between">
 
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
-          {/* Mock Soundwave Icon */}
-          <div className="flex items-end space-x-[2px] h-8">
-            <div className="w-1 bg-primary h-3"></div>
-            <div className="w-1 bg-primary h-6"></div>
-            <div className="w-1 bg-primary h-8"></div>
-            <div className="w-1 bg-primary h-5"></div>
-            <div className="w-1 bg-primary h-4"></div>
-          </div>
-          <div className="flex flex-col uppercase tracking-wider leading-none font-black text-xl">
-            <span className="text-white">Paadukundam</span>
-            <span className="text-white">Dhaa</span>
-          </div>
+        <Link to="/" className="flex items-center">
+          <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa Logo" className="h-14 object-contain" />
         </Link>
 
         {/* Desktop Nav */}

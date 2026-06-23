@@ -1,10 +1,34 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc } from 'lucide-react';
+import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc } from 'lucide-react';
 
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ days: 2, hours: 14, minutes: 36, seconds: 48 });
+  const [activeFaq, setActiveFaq] = useState(null);
+
+  const faqs = [
+    {
+      question: "How do I receive my tickets after booking?",
+      answer: "Once your payment is successful, you will instantly receive an email with your e-ticket and a unique QR code. You can also access your tickets anytime in the 'My Bookings' section of your account."
+    },
+    {
+      question: "Are the tickets refundable or transferable?",
+      answer: "Tickets are non-refundable unless the event is cancelled by the organizer. However, you can transfer your tickets to a friend via the 'Transfer Ticket' option in your dashboard up to 24 hours before the event."
+    },
+    {
+      question: "What time do the gates open for concerts?",
+      answer: "Gates typically open 2 to 3 hours before the main act begins. Please check your specific event ticket for exact gate opening times and early entry privileges."
+    },
+    {
+      question: "Do I need to carry a physical printout of my ticket?",
+      answer: "No, we support 100% paperless entry! Just show the QR code on your mobile device at the entry gates along with a valid Government ID."
+    }
+  ];
+
+  const toggleFaq = (index) => {
+    setActiveFaq(activeFaq === index ? null : index);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -37,22 +61,13 @@ export default function Home() {
     { id: 5, title: 'Martin Garrix', date: '30', month: 'JUN', venue: 'Bengaluru Palace, Bangalore', price: '1,999', img: '/images/garrix.png' },
   ];
 
-  const categories = [
-    { name: 'Live Concerts', icon: <Music /> },
-    { name: 'Music Festivals', icon: <Users /> },
-    { name: 'DJ Nights', icon: <Disc /> },
-    { name: 'Cultural Shows', icon: <Smile /> },
-    { name: 'Comedy', icon: <Smile /> },
-    { name: 'College Events', icon: <GraduationCap /> },
-    { name: 'Premium VIP', icon: <Crown /> },
-    { name: 'Family Events', icon: <Users /> }
-  ];
+
 
   return (
-    <div className="bg-[#0a0a0a] min-h-screen text-white font-sans">
+    <div className="bg-white min-h-screen text-black font-sans">
       
       {/* ULTRA-PREMIUM HERO SECTION */}
-      <section className="relative pt-32 pb-20 min-h-[90vh] flex items-center border-b border-white/10 overflow-hidden">
+      <section className="bg-[#0a0a0a] text-white relative pt-32 pb-20 min-h-[90vh] flex items-center border-b border-white/10 overflow-hidden">
         {/* Background Animation */}
         <div className="absolute inset-0 z-0 bg-black">
           <motion.img 
@@ -214,6 +229,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* NEWS TICKER */}
+      <div className="bg-primary text-white py-3 flex overflow-hidden border-b border-gray-200 relative">
+        <motion.div 
+          animate={{ x: ["0%", "-50%"] }}
+          transition={{ ease: "linear", duration: 25, repeat: Infinity }}
+          className="flex whitespace-nowrap font-bold tracking-wider uppercase text-sm items-center w-max"
+        >
+          {/* First Group */}
+          <div className="flex space-x-12 items-center px-6">
+            <span className="flex items-center"><Star size={14} className="mr-2 text-secondary" /> Early Bird Tickets for Sunburn 2026 are Live!</span>
+            <span className="flex items-center"><Zap size={14} className="mr-2 text-secondary" /> Arijit Singh Live - 50% Sold Out!</span>
+            <span className="flex items-center"><TicketIcon size={14} className="mr-2 text-secondary" /> Use code 'PDHAA10' for 10% off your first booking</span>
+            <span className="flex items-center"><Music size={14} className="mr-2 text-secondary" /> The Local Train reunion tour announced</span>
+          </div>
+          {/* Duplicate Group for Seamless Looping */}
+          <div className="flex space-x-12 items-center px-6">
+            <span className="flex items-center"><Star size={14} className="mr-2 text-secondary" /> Early Bird Tickets for Sunburn 2026 are Live!</span>
+            <span className="flex items-center"><Zap size={14} className="mr-2 text-secondary" /> Arijit Singh Live - 50% Sold Out!</span>
+            <span className="flex items-center"><TicketIcon size={14} className="mr-2 text-secondary" /> Use code 'PDHAA10' for 10% off your first booking</span>
+            <span className="flex items-center"><Music size={14} className="mr-2 text-secondary" /> The Local Train reunion tour announced</span>
+          </div>
+        </motion.div>
+      </div>
+
       {/* FEATURED EVENTS */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-6">
@@ -229,7 +268,7 @@ export default function Home() {
 
           <div className="flex space-x-6 overflow-x-auto pb-8 hide-scrollbar">
             {featuredEvents.map((event) => (
-              <div key={event.id} className="min-w-[280px] bg-[#111] rounded-xl overflow-hidden relative group">
+              <div key={event.id} className="min-w-[280px] bg-white border border-gray-200 shadow-md rounded-xl overflow-hidden relative group">
                 {/* Date Badge */}
                 <div className="absolute top-4 left-4 bg-primary text-white text-center w-12 h-12 flex flex-col justify-center rounded-md z-10 shadow-lg">
                   <span className="text-lg font-black leading-none">{event.date}</span>
@@ -242,9 +281,9 @@ export default function Home() {
                   <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div className="p-5">
-                  <h3 className="font-bold text-lg mb-1 truncate text-white">{event.title}</h3>
-                  <p className="text-pale text-xs mb-4 truncate">{event.venue}</p>
-                  <p className="font-semibold text-sm text-white">From ₹{event.price}</p>
+                  <h3 className="font-bold text-lg mb-1 truncate text-black">{event.title}</h3>
+                  <p className="text-gray-600 text-xs mb-4 truncate">{event.venue}</p>
+                  <p className="font-semibold text-sm text-black">From ₹{event.price}</p>
                 </div>
               </div>
             ))}
@@ -252,40 +291,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* EXPLORE BY CATEGORY */}
-      <section className="py-16 bg-white border-t border-gray-200">
-        <div className="w-full px-6 md:px-12 lg:px-20">
-          <div className="flex items-center mb-10">
-            <div className="w-1.5 h-6 bg-primary mr-3"></div>
-            <h2 className="text-black text-2xl font-black uppercase tracking-wider">Explore By Category</h2>
-          </div>
-          
-          <div className="flex items-center justify-between gap-4 overflow-x-auto hide-scrollbar pb-4">
-            {categories.map((cat, idx) => (
-              <div key={idx} className="flex flex-col items-center min-w-[100px] cursor-pointer group">
-                <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-full border border-gray-300 flex items-center justify-center mb-3 group-hover:border-primary group-hover:shadow-lg transition-all bg-white">
-                  <div className="text-primary [&>svg]:w-8 [&>svg]:h-8 lg:[&>svg]:w-10 lg:[&>svg]:h-10 [&>svg]:stroke-[1.5]">
-                    {cat.icon}
-                  </div>
-                </div>
-                <span className="text-xs lg:text-sm font-bold text-gray-800 text-center uppercase tracking-wide">{cat.name}</span>
-              </div>
-            ))}
-            <div className="flex items-center justify-center min-w-[80px]">
-              <button className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-primary text-white flex items-center justify-center shrink-0 hover:bg-red-800 transition-colors shadow-md">
-                <ArrowRight size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* WHY CHOOSE US */}
-      <section className="bg-[#111] py-16 border-y border-white/10">
+      <section className="bg-gray-50 py-16 border-y border-gray-200">
         <div className="container mx-auto px-6">
           <div className="flex items-center mb-10">
             <div className="w-1.5 h-6 bg-primary mr-3"></div>
-            <h2 className="text-white text-2xl font-black uppercase tracking-wider">Why Choose Us</h2>
+            <h2 className="text-black text-2xl font-black uppercase tracking-wider">Why Choose Us</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
             {[
@@ -298,8 +311,8 @@ export default function Home() {
             ].map((feature, idx) => (
               <div key={idx} className="flex flex-col items-center text-center">
                 <div className="text-secondary mb-4">{feature.icon}</div>
-                <h4 className="text-white font-bold text-sm mb-1">{feature.title}</h4>
-                <p className="text-pale text-[10px] uppercase tracking-wider">{feature.sub}</p>
+                <h4 className="text-black font-bold text-sm mb-1">{feature.title}</h4>
+                <p className="text-gray-600 text-[10px] uppercase tracking-wider">{feature.sub}</p>
               </div>
             ))}
           </div>
@@ -328,7 +341,7 @@ export default function Home() {
                   <span className="text-xs font-bold text-gray-500 uppercase">{event.month}</span>
                 </div>
                 <div>
-                  <h4 className="font-bold text-black text-sm mb-1 truncate">{event.title}</h4>
+                  <h4 className="font-bold text-white text-black text-sm mb-1 truncate">{event.title}</h4>
                   <p className="text-xs text-gray-500 mb-2 truncate">{event.venue}</p>
                   <p className="text-[10px] text-primary font-bold uppercase flex items-center group-hover:underline">Book Now <ArrowRight size={10} className="ml-1" /></p>
                 </div>
@@ -341,16 +354,16 @@ export default function Home() {
       </section>
 
       {/* ARTIST SPOTLIGHT */}
-      <section className="bg-black py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-primary/5 to-black"></div>
+      <section className="bg-white py-20 relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-primary/5 to-white"></div>
         <div className="container mx-auto px-6 relative z-10">
           <div className="flex justify-between items-center mb-12">
             <div className="flex items-center">
               <div className="w-1.5 h-6 bg-primary mr-3"></div>
-              <h2 className="text-white text-2xl font-black uppercase tracking-wider">Artist Spotlight</h2>
+              <h2 className="text-black text-2xl font-black uppercase tracking-wider">Artist Spotlight</h2>
             </div>
             <div className="flex space-x-2">
-              <button className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"><ChevronLeft size={16} /></button>
+              <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-black transition-colors"><ChevronLeft size={16} /></button>
               <button className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"><ChevronRight size={16} /></button>
             </div>
           </div>
@@ -364,14 +377,14 @@ export default function Home() {
                   <h3 className="text-3xl font-black mr-3">Arijit Singh</h3>
                   <span className="bg-secondary text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">Live</span>
                 </div>
-                <p className="text-pale text-sm leading-relaxed mb-6">
+                <p className="text-gray-600 text-sm leading-relaxed mb-6">
                   The voice that touches millions of hearts. Get ready for an unforgettable night filled with soulful music and magical moments.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-6">
-                  <span className="border border-white/20 px-3 py-1 text-xs rounded-full">Pop</span>
-                  <span className="border border-white/20 px-3 py-1 text-xs rounded-full">Bollywood</span>
-                  <span className="border border-white/20 px-3 py-1 text-xs rounded-full">Sufi</span>
-                  <span className="border border-white/20 px-3 py-1 text-xs rounded-full">Romantic</span>
+                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Pop</span>
+                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Bollywood</span>
+                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Sufi</span>
+                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Romantic</span>
                 </div>
               </div>
             </div>
@@ -383,12 +396,12 @@ export default function Home() {
                 { name: 'The Local Train', date: '21 Jun 2026', img: '/images/sunburn.png' },
                 { name: 'Martin Garrix', date: '30 Jun 2026', img: '/images/garrix.png' },
               ].map((artist, idx) => (
-                <div key={idx} className="relative rounded-xl overflow-hidden h-64 group cursor-pointer border border-white/5">
+                <div key={idx} className="relative rounded-xl overflow-hidden h-64 group cursor-pointer border border-gray-200 shadow-md">
                   <img src={artist.img} alt={artist.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                   <div className="absolute bottom-4 left-4">
                     <h4 className="font-bold text-sm mb-1">{artist.name}</h4>
-                    <p className="text-[10px] text-pale">{artist.date}</p>
+                    <p className="text-[10px] text-gray-300">{artist.date}</p>
                   </div>
                 </div>
               ))}
@@ -398,12 +411,12 @@ export default function Home() {
       </section>
 
       {/* GALLERY SECTION */}
-      <section className="py-20 bg-[#111] border-b border-white/10">
+      <section className="py-20 bg-white border-b border-gray-200">
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-center mb-12">
             <div className="flex items-center">
               <div className="w-1.5 h-6 bg-primary mr-3"></div>
-              <h2 className="text-white text-2xl font-black uppercase tracking-wider">PaadukundamDhaa Gallery</h2>
+              <h2 className="text-black text-2xl font-black uppercase tracking-wider">PaadukundamDhaa Gallery</h2>
             </div>
             <Link to="/" className="text-primary font-semibold text-sm hover:underline">View Full Gallery</Link>
           </div>
@@ -454,6 +467,47 @@ export default function Home() {
             <div className="text-secondary text-4xl mb-2"><MapPin /></div>
             <h3 className="text-4xl font-black mb-1">25+</h3>
             <p className="text-xs font-bold uppercase tracking-widest">Cities Covered</p>
+          </div>
+        </div>
+      </section>
+
+      {/* FREQUENTLY ASKED QUESTIONS */}
+      <section className="py-20 bg-gray-50 border-t border-gray-200">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <div className="flex flex-col items-center text-center mb-12">
+            <h2 className="text-black text-3xl font-black uppercase tracking-wider mb-4">Frequently Asked Questions</h2>
+            <div className="w-16 h-1 bg-primary"></div>
+          </div>
+          
+          <div className="space-y-4">
+            {faqs.map((faq, idx) => (
+              <div 
+                key={idx} 
+                className={`border rounded-xl overflow-hidden transition-all duration-300 ${activeFaq === idx ? 'border-primary bg-white shadow-md' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+              >
+                <button 
+                  onClick={() => toggleFaq(idx)}
+                  className="w-full flex justify-between items-center p-6 text-left focus:outline-none"
+                >
+                  <span className={`font-bold text-lg ${activeFaq === idx ? 'text-primary' : 'text-black'}`}>
+                    {faq.question}
+                  </span>
+                  <div className={`shrink-0 ml-4 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${activeFaq === idx ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'}`}>
+                    {activeFaq === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </div>
+                </button>
+                
+                <motion.div 
+                  initial={false}
+                  animate={{ height: activeFaq === idx ? 'auto' : 0, opacity: activeFaq === idx ? 1 : 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-6 pt-0 text-gray-600 text-sm leading-relaxed border-t border-gray-100">
+                    {faq.answer}
+                  </div>
+                </motion.div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

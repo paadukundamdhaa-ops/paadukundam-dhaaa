@@ -58,48 +58,48 @@ export default function Gallery() {
   ];
 
   return (
-    <div className="pt-20 min-h-screen bg-[#0a0a0a]">
+    <div className="min-h-screen bg-white">
       
       {/* Top Banner section */}
-      <div className="relative pt-16 pb-16 px-6 border-b border-white/5">
-        <div className="absolute inset-0 z-0">
-          <img src="/images/sunburn.png" className="w-full h-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+      <div className="relative pt-36 pb-16 px-6 border-b border-white/10 bg-[#0a0a0a]">
+        <div className="absolute inset-0 z-0 bg-black">
+          <img src="/images/sunburn.png" className="w-full h-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/40 to-[#0a0a0a]" />
         </div>
         
-        <div className="container mx-auto relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
-          
-          {/* Left Hero Text */}
+        <div className="container mx-auto relative z-10">
           <div className="lg:w-1/2">
-            <span className="text-[#facc15] font-serif italic text-2xl md:text-3xl mb-3 block">Gallery</span>
+            <span className="text-primary font-serif italic text-2xl md:text-3xl mb-3 block">Gallery</span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight leading-[1.1] mb-4">
               MOMENTS THAT <br />
-              <span className="text-[#facc15]">STAY FOREVER</span>
+              <span className="text-primary">STAY FOREVER</span>
             </h1>
             <p className="text-gray-300 max-w-lg text-sm md:text-base leading-relaxed">
               Relive the electrifying moments, unforgettable performances, and the energy of live music.
             </p>
           </div>
-          
-          {/* Stats Grid - Redesigned for Premium Look */}
-          <div className="w-full lg:w-3/5 grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 lg:mt-0">
-            {[
-              { icon: <ImageIcon size={24} />, num: '2,450+', label: 'Photos' },
-              { icon: <Video size={24} />, num: '350+', label: 'Videos' },
-              { icon: <Users size={24} />, num: '120+', label: 'Events' },
-              { icon: <Star size={24} />, num: '50+', label: 'Artists' },
-            ].map((stat, idx) => (
-              <div key={idx} className="bg-black/40 backdrop-blur-md border border-white/10 hover:border-[#facc15]/50 hover:bg-[#1a0b0c]/80 transition-all duration-300 rounded-2xl p-5 md:p-6 text-center group shadow-xl relative overflow-hidden cursor-pointer hover:-translate-y-1">
-                <div className="absolute inset-0 bg-gradient-to-b from-[#facc15]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="w-12 h-12 rounded-full bg-white/5 mx-auto flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-[#facc15]/20 transition-all duration-300">
-                  <div className="text-[#facc15] group-hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.5)] transition-all">{stat.icon}</div>
-                </div>
-                <h3 className="text-white font-black text-2xl md:text-3xl mb-1 relative z-10 group-hover:text-[#facc15] transition-colors">{stat.num}</h3>
-                <span className="text-gray-400 text-[10px] md:text-xs font-bold uppercase tracking-wider relative z-10 group-hover:text-white transition-colors">{stat.label}</span>
+        </div>
+      </div>
+
+      {/* Stats Grid - Moved to Main Content Area */}
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {[
+            { icon: <ImageIcon size={28} />, num: '2,450+', label: 'Photos' },
+            { icon: <Video size={28} />, num: '350+', label: 'Videos' },
+            { icon: <Users size={28} />, num: '120+', label: 'Events' },
+            { icon: <Star size={28} />, num: '50+', label: 'Artists' },
+          ].map((stat, idx) => (
+            <div key={idx} className="bg-white border border-gray-200 hover:border-primary/50 transition-all duration-300 rounded-2xl p-6 md:p-8 text-center group shadow-sm hover:shadow-xl relative overflow-hidden cursor-pointer hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="w-16 h-16 rounded-full bg-primary/10 mx-auto flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary transition-all duration-300">
+                <div className="text-primary group-hover:text-white transition-colors">{stat.icon}</div>
               </div>
-            ))}
-          </div>
+              <h3 className="text-black font-black text-3xl md:text-4xl mb-2 relative z-10 group-hover:text-primary transition-colors">{stat.num}</h3>
+              <span className="text-gray-500 text-xs md:text-sm font-bold uppercase tracking-widest relative z-10 transition-colors">{stat.label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -114,8 +114,8 @@ export default function Gallery() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                   activeTab === tab.id 
-                    ? 'bg-[#8c1c24] text-white shadow-lg' 
-                    : 'bg-transparent border border-white/10 text-gray-300 hover:text-white hover:bg-white/5'
+                    ? 'bg-primary text-white shadow-md' 
+                    : 'bg-white border border-gray-200 text-gray-600 hover:text-black hover:bg-gray-50'
                 }`}
               >
                 {tab.icon} {tab.id}
@@ -124,10 +124,10 @@ export default function Gallery() {
           </div>
           
           <div className="flex items-center gap-3 w-full xl:w-auto">
-            <div className="flex-1 xl:flex-none flex items-center justify-between gap-6 bg-transparent border border-white/10 text-gray-300 px-5 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-white/5 transition-colors">
+            <div className="flex-1 xl:flex-none flex items-center justify-between gap-6 bg-white border border-gray-200 text-gray-600 px-5 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-50 transition-colors">
               Latest First <ChevronDown size={16} />
             </div>
-            <button className="flex items-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg transition-colors">
+            <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-md transition-colors">
               <Filter size={16} /> Filter
             </button>
           </div>
@@ -141,14 +141,14 @@ export default function Gallery() {
           {images.map((img, idx) => (
             <div 
               key={img.id} 
-              className={`group relative rounded-xl overflow-hidden bg-[#120a0b] cursor-pointer shadow-lg ${gridLayout[idx]}`}
+              className={`group relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer shadow-sm hover:shadow-md ${gridLayout[idx]}`}
             >
               <img 
                 src={img.url} 
                 alt="Concert" 
-                className="w-full h-[220px] md:h-[260px] object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+                className="w-full h-[220px] md:h-[260px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100" 
               />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300"></div>
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
             </div>
           ))}
         </div>
@@ -156,20 +156,20 @@ export default function Gallery() {
 
       {/* Newsletter Section */}
       <div className="container mx-auto px-6 mb-16">
-        <div className="bg-gradient-to-r from-[#1f0b0d] to-[#120506] border border-[#8c1c24]/20 rounded-2xl p-8 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-sm">
           
-          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-20 pointer-events-none">
-            <img src="https://images.unsplash.com/photo-1540039155732-6761b3336765?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover mix-blend-screen mask-image-linear" alt="Background" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1f0b0d] to-transparent"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-10 pointer-events-none hidden md:block">
+            <img src="https://images.unsplash.com/photo-1540039155732-6761b3336765?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover mix-blend-multiply mask-image-linear" alt="Background" />
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-transparent"></div>
           </div>
           
           <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 relative z-10 w-full lg:w-3/5">
-            <div className="w-16 h-16 rounded-2xl bg-[#2a1215] border border-[#facc15]/30 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(250,204,21,0.15)]">
-              <ImageIcon size={28} className="text-[#facc15]" />
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <ImageIcon size={28} className="text-primary" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-white mb-2">Never Miss a Moment!</h3>
-              <p className="text-gray-400 text-sm md:text-base">Subscribe to get the best concert photos, videos and event highlights delivered to your inbox.</p>
+              <h3 className="text-2xl font-bold text-black mb-2">Never Miss a Moment!</h3>
+              <p className="text-gray-600 text-sm md:text-base">Subscribe to get the best concert photos, videos and event highlights delivered to your inbox.</p>
             </div>
           </div>
           
@@ -177,9 +177,9 @@ export default function Gallery() {
             <input 
               type="email" 
               placeholder="Enter your email address" 
-              className="bg-white text-gray-900 px-5 py-3.5 rounded-xl w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-[#facc15] font-medium text-sm" 
+              className="bg-white border border-gray-300 text-gray-900 px-5 py-3.5 rounded-xl w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-primary font-medium text-sm shadow-sm" 
             />
-            <button className="w-full sm:w-auto bg-[#facc15] hover:bg-yellow-500 text-black px-6 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 whitespace-nowrap transition-colors shadow-lg">
+            <button className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white px-6 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 whitespace-nowrap transition-colors shadow-md">
               Subscribe Now <Send size={16} />
             </button>
           </div>
@@ -187,42 +187,42 @@ export default function Gallery() {
       </div>
 
       {/* Features Bar */}
-      <div className="border-t border-white/5 bg-[#0a0a0a]">
+      <div className="border-t border-gray-200 bg-white">
         <div className="container mx-auto px-6 py-10">
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8">
             <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4">
-              <ShieldCheck className="text-[#facc15] shrink-0" size={32} strokeWidth={1.5} />
+              <ShieldCheck className="text-primary shrink-0" size={32} strokeWidth={1.5} />
               <div>
-                <h4 className="text-white font-bold text-sm mb-1">Secure Booking</h4>
-                <p className="text-gray-500 text-xs">100% Safe & Secure</p>
+                <h4 className="text-black font-bold text-sm mb-1">Secure Booking</h4>
+                <p className="text-gray-600 text-xs">100% Safe & Secure</p>
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4">
-              <Ticket className="text-[#facc15] shrink-0" size={32} strokeWidth={1.5} />
+              <Ticket className="text-primary shrink-0" size={32} strokeWidth={1.5} />
               <div>
-                <h4 className="text-white font-bold text-sm mb-1">Instant Confirmation</h4>
-                <p className="text-gray-500 text-xs">Get Tickets Instantly</p>
+                <h4 className="text-black font-bold text-sm mb-1">Instant Confirmation</h4>
+                <p className="text-gray-600 text-xs">Get Tickets Instantly</p>
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4">
-              <QrCode className="text-[#facc15] shrink-0" size={32} strokeWidth={1.5} />
+              <QrCode className="text-primary shrink-0" size={32} strokeWidth={1.5} />
               <div>
-                <h4 className="text-white font-bold text-sm mb-1">QR Code Entry</h4>
-                <p className="text-gray-500 text-xs">Easy & Contactless</p>
+                <h4 className="text-black font-bold text-sm mb-1">QR Code Entry</h4>
+                <p className="text-gray-600 text-xs">Easy & Contactless</p>
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4">
-              <MapPin className="text-[#facc15] shrink-0" size={32} strokeWidth={1.5} />
+              <MapPin className="text-primary shrink-0" size={32} strokeWidth={1.5} />
               <div>
-                <h4 className="text-white font-bold text-sm mb-1">Best Venues</h4>
-                <p className="text-gray-500 text-xs">Top Locations</p>
+                <h4 className="text-black font-bold text-sm mb-1">Best Venues</h4>
+                <p className="text-gray-600 text-xs">Top Locations</p>
               </div>
             </div>
             <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left gap-4 col-span-2 lg:col-span-1">
-              <Headphones className="text-[#facc15] shrink-0" size={32} strokeWidth={1.5} />
+              <Headphones className="text-primary shrink-0" size={32} strokeWidth={1.5} />
               <div>
-                <h4 className="text-white font-bold text-sm mb-1">24/7 Support</h4>
-                <p className="text-gray-500 text-xs">We're Here Anytime</p>
+                <h4 className="text-black font-bold text-sm mb-1">24/7 Support</h4>
+                <p className="text-gray-600 text-xs">We're Here Anytime</p>
               </div>
             </div>
           </div>

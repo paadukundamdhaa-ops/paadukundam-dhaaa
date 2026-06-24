@@ -90,8 +90,14 @@ export default function Checkout() {
         // Continue anyway as profile update isn't strictly blocking
       }
 
-      // 2. Generate Booking Reference
-      const bookingRef = `#BK-${Math.floor(100000 + Math.random() * 900000)}`;
+      // Generate event-specific Booking Reference
+      const getInitials = (title) => {
+        if (!title) return 'BK';
+        return title.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 4);
+      };
+      
+      const eventInitials = getInitials(event.title);
+      const bookingRef = `#${eventInitials}-` + Math.floor(100000 + Math.random() * 900000);
 
       // 3. Save Booking to Database
       const { error: bookingError } = await supabase

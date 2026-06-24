@@ -27,6 +27,7 @@ import AdminGallery from './pages/admin/AdminGallery';
 import AdminHomeCMS from './pages/admin/AdminHomeCMS';
 import AdminSettings from './pages/admin/AdminSettings';
 import CreateEvent from './pages/admin/CreateEvent';
+import AdminScanner from './pages/admin/AdminScanner';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -73,6 +74,10 @@ function App() {
               <Route path="home-cms" element={<AdminHomeCMS />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
+            
+            {/* Standalone Admin Scanner (Full Screen for Mobile) */}
+            <Route path="/admin/scanner" element={<AdminScanner />} />
+
             {/* Auth routes without Navbar/Footer */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

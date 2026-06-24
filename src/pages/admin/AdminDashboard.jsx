@@ -1,20 +1,49 @@
-import React from 'react';
-import { Users, Ticket, ShoppingBag, TrendingUp, DollarSign, Calendar, Music } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Ticket, ShoppingBag, TrendingUp, DollarSign, Calendar, Music, CheckCircle } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
-  const stats = [
-    { title: 'Total Revenue', value: '$45,231', increase: '+20.1%', icon: <DollarSign size={24} className="text-primary" /> },
-    { title: 'Tickets Sold', value: '2,345', increase: '+15.2%', icon: <Ticket size={24} className="text-secondary" /> },
-    { title: 'Active Users', value: '1,203', increase: '+5.4%', icon: <Users size={24} className="text-green-500" /> },
-    { title: 'Upcoming Events', value: '12', increase: 'Next: 2 days', icon: <Calendar size={24} className="text-blue-500" /> },
-  ];
+  const [stats, setStats] = useState([
+    { title: 'Total Revenue', value: '$0', increase: '0%', icon: <DollarSign size={24} className="text-primary" /> },
+    { title: 'Tickets Sold', value: '0', increase: '0%', icon: <Ticket size={24} className="text-secondary" /> },
+    { title: 'Checked In', value: '0', increase: '0%', icon: <CheckCircle size={24} className="text-green-500" /> },
+    { title: 'Upcoming Events', value: '0', increase: '0%', icon: <Calendar size={24} className="text-blue-500" /> },
+  ]);
 
-  const recentBookings = [
-    { id: '#BK-1029', user: 'Riya Sharma', event: 'Arijit Singh Live', date: 'Today, 10:45 AM', amount: '$150', status: 'Completed' },
-    { id: '#BK-1028', user: 'Aman Verma', event: 'The Local Train', date: 'Today, 09:12 AM', amount: '$45', status: 'Completed' },
-    { id: '#BK-1027', user: 'Neha Kapoor', event: 'Martin Garrix', date: 'Yesterday, 08:30 PM', amount: '$120', status: 'Completed' },
-    { id: '#BK-1026', user: 'Rahul Jain', event: 'Arijit Singh Live', date: 'Yesterday, 05:15 PM', amount: '$300', status: 'Pending' },
-  ];
+  const [recentBookings, setRecentBookings] = useState([]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    const { data: bookings } = await supabase.from('bookings').select('*, events(*), profiles(*)').order('created_at', { ascending: false });
+    const { count: eventCount } = await supabase.from('events').select('*', { count: 'exact', head: true });
+    
+    if (bookings) {
+      const revenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+      const sold = bookings.reduce((sum, b) => sum + (b.qty || 1), 0);
+      const checkedIn = bookings.filter(b => b.check_in_status === 'checked_in').length;
+
+      setStats([
+        { title: 'Total Revenue', value: `₹${revenue.toLocaleString()}`, increase: '', icon: <DollarSign size={24} className="text-primary" /> },
+        { title: 'Tickets Sold', value: sold.toString(), increase: '', icon: <Ticket size={24} className="text-secondary" /> },
+        { title: 'Checked In', value: checkedIn.toString(), increase: `${Math.round((checkedIn/(sold||1))*100)}% of sold`, icon: <CheckCircle size={24} className="text-green-500" /> },
+        { title: 'Events', value: eventCount?.toString() || '0', increase: '', icon: <Calendar size={24} className="text-blue-500" /> },
+      ]);
+
+      const formattedBookings = bookings.slice(0, 5).map(b => ({
+        id: b.booking_ref,
+        user: b.profiles?.name || 'Unknown User',
+        event: b.events?.title || 'Unknown Event',
+        date: new Date(b.created_at).toLocaleDateString(),
+        amount: `₹${b.total_amount}`,
+        status: b.check_in_status === 'checked_in' ? 'Checked In' : b.status || 'Pending'
+      }));
+      setRecentBookings(formattedBookings);
+    }
+  };
 
   return (
     <div className="space-y-6">

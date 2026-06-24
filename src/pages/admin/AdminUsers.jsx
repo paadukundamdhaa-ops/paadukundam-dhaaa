@@ -14,7 +14,11 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase.from('profiles').select('*').order('joined_date', { ascending: false });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, bookings(qty)')
+        .order('joined_date', { ascending: false });
+        
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
@@ -103,9 +107,11 @@ export default function AdminUsers() {
                 </tr>
               ) : (
                 users.filter(u => 
-                  u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                  u.email.toLowerCase().includes(searchTerm.toLowerCase())
-                ).map((user) => (
+                  (u.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  (u.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+                ).map((user) => {
+                  const totalTickets = user.bookings?.reduce((sum, booking) => sum + (booking.qty || 0), 0) || 0;
+                  return (
                   <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
                     <td className="p-4">
                       <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
@@ -126,7 +132,7 @@ export default function AdminUsers() {
                       <p className="text-xs text-gray-500 mt-1">{user.phone || 'No phone'}</p>
                     </td>
                     <td className="p-4 text-gray-600">{new Date(user.joined_date).toLocaleDateString()}</td>
-                    <td className="p-4 font-bold text-black">0</td>
+                    <td className="p-4 font-bold text-black">{totalTickets}</td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         user.status === 'Active' ? 'bg-green-100 text-green-700' : 
@@ -161,7 +167,8 @@ export default function AdminUsers() {
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>

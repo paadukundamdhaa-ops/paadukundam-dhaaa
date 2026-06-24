@@ -28,6 +28,8 @@ import AdminHomeCMS from './pages/admin/AdminHomeCMS';
 import AdminSettings from './pages/admin/AdminSettings';
 import CreateEvent from './pages/admin/CreateEvent';
 import AdminScanner from './pages/admin/AdminScanner';
+import ScannerLogin from './pages/ScannerLogin';
+import StandaloneScanner from './pages/StandaloneScanner';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -77,6 +79,10 @@ function App() {
             
             {/* Standalone Admin Scanner (Full Screen for Mobile) */}
             <Route path="/admin/scanner" element={<AdminScanner />} />
+
+            {/* Dedicated Scanner App Routes */}
+            <Route path="/scanner/login" element={<ScannerLogin />} />
+            <Route path="/scanner" element={<StandaloneScanner />} />
 
             {/* Auth routes without Navbar/Footer */}
             <Route path="/login" element={<Login />} />

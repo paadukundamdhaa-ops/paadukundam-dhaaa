@@ -11,6 +11,7 @@ export default function EventDetails() {
   const [showTicketModal, setShowTicketModal] = useState(false);
 
   const [eventData, setEventData] = useState(null);
+  const [ticketTiers, setTicketTiers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTickets, setSelectedTickets] = useState({});
 
@@ -25,8 +26,29 @@ export default function EventDetails() {
 
         if (error) throw error;
         setEventData(data);
+
+        // Fetch ticket tiers for this event
+        const { data: tiersData, error: tiersError } = await supabase
+          .from('ticket_tiers')
+          .select('*')
+          .eq('event_id', id)
+          .eq('status', 'Active');
+        
+        if (tiersError) throw tiersError;
+        if (tiersData) {
+          // Format them to match what the component expects
+          const formattedTiers = tiersData.map(t => ({
+            id: t.id,
+            name: t.tier_name,
+            price: Number(t.price),
+            description: `Total Capacity: ${t.total_capacity}`, // Or fetch actual description if added to db later
+            available: (t.total_capacity - (t.tickets_sold || 0)) > 0
+          }));
+          setTicketTiers(formattedTiers);
+        }
+
       } catch (err) {
-        console.error("Error fetching event:", err);
+        console.error("Error fetching event or tickets:", err);
       } finally {
         setLoading(false);
       }
@@ -62,14 +84,6 @@ export default function EventDetails() {
 
   const isFreeEvent = (eventData.title || "").toLowerCase().includes("free") || (eventData.title || "").toLowerCase().includes("meetup");
 
-  const fallbackTickets = isFreeEvent ? [
-      { id: 1, name: "Free Admission", price: 0, description: "General free entry. First come, first served.", available: true }
-    ] : [
-      { id: 1, name: "General Admission", price: 999, description: "Entry to standing arena.", available: true },
-      { id: 2, name: "VIP Lounge", price: 4999, description: "Dedicated entry, front rows, and food.", available: true },
-      { id: 3, name: "VVIP Meet & Greet", price: 14999, description: "Backstage access and photo ops.", available: false },
-    ];
-
   // Mix real data with some placeholders for features we haven't built DB tables for yet
   const event = {
     title: eventData.title || "Untitled Event",
@@ -84,7 +98,7 @@ export default function EventDetails() {
       image: eventData.artist_image || "https://images.unsplash.com/photo-1516280440502-6110f06a9284?auto=format&fit=crop&q=80&w=200",
       bio: eventData.artist_bio || "An incredible performance awaits you."
     },
-    tickets: eventData.tickets || fallbackTickets
+    tickets: ticketTiers.length > 0 ? ticketTiers : [] // using fetched tiers
   };
 
   const mapEmbedUrl = eventData.map_url || `https://maps.google.com/maps?q=${encodeURIComponent(venueString + ', ' + city)}&output=embed`;
@@ -99,7 +113,8 @@ export default function EventDetails() {
 
   const totalTickets = Object.values(selectedTickets).reduce((a, b) => a + b, 0);
   const totalPrice = Object.entries(selectedTickets).reduce((total, [ticketId, qty]) => {
-    const ticket = event.tickets.find(t => t.id === parseInt(ticketId));
+    const ticket = event.tickets.find(t => t.id === ticketId || String(t.id) === ticketId);
+    if (!ticket) return total;
     return total + (ticket.price * qty);
   }, 0);
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Html5Qrcode } from 'html5-qrcode';
+import Swal from 'sweetalert2';
 import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, ShieldCheck, Camera, X } from 'lucide-react';
 
 export default function AdminScanner() {
@@ -29,7 +30,12 @@ export default function AdminScanner() {
 
   const startScanner = () => {
     if (!selectedEventId) {
-      alert("Please select an event first!");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Oops...',
+        text: 'Please select an event first!',
+        confirmButtonColor: '#e11d48'
+      });
       return;
     }
     setScanning(true);
@@ -51,7 +57,12 @@ export default function AdminScanner() {
         onScanFailure
       ).catch((err) => {
         console.error("Camera start failed", err);
-        alert("Could not start camera. Please ensure you have granted camera permissions.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Camera Error',
+          text: 'Could not start camera. Please ensure you have granted camera permissions.',
+          confirmButtonColor: '#e11d48'
+        });
         setScanning(false);
       });
     }, 200);
@@ -152,7 +163,12 @@ export default function AdminScanner() {
       .eq('id', bookingId);
 
     if (error) {
-      alert("Error saving check-in status: " + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        text: 'Error saving check-in status: ' + error.message,
+        confirmButtonColor: '#e11d48'
+      });
     } else {
       setScanResult(prev => ({
         ...prev,
@@ -168,7 +184,12 @@ export default function AdminScanner() {
       .eq('id', bookingId);
       
     if (error) {
-      alert("Error updating status: " + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Error updating status: ' + error.message,
+        confirmButtonColor: '#e11d48'
+      });
     } else {
       setScanResult(null); // Clear screen
     }

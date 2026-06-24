@@ -6,10 +6,6 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
   const fetchBookings = async () => {
     const { data, error } = await supabase
       .from('bookings')
@@ -19,6 +15,20 @@ export default function AdminBookings() {
     if (data) setBookings(data);
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchBookings();
+
+    const bookingsSubscription = supabase.channel('public:bookings-admin')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, payload => {
+        fetchBookings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingsSubscription);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">

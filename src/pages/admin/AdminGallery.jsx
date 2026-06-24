@@ -1,17 +1,130 @@
-import React, { useState } from 'react';
-import { Upload, Trash2, Image as ImageIcon, CheckCircle, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Image as ImageIcon, CheckCircle, Upload, Link as LinkIcon, Loader2, ExternalLink } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import Swal from 'sweetalert2';
 
 export default function AdminGallery() {
-  const [images] = useState([
-    { id: 1, url: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=600', selected: true },
-    { id: 2, url: 'https://images.unsplash.com/photo-1540039155732-68ee23e15b51?auto=format&fit=crop&q=80&w=600', selected: false },
-    { id: 3, url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600', selected: false },
-    { id: 4, url: 'https://images.unsplash.com/photo-1533174000243-ea84bb301e74?auto=format&fit=crop&q=80&w=600', selected: true },
-    { id: 5, url: 'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&q=80&w=600', selected: false },
-    { id: 6, url: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=600', selected: false },
-    { id: 7, url: 'https://images.unsplash.com/photo-1464375117522-1314d6c469e1?auto=format&fit=crop&q=80&w=600', selected: false },
-    { id: 8, url: 'https://images.unsplash.com/photo-1470229722913-7c090bf356c6?auto=format&fit=crop&q=80&w=600', selected: false }
-  ]);
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState(null);
+
+  useEffect(() => {
+    fetchGallery();
+  }, []);
+
+  const fetchGallery = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      setImages(data.map(img => ({ ...img, selected: false })));
+    } catch (err) {
+      console.error('Error fetching gallery:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleSelection = (id) => {
+    setImages(images.map(img => img.id === id ? { ...img, selected: !img.selected } : img));
+  };
+
+  const handleAddImage = async () => {
+    if (!newImageUrl) return;
+    setIsUploading(true);
+    try {
+      const { error } = await supabase.from('gallery').insert([{ image_url: newImageUrl, is_featured: false }]);
+      if (error) throw error;
+      setNewImageUrl('');
+      fetchGallery();
+    } catch (err) {
+      console.error('Error adding image:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        text: 'Failed to add image',
+        confirmButtonColor: '#e11d48'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result;
+      try {
+        const { error } = await supabase.from('gallery').insert([{ image_url: base64String, is_featured: false }]);
+        if (error) throw error;
+        fetchGallery();
+      } catch (err) {
+        console.error('Error adding local image:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Upload Failed',
+          text: 'Failed to upload local image. Ensure it is not too large.',
+          confirmButtonColor: '#e11d48'
+        });
+      } finally {
+        setIsUploading(false);
+        // Clear input so same file can be uploaded again if needed
+        e.target.value = '';
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteSelected = () => {
+    const selectedIds = images.filter(img => img.selected).map(img => img.id);
+    if (selectedIds.length === 0) return;
+    setImageToDelete(null);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteSingle = (e, id) => {
+    e.stopPropagation();
+    setImageToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    let idsToDelete = [];
+    if (imageToDelete) {
+      idsToDelete = [imageToDelete];
+    } else {
+      idsToDelete = images.filter(img => img.selected).map(img => img.id);
+    }
+
+    if (idsToDelete.length === 0) {
+      setShowDeleteModal(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from('gallery').delete().in('id', idsToDelete);
+      if (error) throw error;
+      fetchGallery();
+    } catch (err) {
+      console.error('Error deleting images:', err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Failed to delete images',
+        confirmButtonColor: '#e11d48'
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setImageToDelete(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -21,22 +134,53 @@ export default function AdminGallery() {
           <p className="text-sm text-gray-500">Upload new concert photos and choose which ones to feature.</p>
         </div>
         <div className="flex gap-2">
-          <button className="bg-white text-red-600 border border-red-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm">
-            <Trash2 size={16} /> Delete Selected
-          </button>
-          <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
-            <Upload size={16} /> Upload Photos
-          </button>
+          {images.some(img => img.selected) && (
+            <button onClick={handleDeleteSelected} className="bg-white text-red-600 border border-red-200 px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm">
+              <Trash2 size={16} /> Delete Selected
+            </button>
+          )}
         </div>
       </div>
 
       {/* Upload Zone */}
-      <div className="border-2 border-dashed border-primary/30 rounded-xl bg-primary/5 p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-colors">
+      <div className="border-2 border-dashed border-primary/30 rounded-xl bg-primary/5 p-10 flex flex-col items-center justify-center text-center">
         <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-sm text-primary">
           <ImageIcon size={32} />
         </div>
-        <h3 className="font-bold text-black text-lg mb-1">Click to upload or drag & drop</h3>
-        <p className="text-gray-500 text-sm">SVG, PNG, JPG or GIF (max. 5MB)</p>
+        <h3 className="font-bold text-black text-lg mb-1">Add Image to Gallery</h3>
+        <p className="text-gray-500 text-sm mb-6">Upload a local file or paste an image URL.</p>
+        
+        <div className="flex flex-col w-full max-w-md gap-4">
+          <div className="flex items-center gap-2">
+            <label className={`flex-1 cursor-pointer bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-semibold hover:bg-gray-50 text-gray-700 transition-colors shadow-sm text-center ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+              {isUploading ? 'Uploading...' : 'Select Local Image'}
+              <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+            </label>
+          </div>
+          
+          <div className="flex items-center gap-4 text-sm text-gray-400 font-bold uppercase">
+            <div className="h-px bg-gray-300 flex-1"></div>
+            <span>OR</span>
+            <div className="h-px bg-gray-300 flex-1"></div>
+          </div>
+
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              value={newImageUrl} 
+              onChange={(e) => setNewImageUrl(e.target.value)} 
+              placeholder="https://example.com/image.jpg" 
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary text-sm text-black"
+            />
+            <button 
+              onClick={handleAddImage}
+              disabled={isUploading || !newImageUrl}
+              className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg disabled:opacity-50"
+            >
+              <Plus size={16} /> Add URL
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Gallery Grid */}
@@ -47,9 +191,13 @@ export default function AdminGallery() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {images.map((img) => (
-            <div key={img.id} className="relative group rounded-xl overflow-hidden aspect-square border border-gray-200 cursor-pointer">
-              <img src={img.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Gallery item" />
+          {loading ? (
+            <div className="col-span-full py-12 text-center text-gray-500">Loading gallery...</div>
+          ) : images.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-gray-500">No images in the gallery yet.</div>
+          ) : images.map((img) => (
+            <div key={img.id} onClick={() => toggleSelection(img.id)} className="relative group rounded-xl overflow-hidden aspect-square border border-gray-200 cursor-pointer">
+              <img src={img.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Gallery item" />
               
               {/* Overlay */}
               <div className={`absolute inset-0 transition-colors ${img.selected ? 'bg-primary/20' : 'bg-black/0 group-hover:bg-black/40'}`}>
@@ -62,10 +210,10 @@ export default function AdminGallery() {
 
                 {/* Actions */}
                 <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="w-8 h-8 rounded-lg bg-white/90 text-gray-700 hover:text-black hover:bg-white flex items-center justify-center shadow-sm">
+                  <a href={img.image_url} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/90 text-gray-700 hover:text-black hover:bg-white flex items-center justify-center shadow-sm">
                     <ExternalLink size={14} />
-                  </button>
-                  <button className="w-8 h-8 rounded-lg bg-white/90 text-red-600 hover:text-white hover:bg-red-600 flex items-center justify-center shadow-sm transition-colors">
+                  </a>
+                  <button onClick={(e) => handleDeleteSingle(e, img.id)} className="w-8 h-8 rounded-lg bg-white/90 text-red-600 hover:text-white hover:bg-red-600 flex items-center justify-center shadow-sm transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -74,6 +222,37 @@ export default function AdminGallery() {
           ))}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full mx-auto flex items-center justify-center mb-4">
+                <Trash2 size={32} className="text-red-600" />
+              </div>
+              <h3 className="text-xl font-black text-black mb-2">Delete Image{(!imageToDelete && images.filter(i => i.selected).length > 1) ? 's' : ''}?</h3>
+              <p className="text-gray-500 text-sm mb-6">
+                Are you sure you want to delete {imageToDelete ? 'this image' : 'the selected images'}? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-bold text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-600/20"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -55,6 +55,24 @@ export default function Home() {
   }, []);
 
   const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [heroSettings, setHeroSettings] = useState({
+    heading: 'FEEL THE RHYTHM LIVE THE MUSIC',
+    subheading: 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
+    bgMedia: 'hero_bg.mp4'
+  });
+  const [stats, setStats] = useState([
+    { label: 'Stat 1', val: '500+', desc: 'Concerts Hosted' },
+    { label: 'Stat 2', val: '2M+', desc: 'Tickets Sold' },
+    { label: 'Stat 3', val: '1M+', desc: 'Happy Customers' },
+    { label: 'Stat 4', val: '25+', desc: 'Cities Covered' },
+  ]);
+
+  const [testimonials, setTestimonials] = useState([
+    { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+    { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
+    { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
+  ]);
 
   useEffect(() => {
     const fetchHomeEvents = async () => {
@@ -88,10 +106,60 @@ export default function Home() {
       }
     };
 
+    const fetchGallery = async () => {
+      try {
+        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false }).limit(8);
+        if (error) throw error;
+        if (data) setGalleryImages(data);
+      } catch (err) {
+        console.error('Error fetching gallery:', err);
+      }
+    };
+
+    const fetchCMS = () => {
+      const savedHero = localStorage.getItem('cms_hero');
+      const savedStats = localStorage.getItem('cms_stats');
+      const savedTestimonials = localStorage.getItem('cms_testimonials');
+      if (savedHero) {
+        const parsed = JSON.parse(savedHero);
+        setHeroSettings({
+          heading: parsed.heading || 'FEEL THE RHYTHM LIVE THE MUSIC',
+          subheading: parsed.subheading || 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
+          bgMedia: parsed.bgMedia || 'hero_bg.mp4'
+        });
+      }
+      if (savedStats) setStats(JSON.parse(savedStats));
+      if (savedTestimonials) {
+        setTestimonials(JSON.parse(savedTestimonials));
+      }
+    };
+
     fetchHomeEvents();
+    fetchGallery();
+    fetchCMS();
+
+    // Listen for cross-tab localStorage changes (from AdminHomeCMS)
+    window.addEventListener('storage', fetchCMS);
+
+    // Supabase Realtime subscriptions
+    const eventsSubscription = supabase.channel('public:events-home')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
+        fetchHomeEvents();
+      })
+      .subscribe();
+
+    const gallerySubscription = supabase.channel('public:gallery-home')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery' }, payload => {
+        fetchGallery();
+      })
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('storage', fetchCMS);
+      supabase.removeChannel(eventsSubscription);
+      supabase.removeChannel(gallerySubscription);
+    };
   }, []);
-
-
 
   return (
     <div className="bg-white min-h-screen text-black font-sans">
@@ -150,14 +218,16 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
               className="text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-[1.1] uppercase drop-shadow-2xl"
             >
-              Experience Live Music<br/>
-              Like <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-yellow-200 drop-shadow-[0_0_15px_rgba(245,198,36,0.5)]">Never Before</span>
+              {heroSettings.heading.split(' ').slice(0, 3).join(' ')}<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-yellow-200 drop-shadow-[0_0_15px_rgba(245,198,36,0.5)]">
+                {heroSettings.heading.split(' ').slice(3).join(' ') || 'LIKE NEVER BEFORE'}
+              </span>
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
               className="text-pale mb-10 max-w-xl text-lg md:text-xl font-light"
             >
-              Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.
+              {heroSettings.subheading}
             </motion.p>
             
             <motion.div 
@@ -222,21 +292,20 @@ export default function Home() {
               </div>
 
               <div className="relative h-64 overflow-hidden">
-                <img src="/images/script.png" alt="The Script" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                <img src={featuredEvents[0]?.img || "/images/script.png"} alt="Featured" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                 <div className="absolute bottom-4 left-6">
-                  <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Pop Rock</span>
+                  <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Featured</span>
                 </div>
               </div>
               
               <div className="p-8 pt-4 text-left relative z-10">
-                <h3 className="text-4xl font-black mb-1 tracking-tight text-white drop-shadow-md">THE SCRIPT</h3>
+                <h3 className="text-4xl font-black mb-1 tracking-tight text-white drop-shadow-md">{featuredEvents[0]?.title || "LIVE CONCERT"}</h3>
                 <p className="text-secondary font-bold tracking-widest text-xs uppercase mb-6 drop-shadow-md">Live In Concert</p>
                 
                 <div className="space-y-3 text-sm text-gray-300 mb-6 font-medium border-b border-white/10 pb-6">
-                  <div className="flex items-center"><Calendar size={16} className="mr-3 text-secondary shrink-0" /> 25 May 2026</div>
-                  <div className="flex items-center"><Clock size={16} className="mr-3 text-secondary shrink-0" /> 07:00 PM (Gates open at 5 PM)</div>
-                  <div className="flex items-center"><MapPin size={16} className="mr-3 text-secondary shrink-0" /> Dome, NSCI, Mumbai</div>
+                  <div className="flex items-center"><Calendar size={16} className="mr-3 text-secondary shrink-0" /> {featuredEvents[0]?.date} {featuredEvents[0]?.month} 2026</div>
+                  <div className="flex items-center"><MapPin size={16} className="mr-3 text-secondary shrink-0" /> {featuredEvents[0]?.venue || "Dome, NSCI, Mumbai"}</div>
                 </div>
                 
                 <div className="flex justify-between items-center mb-6">
@@ -250,9 +319,9 @@ export default function Home() {
                   </div>
                 </div>
 
-                <button className="w-full bg-primary hover:bg-red-800 text-white font-black py-4 rounded-xl transition-all flex items-center justify-center shadow-[0_0_15px_rgba(192,0,0,0.5)]">
+                <Link to={featuredEvents[0] ? `/events/${featuredEvents[0].id}` : '/events'} className="w-full bg-primary hover:bg-red-800 text-white font-black py-4 rounded-xl transition-all flex items-center justify-center shadow-[0_0_15px_rgba(192,0,0,0.5)]">
                   Book Now <ArrowRight size={18} className="ml-2" />
-                </button>
+                </Link>
               </div>
             </div>
           </motion.div>
@@ -400,42 +469,43 @@ export default function Home() {
 
           <div className="flex flex-col lg:flex-row gap-10">
             {/* Main Featured Artist */}
-            <div className="lg:w-1/2 flex flex-col md:flex-row gap-6">
-              <img src="/images/arijit.png" alt="Arijit Singh" className="w-full md:w-64 h-64 object-cover rounded-xl" />
-              <div>
-                <div className="flex items-center mb-2">
-                  <h3 className="text-3xl font-black mr-3">Arijit Singh</h3>
-                  <span className="bg-secondary text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">Live</span>
-                </div>
-                <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                  The voice that touches millions of hearts. Get ready for an unforgettable night filled with soulful music and magical moments.
-                </p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Pop</span>
-                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Bollywood</span>
-                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Sufi</span>
-                  <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Romantic</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Other Artists */}
-            <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-8 lg:mt-0">
-              {[
-                { name: 'Atif Aslam', date: '14 Jun 2026', img: '/images/script.png' },
-                { name: 'The Local Train', date: '21 Jun 2026', img: '/images/sunburn.png' },
-                { name: 'Martin Garrix', date: '30 Jun 2026', img: '/images/garrix.png' },
-              ].map((artist, idx) => (
-                <div key={idx} className="relative rounded-xl overflow-hidden h-64 group cursor-pointer border border-gray-200 shadow-md">
-                  <img src={artist.img} alt={artist.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4">
-                    <h4 className="font-bold text-sm mb-1">{artist.name}</h4>
-                    <p className="text-[10px] text-gray-300">{artist.date}</p>
+            {featuredEvents.length > 0 ? (
+              <>
+                <div className="lg:w-1/2 flex flex-col md:flex-row gap-6">
+                  <img src={featuredEvents[0].img} alt={featuredEvents[0].title} className="w-full md:w-64 h-64 object-cover rounded-xl" />
+                  <div>
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-3xl font-black mr-3">{featuredEvents[0].title}</h3>
+                      <span className="bg-secondary text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">Live</span>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                      Get ready for an unforgettable night filled with amazing music and magical moments. Book your tickets before they run out!
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Featured</span>
+                      <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Concert</span>
+                    </div>
+                    <Link to={`/events/${featuredEvents[0].id}`} className="inline-block bg-primary text-white font-bold px-6 py-2 rounded hover:bg-red-700 transition-colors">Book Now</Link>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Other Artists */}
+                <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-8 lg:mt-0">
+                  {featuredEvents.slice(1, 4).map((artist, idx) => (
+                    <Link to={`/events/${artist.id}`} key={idx} className="relative rounded-xl overflow-hidden h-64 group cursor-pointer border border-gray-200 shadow-md block">
+                      <img src={artist.img} alt={artist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                      <div className="absolute bottom-4 left-4">
+                        <h4 className="font-bold text-sm mb-1 text-white">{artist.title}</h4>
+                        <p className="text-[10px] text-gray-300">{artist.date} {artist.month}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="w-full text-center py-10 text-gray-500">More events coming soon...</div>
+            )}
           </div>
         </div>
       </section>
@@ -448,22 +518,13 @@ export default function Home() {
               <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
               <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">PaadukundamDhaa Gallery</h2>
             </div>
-            <Link to="/" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View Full Gallery</Link>
+            <Link to="/gallery" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View Full Gallery</Link>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1540039155732-68ee23e15b51?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1533174000243-ea84bb301e74?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1464375117522-1314d6c469e1?auto=format&fit=crop&q=80&w=600",
-              "https://images.unsplash.com/photo-1470229722913-7c090bf356c6?auto=format&fit=crop&q=80&w=600"
-            ].map((img, idx) => (
+            {galleryImages.map((img, idx) => (
               <div key={idx} className="relative group overflow-hidden rounded-xl aspect-[4/3]">
-                <img src={img} alt={`Concert moment ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <img src={img.image_url} alt={`Concert moment ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/50 transition-colors duration-300 flex items-center justify-center">
                   <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
                     <Heart size={32} className="text-white fill-white" />
@@ -480,23 +541,23 @@ export default function Home() {
         <div className="container mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/20 text-center">
           <div className="flex flex-col items-center">
             <div className="text-secondary text-4xl mb-2"><Music /></div>
-            <h3 className="text-4xl font-black mb-1">500+</h3>
-            <p className="text-xs font-bold uppercase tracking-widest">Concerts Hosted</p>
+            <h3 className="text-4xl font-black mb-1">{stats[0]?.val || '500+'}</h3>
+            <p className="text-xs font-bold uppercase tracking-widest">{stats[0]?.desc || 'Concerts Hosted'}</p>
           </div>
           <div className="flex flex-col items-center">
             <div className="text-secondary text-4xl mb-2"><Ticket /></div>
-            <h3 className="text-4xl font-black mb-1">2M+</h3>
-            <p className="text-xs font-bold uppercase tracking-widest">Tickets Sold</p>
+            <h3 className="text-4xl font-black mb-1">{stats[1]?.val || '2M+'}</h3>
+            <p className="text-xs font-bold uppercase tracking-widest">{stats[1]?.desc || 'Tickets Sold'}</p>
           </div>
           <div className="flex flex-col items-center">
             <div className="text-secondary text-4xl mb-2"><Users /></div>
-            <h3 className="text-4xl font-black mb-1">1M+</h3>
-            <p className="text-xs font-bold uppercase tracking-widest">Happy Customers</p>
+            <h3 className="text-4xl font-black mb-1">{stats[2]?.val || '1M+'}</h3>
+            <p className="text-xs font-bold uppercase tracking-widest">{stats[2]?.desc || 'Happy Customers'}</p>
           </div>
           <div className="flex flex-col items-center">
             <div className="text-secondary text-4xl mb-2"><MapPin /></div>
-            <h3 className="text-4xl font-black mb-1">25+</h3>
-            <p className="text-xs font-bold uppercase tracking-widest">Cities Covered</p>
+            <h3 className="text-4xl font-black mb-1">{stats[3]?.val || '25+'}</h3>
+            <p className="text-xs font-bold uppercase tracking-widest">{stats[3]?.desc || 'Cities Covered'}</p>
           </div>
         </div>
       </section>
@@ -561,11 +622,7 @@ export default function Home() {
             >
               {/* First Group */}
               <div className="flex space-x-6">
-                {[
-                  { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
-                  { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
-                  { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
-                ].map((review, idx) => (
+                {testimonials.map((review, idx) => (
                   <div key={idx} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4 w-[320px] shrink-0">
                     <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
                     <div>
@@ -581,11 +638,7 @@ export default function Home() {
               
               {/* Duplicate Group for Seamless Looping */}
               <div className="flex space-x-6">
-                {[
-                  { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
-                  { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
-                  { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
-                ].map((review, idx) => (
+                {testimonials.map((review, idx) => (
                   <div key={`dup-${idx}`} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4 w-[320px] shrink-0">
                     <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
                     <div>

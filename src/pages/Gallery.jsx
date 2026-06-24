@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutGrid, 
   Music, 
@@ -17,9 +17,12 @@ import {
   MapPin,
   Headphones
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function Gallery() {
   const [activeTab, setActiveTab] = useState('All');
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const tabs = [
     { id: 'All', icon: <LayoutGrid size={16} /> },
@@ -44,18 +47,35 @@ export default function Gallery() {
     'col-span-12 md:col-span-6 lg:col-span-2', // 10 (square)
   ];
 
-  const images = [
-    { id: 1, url: 'https://images.unsplash.com/photo-1540039155732-6761b3336765?auto=format&fit=crop&q=80&w=800' },
-    { id: 2, url: 'https://images.unsplash.com/photo-1493225457124-a1a2f295fa07?auto=format&fit=crop&q=80&w=800' },
-    { id: 3, url: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&q=80&w=800' },
-    { id: 4, url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=800' },
-    { id: 5, url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=800' },
-    { id: 6, url: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=800' },
-    { id: 7, url: 'https://images.unsplash.com/photo-1533174000223-11440fb4ce8f?auto=format&fit=crop&q=80&w=800' },
-    { id: 8, url: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80&w=800' },
-    { id: 9, url: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&q=80&w=800' },
-    { id: 10, url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=800' },
-  ];
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (data) {
+          setImages(data.map(img => ({
+            id: img.id,
+            url: img.image_url
+          })));
+        }
+      } catch (err) {
+        console.error('Error fetching gallery:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchGallery();
+
+    const gallerySubscription = supabase.channel('public:gallery-page')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gallery' }, payload => {
+        fetchGallery();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(gallerySubscription);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -138,10 +158,14 @@ export default function Gallery() {
       {/* Masonry-style Grid */}
       <div className="container mx-auto px-6 mb-16">
         <div className="grid grid-cols-12 gap-4">
-          {images.map((img, idx) => (
+          {loading ? (
+            <div className="col-span-12 py-12 text-center text-gray-500 font-bold">Loading gallery...</div>
+          ) : images.length === 0 ? (
+            <div className="col-span-12 py-12 text-center text-gray-500 font-bold">No images in the gallery yet.</div>
+          ) : images.map((img, idx) => (
             <div 
               key={img.id} 
-              className={`group relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer shadow-sm hover:shadow-md ${gridLayout[idx]}`}
+              className={`group relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer shadow-sm hover:shadow-md ${gridLayout[idx % gridLayout.length]}`}
             >
               <img 
                 src={img.url} 

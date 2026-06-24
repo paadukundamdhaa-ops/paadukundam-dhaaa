@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Plus, MapPin, Calendar, Clock, Edit, Trash2, Eye, X } from 'lucide-react';
+import { Search, Plus, MapPin, Calendar, Clock, Edit, Trash2, Eye, X, Filter, MoreVertical, Tag, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import Swal from 'sweetalert2';
 
 export default function AdminEvents() {
   const navigate = useNavigate();
@@ -26,10 +27,6 @@ export default function AdminEvents() {
     img_url: ''
   });
 
-  React.useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
@@ -42,11 +39,30 @@ export default function AdminEvents() {
       if (data) setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
-      alert('Failed to load events. Check console.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load events. Check console.',
+        confirmButtonColor: '#e11d48'
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    fetchEvents();
+
+    const eventsSubscription = supabase.channel('public:events-admin')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
+        fetchEvents();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(eventsSubscription);
+    };
+  }, []);
 
   const handleOpenModal = (event = null) => {
     if (event) {
@@ -117,20 +133,50 @@ export default function AdminEvents() {
       fetchEvents(); // Reload the list
     } catch (error) {
       console.error('Error saving event:', error);
-      alert('Failed to save event. Check console.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        text: 'Failed to save event. Check console.',
+        confirmButtonColor: '#e11d48'
+      });
     }
   };
 
-  const handleDeleteEvent = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
-    
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
+      // First delete associated ticket_tiers to avoid foreign key violations
+      const { error: tierError } = await supabase.from('ticket_tiers').delete().eq('event_id', id);
+      if (tierError) throw tierError;
+
       const { error } = await supabase.from('events').delete().eq('id', id);
       if (error) throw error;
-      fetchEvents(); // Reload the list
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('Failed to delete event. Check console.');
+      setEvents(events.filter(e => e.id !== id));
+      Swal.fire({
+        title: 'Deleted!',
+        text: 'Event has been deleted.',
+        icon: 'success',
+        confirmButtonColor: '#22c55e'
+      });
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Failed to delete event. Check console.',
+        confirmButtonColor: '#e11d48'
+      });
     }
   };
 
@@ -208,7 +254,7 @@ export default function AdminEvents() {
                     </div>
                     <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button onClick={() => handleOpenModal(event)} className="p-1.5 text-gray-400 hover:text-primary hover:bg-red-50 rounded" title="Edit"><Edit size={16}/></button>
-                      <button onClick={() => handleDeleteEvent(event.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 size={16}/></button>
+                      <button onClick={() => handleDelete(event.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 size={16}/></button>
                     </div>
                   </div>
                   

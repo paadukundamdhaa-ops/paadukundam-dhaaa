@@ -67,7 +67,11 @@ app.post('/api/send-ticket', async (req, res) => {
             </tr>
           </table>
 
-          <p style="color: #4b5563; font-size: 16px;">You can view and download your full digital ticket by logging into your account dashboard.</p>
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="https://paadukundam-dhaaa.vercel.app/ticket/${bookingRef}?download=true" style="display: inline-block; padding: 12px 24px; background-color: #8c1c24; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Download Your Ticket (JPG)</a>
+          </div>
+          
+          <p style="color: #4b5563; font-size: 16px; margin-top: 24px;">You can also view and download your full digital ticket by logging into your account dashboard.</p>
           
           <div style="margin-top: 30px; text-align: center; color: #9ca3af; font-size: 14px;">
             <p>If you have any questions, please contact our support team.</p>

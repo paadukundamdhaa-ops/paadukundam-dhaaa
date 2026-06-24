@@ -1,15 +1,51 @@
 import React, { useState } from 'react';
 import { Search, Plus, Tag, Settings, MoreVertical } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminTickets() {
-  const [ticketTiers] = useState([
-    { event: 'Arijit Singh Live', type: 'Early Bird', price: '$45', total: 500, sold: 500, status: 'Sold Out' },
-    { event: 'Arijit Singh Live', type: 'General Admission', price: '$75', total: 3000, sold: 2150, status: 'Active' },
-    { event: 'Arijit Singh Live', type: 'VIP', price: '$150', total: 1000, sold: 850, status: 'Active' },
-    { event: 'Arijit Singh Live', type: 'VVIP Front Row', price: '$300', total: 500, sold: 480, status: 'Active' },
-    { event: 'Martin Garrix NYE', type: 'General Admission', price: '$120', total: 6000, sold: 0, status: 'Upcoming' },
-    { event: 'Martin Garrix NYE', type: 'VIP Backstage', price: '$500', total: 500, sold: 0, status: 'Upcoming' },
-  ]);
+  const [ticketTiers, setTicketTiers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ticket_tiers')
+        .select('*, events(title)')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      const formatted = data.map(t => ({
+        id: t.id,
+        event: t.events?.title || 'Unknown',
+        type: t.tier_name,
+        price: `₹${t.price}`,
+        total: t.total_capacity,
+        sold: t.tickets_sold,
+        status: t.status
+      }));
+      setTicketTiers(formatted);
+    } catch (err) {
+      console.error('Error fetching tickets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchTickets();
+    
+    const ticketsSub = supabase.channel('public:tickets-admin')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ticket_tiers' }, () => {
+        fetchTickets();
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(ticketsSub);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">

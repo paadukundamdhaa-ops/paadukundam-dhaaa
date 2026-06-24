@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, MapPin, Calendar, SlidersHorizontal, Grid, List, ChevronLeft, ChevronRight, Heart, ChevronDown } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { categories } from '../data/mockData';
 import { supabase } from '../lib/supabase';
 
 export default function Events() {
@@ -21,6 +20,12 @@ export default function Events() {
   const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 8;
   const [allEvents, setAllEvents] = useState([]);
+  
+  // Extract unique categories from events
+  const uniqueCategories = useMemo(() => {
+    const cats = new Set(allEvents.map(e => e.category).filter(Boolean));
+    return Array.from(cats).sort();
+  }, [allEvents]);
   
   // Scroll to top on mount and route change
   useEffect(() => {
@@ -73,6 +78,16 @@ export default function Events() {
       }
     };
     fetchAllEvents();
+
+    const eventsSubscription = supabase.channel('public:events-page')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
+        fetchAllEvents();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(eventsSubscription);
+    };
   }, []);
 
   // Logic: Filter & Sort Events
@@ -221,7 +236,7 @@ export default function Events() {
             <div className="mb-6">
               <label className="block text-[13px] font-bold text-gray-800 mb-3">Event Categories</label>
               <div className="space-y-2.5">
-                {categories.map((cat, idx) => (
+                {uniqueCategories.map((cat, idx) => (
                   <label key={idx} className="flex items-center space-x-3 cursor-pointer group">
                     <div className="relative flex items-center justify-center">
                       <input 

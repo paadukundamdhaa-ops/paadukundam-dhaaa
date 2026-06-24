@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import QRCode from 'react-qr-code';
+import Swal from 'sweetalert2';
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -65,6 +66,16 @@ export default function Dashboard() {
     };
 
     fetchBookingsAndProfile();
+
+    const dashboardSubscription = supabase.channel(`public:dashboard-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchBookingsAndProfile();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(dashboardSubscription);
+    };
   }, [user, navigate]);
 
   if (!user) return null;
@@ -112,7 +123,12 @@ export default function Dashboard() {
       link.click();
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert(`Failed to download ticket: ${error.message || 'Unknown error'}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Download Failed',
+        text: `Failed to download ticket: ${error.message || 'Unknown error'}`,
+        confirmButtonColor: '#e11d48'
+      });
     } finally {
       setDownloading(null);
     }

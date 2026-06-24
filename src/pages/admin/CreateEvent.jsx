@@ -4,7 +4,9 @@ import {
   Users, Ticket, Settings, Shield, Link as LinkIcon, AlertCircle, Plus,
   Trash2, Copy, PlayCircle, Info, Image as ImageIcon, Music, Star, Search
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 export default function CreateEvent() {
   const navigate = useNavigate();
@@ -18,6 +20,16 @@ export default function CreateEvent() {
   const [squareImage, setSquareImage] = useState(null);
   const [artistImage, setArtistImage] = useState(null);
   const [mapUrlInput, setMapUrlInput] = useState("https://maps.google.com/?q=Eden+Gardens");
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  // Form States
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('Concert');
+  const [eventDate, setEventDate] = useState('');
+  const [eventTime, setEventTime] = useState('');
+  const [venueName, setVenueName] = useState('');
+  const [city, setCity] = useState('');
+  const [artistName, setArtistName] = useState('');
 
   const getMapEmbedUrl = (url) => {
     if (!url) return null;
@@ -120,6 +132,91 @@ export default function CreateEvent() {
     }
   };
 
+  const handlePublish = async () => {
+    if (!title || !artistName || !category || !eventDate || !eventTime || !venueName || !city) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Fields',
+        text: 'Please fill in all required fields (Title, Artist, Category, Date, Time, Venue, City).',
+        confirmButtonColor: '#e11d48'
+      });
+      return;
+    }
+
+    if (ticketTypes.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Tickets',
+        text: 'Please add at least one ticket type.',
+        confirmButtonColor: '#e11d48'
+      });
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      // Calculate total tickets
+      const totalTickets = ticketTypes.reduce((acc, t) => acc + (Number(t.qty) || 0), 0);
+
+      // Format Venue
+      const fullVenue = `${venueName}, ${city}`;
+
+      // Insert Event
+      const { data: eventData, error: eventError } = await supabase
+        .from('events')
+        .insert({
+          title,
+          artist: artistName,
+          category,
+          event_date: eventDate,
+          event_time: eventTime,
+          venue: fullVenue,
+          status: 'Upcoming',
+          total_tickets: totalTickets,
+          tickets_sold: 0,
+          img_url: heroImage || '/images/sunburn.png' // Fallback image if no upload
+        })
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      // Insert Ticket Tiers
+      const tiersToInsert = ticketTypes.map(t => ({
+        event_id: eventData.id,
+        tier_name: t.name || 'General Admission',
+        price: Number(t.price) || 0,
+        total_capacity: Number(t.qty) || 0,
+        tickets_sold: 0,
+        status: 'Active'
+      }));
+
+      const { error: tierError } = await supabase
+        .from('ticket_tiers')
+        .insert(tiersToInsert);
+
+      if (tierError) throw tierError;
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Event published successfully!',
+        confirmButtonColor: '#22c55e'
+      });
+      navigate('/admin/events');
+    } catch (error) {
+      console.error("Error publishing event:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Publishing Failed',
+        text: 'Failed to publish event. See console for details.',
+        confirmButtonColor: '#e11d48'
+      });
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-32 text-black">
 
@@ -189,7 +286,7 @@ export default function CreateEvent() {
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Event Title *</label>
-                <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g. Arijit Singh Live in Concert" />
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g. Arijit Singh Live in Concert" />
               </div>
               <div className="flex gap-6">
                 <div className="flex-1">
@@ -201,7 +298,7 @@ export default function CreateEvent() {
                 </div>
                 <div className="w-1/3">
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Category *</label>
-                  <select className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                  <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
                     <option>Concert</option><option>EDM</option><option>Comedy</option>
                   </select>
                 </div>
@@ -286,7 +383,7 @@ export default function CreateEvent() {
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Event Date *</label>
-                  <input type="date" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                  <input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Time Zone</label>
@@ -302,7 +399,7 @@ export default function CreateEvent() {
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Show Starts *</label>
-                  <input type="time" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
+                  <input type="time" value={eventTime} onChange={e => setEventTime(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Show Ends</label>
@@ -332,7 +429,7 @@ export default function CreateEvent() {
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div className="col-span-2">
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Venue Name *</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="e.g. NSCI Dome" />
+                  <input type="text" value={venueName} onChange={e => setVenueName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="e.g. NSCI Dome" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Full Address *</label>
@@ -340,7 +437,7 @@ export default function CreateEvent() {
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">City *</label>
-                  <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
+                  <input type="text" value={city} onChange={e => setCity(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">State</label>
@@ -400,7 +497,7 @@ export default function CreateEvent() {
                     )}
                   </label>
                   <div className="flex-1 space-y-3">
-                    <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="Artist Name" />
+                    <input type="text" value={artistName} onChange={e => setArtistName(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="Artist Name" />
                     <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="Short Biography (optional)" />
                   </div>
                 </div>
@@ -434,9 +531,9 @@ export default function CreateEvent() {
                 <tbody className="divide-y divide-gray-100">
                   {ticketTypes.map(t => (
                     <tr key={t.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4"><input type="text" defaultValue={t.name} className="border border-gray-200 rounded px-2 py-1 w-full text-sm font-bold" /></td>
-                      <td className="px-6 py-4"><input type="number" defaultValue={t.price} className="border border-gray-200 rounded px-2 py-1 w-24 text-sm font-bold text-green-600" /></td>
-                      <td className="px-6 py-4"><input type="number" defaultValue={t.qty} className="border border-gray-200 rounded px-2 py-1 w-24 text-sm" /></td>
+                      <td className="px-6 py-4"><input type="text" value={t.name} onChange={e => setTicketTypes(ticketTypes.map(tick => tick.id === t.id ? { ...tick, name: e.target.value } : tick))} className="border border-gray-200 rounded px-2 py-1 w-full text-sm font-bold" /></td>
+                      <td className="px-6 py-4"><input type="number" value={t.price} onChange={e => setTicketTypes(ticketTypes.map(tick => tick.id === t.id ? { ...tick, price: e.target.value } : tick))} className="border border-gray-200 rounded px-2 py-1 w-24 text-sm font-bold text-green-600" /></td>
+                      <td className="px-6 py-4"><input type="number" value={t.qty} onChange={e => setTicketTypes(ticketTypes.map(tick => tick.id === t.id ? { ...tick, qty: e.target.value } : tick))} className="border border-gray-200 rounded px-2 py-1 w-24 text-sm" /></td>
                       <td className="px-6 py-4">
                         <label className="relative inline-flex items-center cursor-pointer">
                           <input type="checkbox" defaultChecked={t.refundable} className="sr-only peer" />
@@ -687,8 +784,8 @@ export default function CreateEvent() {
             <button className="px-6 py-2.5 rounded-lg font-bold text-white bg-black hover:bg-gray-900 transition-colors flex items-center gap-2 text-sm shadow-md">
               <Eye size={18} /> Preview Page
             </button>
-            <button className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5">
-              <Rocket size={18} /> Publish Event
+            <button onClick={handlePublish} disabled={isPublishing} className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-50">
+              <Rocket size={18} /> {isPublishing ? 'Publishing...' : 'Publish Event'}
             </button>
           </div>
         </div>

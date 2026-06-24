@@ -13,10 +13,6 @@ export default function AdminDashboard() {
 
   const [recentBookings, setRecentBookings] = useState([]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
   const fetchDashboardData = async () => {
     const { data: bookings } = await supabase.from('bookings').select('*, events(*), profiles(*)').order('created_at', { ascending: false });
     const { count: eventCount } = await supabase.from('events').select('*', { count: 'exact', head: true });
@@ -44,6 +40,27 @@ export default function AdminDashboard() {
       setRecentBookings(formattedBookings);
     }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+
+    const bookingsSub = supabase.channel('public:dashboard-bookings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    const eventsSub = supabase.channel('public:dashboard-events')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingsSub);
+      supabase.removeChannel(eventsSub);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -120,7 +137,7 @@ export default function AdminDashboard() {
             <h3 className="font-bold text-lg text-black">Quick Actions</h3>
           </div>
           <div className="p-6 flex-1 flex flex-col justify-center space-y-4">
-            <button className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-red-50 text-left transition-all group">
+            <Link to="/admin/events/create" className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-red-50 text-left transition-all group">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                   <Music size={18} />
@@ -130,7 +147,7 @@ export default function AdminDashboard() {
                   <p className="text-xs text-gray-500">Draft a new concert</p>
                 </div>
               </div>
-            </button>
+            </Link>
             <button className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-left transition-all group">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">

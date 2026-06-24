@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Swal from 'sweetalert2';
 import { Html5Qrcode } from 'html5-qrcode';
 import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode } from 'lucide-react';
 
@@ -65,7 +66,12 @@ export default function StandaloneScanner() {
 
   const startScanner = () => {
     if (!selectedEventId) {
-      alert("Please select an event first!");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Oops...',
+        text: 'Please select an event first!',
+        confirmButtonColor: '#e11d48'
+      });
       return;
     }
     setScanning(true);
@@ -99,7 +105,12 @@ export default function StandaloneScanner() {
         }
       ).catch(err => {
         console.error("Error starting scanner", err);
-        alert("Failed to start camera. Please check permissions.");
+        Swal.fire({
+          icon: 'error',
+          title: 'Camera Error',
+          text: 'Failed to start camera. Please check permissions.',
+          confirmButtonColor: '#e11d48'
+        });
         setScanning(false);
       });
     }, 100);
@@ -172,7 +183,12 @@ export default function StandaloneScanner() {
       startScanner(); // auto restart scanner
 
     } catch (err) {
-      alert("Failed to update status.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Failed to update status.',
+        confirmButtonColor: '#e11d48'
+      });
     }
   };
 

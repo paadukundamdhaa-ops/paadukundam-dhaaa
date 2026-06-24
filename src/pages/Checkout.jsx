@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { CreditCard, Wallet, Lock, Ticket, ArrowLeft, ShieldCheck, MapPin, Calendar } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Info, ShieldCheck, Ticket, CreditCard, Wallet, Lock, ArrowLeft } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { supabase } from '../lib/supabase';
 
 export default function Checkout() {
@@ -63,18 +64,33 @@ export default function Checkout() {
 
   const handlePayment = async () => {
     if (totalTickets === 0) {
-      alert("Please select at least one ticket.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Oops...',
+        text: 'Please select at least one ticket.',
+        confirmButtonColor: '#e11d48'
+      });
       return;
     }
     if (!firstName || !email || !phone) {
-      alert("Please fill in all personal information before paying.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Details',
+        text: 'Please fill in all personal information before paying.',
+        confirmButtonColor: '#e11d48'
+      });
       return;
     }
 
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser) {
-        alert("Please log in to complete checkout.");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Authentication Required',
+          text: 'Please log in to complete checkout.',
+          confirmButtonColor: '#e11d48'
+        });
         navigate('/login');
         return;
       }
@@ -99,6 +115,9 @@ export default function Checkout() {
       const eventInitials = getInitials(event.title);
       const bookingRef = `#${eventInitials}-` + Math.floor(100000 + Math.random() * 900000);
 
+      // Find primary ticket tier (the first one they selected)
+      const primaryTicketTierId = Object.keys(selectedTickets).find(id => selectedTickets[id] > 0);
+
       // 3. Save Booking to Database
       const { error: bookingError } = await supabase
         .from('bookings')
@@ -106,6 +125,7 @@ export default function Checkout() {
           booking_ref: bookingRef,
           user_id: currentUser.id,
           event_id: event.id,
+          ticket_tier_id: primaryTicketTierId || null,
           qty: totalTickets,
           total_amount: grandTotal,
           status: 'Completed'
@@ -144,7 +164,12 @@ export default function Checkout() {
 
     } catch (error) {
       console.error("Checkout failed:", error);
-      alert("Failed to process booking. Please try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Booking Failed',
+        text: 'Failed to process booking. Please try again.',
+        confirmButtonColor: '#e11d48'
+      });
     }
   };
 

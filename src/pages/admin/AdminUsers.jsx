@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MoreVertical, Edit, Trash2, UserPlus, Mail, Eye, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import Swal from 'sweetalert2';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -28,14 +25,50 @@ export default function AdminUsers() {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+
+    const usersSubscription = supabase.channel('public:users-admin')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, payload => {
+        fetchUsers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(usersSubscription);
+    };
+  }, []);
+
   const deleteUser = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user profile?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete user!'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const { error } = await supabase.from('profiles').delete().eq('id', id);
       if (error) throw error;
       setUsers(users.filter(u => u.id !== id));
+      Swal.fire({
+        title: 'Deleted!',
+        text: 'User profile has been deleted.',
+        icon: 'success',
+        confirmButtonColor: '#22c55e'
+      });
     } catch (error) {
-      alert('Error deleting user: ' + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Error deleting user: ' + error.message,
+        confirmButtonColor: '#e11d48'
+      });
     }
   };
 
@@ -46,7 +79,12 @@ export default function AdminUsers() {
       if (error) throw error;
       setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
     } catch (error) {
-      alert('Error updating status: ' + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Error updating status: ' + error.message,
+        confirmButtonColor: '#e11d48'
+      });
     }
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Html5Qrcode } from 'html5-qrcode';
@@ -10,6 +10,7 @@ export default function AdminScanner() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
   const [scannerInstance, setScannerInstance] = useState(null);
+  const isProcessingRef = useRef(false);
 
   useEffect(() => {
     fetchEvents();
@@ -33,6 +34,7 @@ export default function AdminScanner() {
     }
     setScanning(true);
     setScanResult(null);
+    isProcessingRef.current = false; // Reset processing lock
 
     // Small delay to ensure the div is rendered
     setTimeout(() => {
@@ -70,9 +72,10 @@ export default function AdminScanner() {
   };
 
   const onScanSuccess = async (decodedText) => {
-    // The decodedText is the URL (e.g. http://localhost:5173/ticket/BK-123456)
-    // We want to extract the booking_ref part
-    
+    // Prevent multiple API calls from rapid successive frames
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
+
     // Stop scanning once we get a result
     stopScanner();
     setScanning(false);

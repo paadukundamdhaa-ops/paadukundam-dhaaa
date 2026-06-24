@@ -47,6 +47,8 @@ export default function Events() {
             const venueParts = venueString.split(',');
             const city = venueParts.length > 1 ? venueParts[venueParts.length - 1].trim() : venueString;
 
+            const isFree = (event.title || '').toLowerCase().includes('free') || (event.title || '').toLowerCase().includes('meetup');
+
             return {
               id: event.id,
               title: event.title || 'Untitled Event',
@@ -59,7 +61,7 @@ export default function Events() {
               venue: venueString,
               city: city,
               category: event.category || 'Uncategorized',
-              price: 999, // default fallback price
+              price: isFree ? 0 : 999, // dynamic fallback price
               img: event.img_url || '/images/arijit.png',
               tag: event.status || 'Draft'
             };
@@ -390,7 +392,9 @@ export default function Events() {
                     <div className={view === 'list' ? 'flex flex-row items-end justify-between mt-auto pt-3 border-t border-gray-50 md:border-gray-100' : 'mt-auto'}>
                       <div className={view === 'grid' ? 'mb-4' : ''}>
                         <span className={`font-bold text-primary ${view === 'grid' ? 'text-[11px]' : 'text-[10px] md:text-[11px] block leading-tight'}`}>
-                          From <span className={`text-black tracking-tight ${view === 'grid' ? 'text-[15px] ml-0.5' : 'text-[14px] md:text-[15px] block sm:inline mt-0.5 sm:mt-0 sm:ml-0.5'}`}>₹{event.price.toLocaleString('en-IN')}</span>
+                          From <span className={`text-black tracking-tight ${view === 'grid' ? 'text-[15px] ml-0.5' : 'text-[14px] md:text-[15px] block sm:inline mt-0.5 sm:mt-0 sm:ml-0.5'}`}>
+                            {event.price === 0 ? 'Free' : `₹${event.price.toLocaleString('en-IN')}`}
+                          </span>
                         </span>
                       </div>
 

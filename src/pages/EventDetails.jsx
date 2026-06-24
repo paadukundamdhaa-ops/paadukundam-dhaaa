@@ -60,6 +60,16 @@ export default function EventDetails() {
   const venueParts = venueString.split(',');
   const city = venueParts.length > 1 ? venueParts[venueParts.length - 1].trim() : venueString;
 
+  const isFreeEvent = (eventData.title || "").toLowerCase().includes("free") || (eventData.title || "").toLowerCase().includes("meetup");
+
+  const fallbackTickets = isFreeEvent ? [
+      { id: 1, name: "Free Admission", price: 0, description: "General free entry. First come, first served.", available: true }
+    ] : [
+      { id: 1, name: "General Admission", price: 999, description: "Entry to standing arena.", available: true },
+      { id: 2, name: "VIP Lounge", price: 4999, description: "Dedicated entry, front rows, and food.", available: true },
+      { id: 3, name: "VVIP Meet & Greet", price: 14999, description: "Backstage access and photo ops.", available: false },
+    ];
+
   // Mix real data with some placeholders for features we haven't built DB tables for yet
   const event = {
     title: eventData.title || "Untitled Event",
@@ -70,15 +80,11 @@ export default function EventDetails() {
     description: eventData.description || "Join us for an unforgettable experience! More details coming soon.",
     heroImage: eventData.hero_image || eventData.img_url || "https://images.unsplash.com/photo-1540039155732-61ee14b12756?auto=format&fit=crop&q=80&w=2000",
     artist: {
-      name: eventData.artist_name || "Featured Artist",
+      name: eventData.artist_name || eventData.artist || "Featured Artist",
       image: eventData.artist_image || "https://images.unsplash.com/photo-1516280440502-6110f06a9284?auto=format&fit=crop&q=80&w=200",
       bio: eventData.artist_bio || "An incredible performance awaits you."
     },
-    tickets: eventData.tickets || [
-      { id: 1, name: "General Admission", price: 999, description: "Entry to standing arena.", available: true },
-      { id: 2, name: "VIP Lounge", price: 4999, description: "Dedicated entry, front rows, and food.", available: true },
-      { id: 3, name: "VVIP Meet & Greet", price: 14999, description: "Backstage access and photo ops.", available: false },
-    ]
+    tickets: eventData.tickets || fallbackTickets
   };
 
   const mapEmbedUrl = eventData.map_url || `https://maps.google.com/maps?q=${encodeURIComponent(venueString + ', ' + city)}&output=embed`;
@@ -220,7 +226,7 @@ export default function EventDetails() {
 
                   <div className="flex justify-between items-center mt-3">
                     <div className={`font-black text-lg ${ticket.available ? 'text-black' : 'text-gray-400'}`}>
-                      ₹{ticket.price.toLocaleString()}
+                      {ticket.price === 0 ? 'Free' : `₹${ticket.price.toLocaleString()}`}
                     </div>
 
                     {ticket.available && (
@@ -249,7 +255,9 @@ export default function EventDetails() {
             <div className="border-t border-gray-100 pt-6">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">{totalTickets} Tickets Selected</span>
-                <span className="text-xl font-black text-black">₹{totalPrice.toLocaleString()}</span>
+                <span className="text-xl font-black text-black">
+                  {totalPrice === 0 && totalTickets > 0 ? 'Free' : `₹${totalPrice.toLocaleString()}`}
+                </span>
               </div>
               <button
                 onClick={handleProceedToCheckout}

@@ -61,7 +61,7 @@ export default function Checkout() {
     });
   };
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (totalTickets === 0) {
       alert("Please select at least one ticket.");
       return;
@@ -70,9 +70,79 @@ export default function Checkout() {
       alert("Please fill in all personal information before paying.");
       return;
     }
-    // We will save the booking to DB here in the future
-    alert(`Payment of ₹${grandTotal.toLocaleString()} Successful!`);
-    navigate('/');
+
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        alert("Please log in to complete checkout.");
+        navigate('/login');
+        return;
+      }
+
+      // 1. Update Profile with Phone Number
+      const fullName = `${firstName} ${lastName}`.trim();
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({ id: currentUser.id, name: fullName, email, phone });
+      
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        // Continue anyway as profile update isn't strictly blocking
+      }
+
+      // 2. Generate Booking Reference
+      const bookingRef = `#BK-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      // 3. Save Booking to Database
+      const { error: bookingError } = await supabase
+        .from('bookings')
+        .insert({
+          booking_ref: bookingRef,
+          user_id: currentUser.id,
+          event_id: event.id,
+          qty: totalTickets,
+          total_amount: grandTotal,
+          status: 'Completed'
+        });
+
+      if (bookingError) throw bookingError;
+
+      // 4. Send Confirmation Email via Backend Server
+      try {
+        await fetch('http://localhost:5000/api/send-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            name: firstName,
+            bookingRef,
+            eventTitle: event.title,
+            totalTickets,
+            grandTotal,
+            eventDate: event.date,
+            eventTime: event.time,
+            venue: event.venue
+          })
+        });
+        // We do not block the UI if the email fails, we just log it
+      } catch (emailError) {
+        console.error("Failed to trigger email send:", emailError);
+      }
+
+      // Navigate to Success
+      navigate('/success', { 
+        state: { 
+          bookingRef, 
+          event, 
+          totalTickets, 
+          grandTotal 
+        } 
+      });
+
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      alert("Failed to process booking. Please try again.");
+    }
   };
 
   return (

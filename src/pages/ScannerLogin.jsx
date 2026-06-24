@@ -18,7 +18,7 @@ export default function ScannerLogin() {
     setTimeout(() => {
       if (username === 'scanner' && password === '123456') {
         localStorage.setItem('scanner_auth', 'true');
-        navigate('/scanner');
+        navigate('/scanner/app');
       } else {
         setError('Invalid username or password');
         setLoading(false);

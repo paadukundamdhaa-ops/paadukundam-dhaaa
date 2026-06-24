@@ -81,8 +81,8 @@ function App() {
             <Route path="/admin/scanner" element={<AdminScanner />} />
 
             {/* Dedicated Scanner App Routes */}
-            <Route path="/scanner/login" element={<ScannerLogin />} />
-            <Route path="/scanner" element={<StandaloneScanner />} />
+            <Route path="/scanner" element={<ScannerLogin />} />
+            <Route path="/scanner/app" element={<StandaloneScanner />} />
 
             {/* Auth routes without Navbar/Footer */}
             <Route path="/login" element={<Login />} />

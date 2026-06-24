@@ -18,7 +18,7 @@ export default function StandaloneScanner() {
   useEffect(() => {
     // Check authentication
     if (localStorage.getItem('scanner_auth') !== 'true') {
-      navigate('/scanner/login');
+      navigate('/scanner');
       return;
     }
 
@@ -60,7 +60,7 @@ export default function StandaloneScanner() {
 
   const handleLogout = () => {
     localStorage.removeItem('scanner_auth');
-    navigate('/scanner/login');
+    navigate('/scanner');
   };
 
   const startScanner = () => {

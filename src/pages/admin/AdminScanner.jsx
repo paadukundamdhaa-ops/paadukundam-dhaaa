@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, ShieldCheck, Camera, X } from 'lucide-react';
 
 export default function AdminScanner() {
@@ -13,7 +13,13 @@ export default function AdminScanner() {
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+    // Cleanup scanner on unmount
+    return () => {
+      if (scannerInstance) {
+        scannerInstance.stop().catch(console.error);
+      }
+    };
+  }, [scannerInstance]);
 
   const fetchEvents = async () => {
     const { data } = await supabase.from('events').select('id, title, event_date').order('event_date', { ascending: false });
@@ -30,22 +36,31 @@ export default function AdminScanner() {
 
     // Small delay to ensure the div is rendered
     setTimeout(() => {
-      const scanner = new Html5QrcodeScanner(
-        "reader",
-        { fps: 10, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true },
-        /* verbose= */ false
-      );
-      
-      setScannerInstance(scanner);
+      const html5QrCode = new Html5Qrcode("reader");
+      setScannerInstance(html5QrCode);
 
-      scanner.render(onScanSuccess, onScanFailure);
-    }, 100);
+      html5QrCode.start(
+        { facingMode: "environment" }, // Prefer back camera
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        onScanSuccess,
+        onScanFailure
+      ).catch((err) => {
+        console.error("Camera start failed", err);
+        alert("Could not start camera. Please ensure you have granted camera permissions.");
+        setScanning(false);
+      });
+    }, 200);
   };
 
   const stopScanner = () => {
     if (scannerInstance) {
-      scannerInstance.clear().catch(error => console.error("Failed to clear scanner", error));
-      setScannerInstance(null);
+      scannerInstance.stop().then(() => {
+        scannerInstance.clear();
+        setScannerInstance(null);
+      }).catch(err => console.error("Failed to stop scanner", err));
     }
     setScanning(false);
   };

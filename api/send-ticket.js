@@ -1,0 +1,104 @@
+import nodemailer from 'nodemailer';
+
+export default async function handler(req, res) {
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
+
+  const { email, name, eventTitle, eventDate, bookingRef, qty, amount } = req.body;
+
+  if (!email || !bookingRef) {
+    return res.status(400).json({ message: 'Missing required fields: email and bookingRef are required' });
+  }
+
+  try {
+    // Check if SMTP variables are configured
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn("SMTP environment variables are missing.");
+      return res.status(500).json({ message: 'Email configuration is missing on the server.' });
+    }
+
+    // Configure the nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 465,
+      secure: process.env.SMTP_PORT == 465, // true for port 465, false for others (like 587)
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const ticketUrl = `https://paadukundam-dhaaa.vercel.app/ticket/${bookingRef}`;
+    
+    // Generate a QR code URL for the ticket
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
+
+    const htmlContent = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px; background-color: #ffffff;">
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #e50914; margin: 0; font-size: 24px; font-weight: 900;">PAADUKUNDAMDHAA</h2>
+          <p style="color: #666; font-size: 14px; margin-top: 5px;">Your Official Event Ticket</p>
+        </div>
+        
+        <p style="font-size: 16px; color: #333;">Hi <strong>${name || 'there'}</strong>,</p>
+        <p style="font-size: 16px; color: #333; line-height: 1.5;">Thank you for your purchase! Your booking has been confirmed and your ticket is ready.</p>
+        
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; margin: 25px 0; border: 1px solid #e2e8f0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Event</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${eventTitle}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${eventDate}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Booking Ref</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${bookingRef}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Quantity</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${qty} Ticket(s)</td>
+            </tr>
+            <tr style="border-top: 1px solid #e2e8f0;">
+              <td style="padding: 12px 0 0 0; color: #64748b; font-size: 14px;">Amount Paid</td>
+              <td style="padding: 12px 0 0 0; color: #0f172a; font-weight: 900; font-size: 18px; text-align: right;">₹${amount}</td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="text-align: center; margin: 35px 0;">
+          <p style="font-size: 14px; color: #64748b; margin-bottom: 15px; font-weight: bold;">Present this QR code at the entrance</p>
+          <img src="${qrCodeUrl}" alt="Ticket QR Code" style="width: 180px; height: 180px; border: 4px solid #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 12px;" />
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+          <a href="${ticketUrl}" style="background-color: #e50914; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">View Full Ticket</a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+        <p style="font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.6;">
+          Need help? Contact us at <a href="mailto:admin@paadukundamdhaa.com" style="color: #e50914; text-decoration: none;">admin@paadukundamdhaa.com</a><br/>
+          &copy; ${new Date().getFullYear()} PaadukundamDhaa. All rights reserved.
+        </p>
+      </div>
+    `;
+
+    // Send the email
+    const info = await transporter.sendMail({
+      from: `"PaadukundamDhaa" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: `Your Ticket Confirmed: ${eventTitle} (${bookingRef})`,
+      html: htmlContent,
+    });
+
+    res.status(200).json({ success: true, message: 'Email sent successfully', messageId: info.messageId });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ success: false, message: 'Error sending email', error: error.message });
+  }
+}

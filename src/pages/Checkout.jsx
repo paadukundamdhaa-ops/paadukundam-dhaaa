@@ -113,24 +113,21 @@ export default function Checkout() {
 
       if (bookingError) throw bookingError;
 
-      // 4. Send Confirmation Email via Backend Server
+      // 4. Send Confirmation Email via Serverless API
       try {
-        await fetch('http://localhost:5000/api/send-ticket', {
+        fetch('/api/send-ticket', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email,
             name: firstName,
-            bookingRef,
             eventTitle: event.title,
-            totalTickets,
-            grandTotal,
             eventDate: event.date,
-            eventTime: event.time,
-            venue: event.venue
+            bookingRef: bookingRef,
+            qty: totalTickets,
+            amount: grandTotal
           })
-        });
-        // We do not block the UI if the email fails, we just log it
+        }).catch(err => console.error("API error:", err));
       } catch (emailError) {
         console.error("Failed to trigger email send:", emailError);
       }

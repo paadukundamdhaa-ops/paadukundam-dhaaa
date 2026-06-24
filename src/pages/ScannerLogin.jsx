@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, EyeOff, QrCode, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
+import { User, Lock, EyeOff, QrCode, ShieldCheck, ArrowRight, ArrowLeft, Zap, Headphones, Ticket } from 'lucide-react';
 
 export default function ScannerLogin() {
   const [username, setUsername] = useState('');
@@ -116,9 +116,19 @@ export default function ScannerLogin() {
           </div>
 
           <div className="flex justify-between items-start relative mt-4">
-             <div className="w-[85%]">
+             <div className="w-[65%]">
                <h1 className="text-4xl font-black text-white leading-tight">Scanner <span className="text-[#facc15]">Portal</span></h1>
-               <p className="text-gray-300 text-[13px] mt-3 font-medium leading-relaxed">Authorized event staff only</p>
+               <p className="text-gray-300 text-[13px] mt-3 font-medium leading-relaxed">Log in to manage<br/>event entries</p>
+             </div>
+             
+             {/* Mobile Graphic */}
+             <div className="absolute right-[-10px] top-[-20px] transform -rotate-[12deg] z-20">
+                 <div className="px-5 py-4 bg-[#6b151b] rounded-xl shadow-2xl flex flex-col items-center justify-center border-dashed border border-white/20 relative">
+                    <div className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 bg-black rounded-full"></div>
+                    <div className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 bg-black rounded-full"></div>
+                    <QrCode className="w-6 h-6 text-white mb-2" />
+                    <span className="text-white font-black text-[10px] tracking-widest uppercase mt-1">SCANNER</span>
+                 </div>
              </div>
           </div>
         </div>
@@ -178,6 +188,9 @@ export default function ScannerLogin() {
                   placeholder="Scanner Password" 
                   required
                 />
+                <button type="button" className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600">
+                  <EyeOff size={18} />
+                </button>
               </div>
 
               <div className="pt-3 lg:pt-4">
@@ -193,10 +206,45 @@ export default function ScannerLogin() {
               </div>
             </form>
 
-            <div className="mt-6 lg:mt-5 text-center text-[13px] font-medium text-gray-500 lg:text-gray-600">
-              Only authorized personnel can access this portal.
+            {/* --- MOBILE BOTTOM BADGES (Inside Card) --- */}
+            <div className="lg:hidden mt-8 pt-6 border-t border-[#2a1618] grid grid-cols-3 gap-2">
+               <div className="flex flex-col items-center gap-2 text-center">
+                  <div className="w-8 h-8 rounded-full border border-[#facc15]/20 flex items-center justify-center bg-[#facc15]/5">
+                     <ShieldCheck size={14} className="text-[#facc15]" />
+                  </div>
+                  <div className="leading-none">
+                     <div className="text-[9px] text-white font-bold tracking-wide mb-0.5">Secure</div>
+                     <div className="text-[8px] text-gray-500">Access</div>
+                  </div>
+               </div>
+               <div className="flex flex-col items-center gap-2 text-center">
+                  <div className="w-8 h-8 rounded-full border border-[#facc15]/20 flex items-center justify-center bg-[#facc15]/5">
+                     <Zap size={14} className="text-[#facc15]" />
+                  </div>
+                  <div className="leading-none">
+                     <div className="text-[9px] text-white font-bold tracking-wide mb-0.5">Fast</div>
+                     <div className="text-[8px] text-gray-500">Scanning</div>
+                  </div>
+               </div>
+               <div className="flex flex-col items-center gap-2 text-center">
+                  <div className="w-8 h-8 rounded-full border border-[#facc15]/20 flex items-center justify-center bg-[#facc15]/5">
+                     <QrCode size={14} className="text-[#facc15]" />
+                  </div>
+                  <div className="leading-none">
+                     <div className="text-[9px] text-white font-bold tracking-wide mb-0.5">Instant</div>
+                     <div className="text-[8px] text-gray-500">Validation</div>
+                  </div>
+               </div>
             </div>
+
           </div>
+
+          {/* --- MOBILE SAFE TEXT (Outside Card) --- */}
+          <div className="lg:hidden flex items-center gap-2 text-gray-400 text-[11px] mt-4 mb-2 justify-center w-full font-medium">
+             <ShieldCheck size={14} className="text-[#facc15]" />
+             <span>Only authorized personnel allowed.</span>
+          </div>
+
         </div>
       </div>
     </div>

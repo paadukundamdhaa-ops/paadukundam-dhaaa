@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { QrCode, Lock, ShieldCheck } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { User, Lock, EyeOff, QrCode, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function ScannerLogin() {
   const [username, setUsername] = useState('');
@@ -14,7 +14,7 @@ export default function ScannerLogin() {
     setError('');
     setLoading(true);
 
-    // Dummy credentials as requested (you can change these later)
+    // Dummy credentials as requested
     setTimeout(() => {
       if (username === 'scanner' && password === '123456') {
         localStorage.setItem('scanner_auth', 'true');
@@ -23,71 +23,181 @@ export default function ScannerLogin() {
         setError('Invalid username or password');
         setLoading(false);
       }
-    }, 500); // Simulate brief network delay
+    }, 500);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30">
-            <QrCode className="text-white w-8 h-8" />
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col lg:flex-row font-sans relative bg-black">
+      
+      {/* Back to Website Button */}
+      <Link 
+        to="/" 
+        className="absolute top-6 right-6 lg:top-10 lg:right-12 z-50 flex items-center gap-2 text-white/90 hover:text-white lg:text-gray-500 lg:hover:text-gray-900 transition-colors font-semibold text-sm bg-black/40 lg:bg-transparent px-4 py-2 lg:px-0 lg:py-0 rounded-full backdrop-blur-md lg:backdrop-blur-none border border-white/10 lg:border-none hover:scale-105 lg:hover:scale-100"
+      >
+        <ArrowLeft size={16} />
+        <span className="hidden sm:inline">Back to Website</span>
+        <span className="sm:hidden">Back</span>
+      </Link>
+
+      {/* --- DESKTOP BACKGROUND LAYERS --- */}
+      <div className="hidden lg:block absolute inset-0 w-[55%] z-0">
+        <img src="/images/sunburn.png" alt="Concert" className="w-full h-full object-cover opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
+      </div>
+      <div className="hidden lg:block absolute -top-[10%] -bottom-[10%] left-[45%] right-[-10%] bg-[#f8f9fa] border-l-[32px] border-[#8c1c24] transform -skew-x-[8deg] z-0 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]"></div>
+
+      {/* --- MOBILE BACKGROUND LAYER --- */}
+      <div className="lg:hidden absolute inset-0 z-0 h-[55vh]">
+        <img src="/images/sunburn.png" alt="Concert" className="w-full h-full object-cover opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-black"></div>
+      </div>
+
+      {/* --- CONTENT LAYERS --- */}
+      <div className="relative z-10 flex flex-col lg:flex-row w-full h-full">
+        
+        {/* --- DESKTOP LEFT PANEL --- */}
+        <div className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 xl:p-16">
+          <div>
+            <Link to="/" className="flex items-center gap-3 mb-12">
+              <div className="flex items-end space-x-[3px] h-8">
+                <div className="w-2 bg-[#8c1c24] h-4 rounded-sm"></div>
+                <div className="w-2 bg-[#8c1c24] h-7 rounded-sm"></div>
+                <div className="w-2 bg-[#8c1c24] h-8 rounded-sm"></div>
+                <div className="w-2 bg-[#8c1c24] h-5 rounded-sm"></div>
+              </div>
+              <span className="text-white font-black text-2xl tracking-tight leading-none uppercase">Paadukundam<br/>Dhaa</span>
+            </Link>
+
+            <h1 className="text-5xl xl:text-6xl font-black text-white mb-4 leading-tight tracking-tight">
+              Event <br/>
+              <span className="text-[#facc15]">Scanner Portal</span>
+            </h1>
+            <div className="w-16 h-1 bg-[#facc15] mb-6"></div>
+            
+            <p className="text-gray-300 text-lg mb-10 max-w-sm font-medium leading-relaxed">
+              Authorized personnel only. Log in to scan tickets and manage entry at the door.
+            </p>
+
+            <div className="space-y-8">
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-full border border-[#facc15]/30 flex items-center justify-center shrink-0">
+                  <QrCode className="text-[#facc15]" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold mb-1 text-lg">Fast Scanning</h3>
+                  <p className="text-gray-400 text-sm">Lightning-fast QR code verification.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-full border border-[#facc15]/30 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="text-[#facc15]" size={20} />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold mb-1 text-lg">Secure Access</h3>
+                  <p className="text-gray-400 text-sm">Prevent duplicate entries effortlessly.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl font-black text-black tracking-tight">Scanner Portal</h1>
-          <p className="text-gray-500 font-medium mt-2">Authorized event staff only</p>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+        {/* --- MOBILE HEADER (Logo & Welcome Text) --- */}
+        <div className="lg:hidden px-6 pt-10 pb-4 relative z-10">
+          <div className="flex justify-between items-start mb-10">
+             <Link to="/" className="flex items-center gap-2">
+                <div className="flex items-end space-x-[2px] h-6">
+                  <div className="w-1.5 bg-[#8c1c24] h-3 rounded-sm"></div>
+                  <div className="w-1.5 bg-[#8c1c24] h-5 rounded-sm"></div>
+                  <div className="w-1.5 bg-[#8c1c24] h-6 rounded-sm"></div>
+                  <div className="w-1.5 bg-[#8c1c24] h-4 rounded-sm"></div>
+                </div>
+                <span className="text-white font-black text-sm tracking-tight leading-none uppercase">Paadukundam<br/>Dhaa</span>
+             </Link>
+          </div>
+
+          <div className="flex justify-between items-start relative mt-4">
+             <div className="w-[85%]">
+               <h1 className="text-4xl font-black text-white leading-tight">Scanner <span className="text-[#facc15]">Portal</span></h1>
+               <p className="text-gray-300 text-[13px] mt-3 font-medium leading-relaxed">Authorized event staff only</p>
+             </div>
+          </div>
+        </div>
+
+        {/* --- RIGHT PANEL (Form Container) --- */}
+        <div className="w-full lg:w-[55%] flex flex-col px-5 pb-8 lg:pt-6 lg:pb-6 lg:px-6 sm:px-12 items-center justify-center flex-1 z-10">
           
-          <form onSubmit={handleLogin} className="space-y-6">
+          {/* Main Card */}
+          <div className="w-full max-w-[420px] bg-[#120a0b] lg:bg-white rounded-[24px] lg:rounded-[30px] p-6 sm:p-8 border border-[#2a1618] lg:border-gray-50 shadow-2xl lg:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] mb-4 lg:mb-8 relative z-10 mt-6 lg:mt-0">
+            
+            {/* Desktop Header (Hidden on Mobile) */}
+            <div className="hidden lg:block text-center mb-5">
+              <div className="inline-flex justify-center mb-4">
+                 <div className="px-6 h-10 bg-[#8c1c24] rounded-lg shadow-lg transform -rotate-[8deg] flex items-center justify-center border-dashed border-2 border-white/30 relative">
+                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full"></div>
+                    <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full"></div>
+                    <span className="text-white font-black text-[10px] tracking-widest uppercase">SCANNER</span>
+                 </div>
+              </div>
+
+              <h2 className="text-2xl font-black text-gray-900 mb-1">
+                Event <span className="text-[#8c1c24]">Staff Login</span>
+              </h2>
+              <p className="text-gray-500 text-xs font-medium">Log in to verify tickets at the gate.</p>
+            </div>
+
             {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold flex items-center gap-2">
+              <div className="bg-red-500/10 lg:bg-red-50 border border-red-500/20 lg:border-red-100 text-red-500 lg:text-red-600 p-3 rounded-xl text-sm font-bold flex items-center gap-2 mb-4">
                 <Lock size={16} /> {error}
               </div>
             )}
-            
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Username</label>
-              <input 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-black focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                placeholder="Enter scanner username"
-                required
-              />
-            </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-black focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                placeholder="Enter scanner password"
-                required
-              />
-            </div>
+            <form onSubmit={handleLogin} className="space-y-4 lg:space-y-3 mt-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                  <User size={18} className="text-gray-500 lg:text-gray-400" />
+                </div>
+                <input 
+                  type="text" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
+                  placeholder="Scanner Username" 
+                  required
+                />
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                  <Lock size={18} className="text-gray-500 lg:text-gray-400" />
+                </div>
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-10 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
+                  placeholder="Scanner Password" 
+                  required
+                />
+              </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-primary hover:bg-primary-dark text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none flex items-center justify-center gap-2"
-            >
-              {loading ? 'Authenticating...' : (
-                <>
-                  <ShieldCheck size={20} /> Login to Scanner
-                </>
-              )}
-            </button>
-          </form>
+              <div className="pt-3 lg:pt-4">
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-2.5 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70"
+                >
+                  {loading ? 'Authenticating...' : (
+                    <>Log In to Scanner <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6 lg:mt-5 text-center text-[13px] font-medium text-gray-500 lg:text-gray-600">
+              Only authorized personnel can access this portal.
+            </div>
+          </div>
         </div>
-        
-        <p className="text-center text-sm font-bold text-gray-400 mt-8">
-          &copy; {new Date().getFullYear()} PaadukundamDhaa
-        </p>
       </div>
     </div>
   );

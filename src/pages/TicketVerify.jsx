@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, XCircle, MapPin, Calendar, Clock, User, Mail, Phone, Ticket } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
+import { CheckCircle, XCircle, MapPin, Calendar, Clock, User, Mail, Phone, Ticket, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import html2canvas from 'html2canvas';
 
 export default function TicketVerify() {
   const { bookingRef } = useParams();
+  const location = useLocation();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const ticketRef = useRef(null);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -32,6 +35,33 @@ export default function TicketVerify() {
 
     fetchBooking();
   }, [bookingRef]);
+
+  // Handle auto-download from email link
+  useEffect(() => {
+    if (booking && !loading) {
+      const searchParams = new URLSearchParams(location.search);
+      if (searchParams.get('download') === 'true') {
+        // Small delay to ensure the component is fully rendered
+        setTimeout(() => {
+          downloadTicket();
+        }, 500);
+      }
+    }
+  }, [booking, loading, location]);
+
+  const downloadTicket = () => {
+    if (ticketRef.current) {
+      html2canvas(ticketRef.current, { 
+        backgroundColor: '#f9fafb', // Match bg-gray-50
+        scale: 2 // Higher resolution
+      }).then((canvas) => {
+        const link = document.createElement('a');
+        link.download = `ticket-${bookingRef}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.9);
+        link.click();
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -64,8 +94,8 @@ export default function TicketVerify() {
   const eventDate = new Date(event.event_date || booking.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-24 font-sans flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
+    <div className="min-h-screen bg-gray-50 pt-24 pb-24 font-sans flex flex-col items-center justify-center p-6">
+      <div className="max-w-md w-full" ref={ticketRef}>
         {/* Verification Status */}
         <div className="bg-green-500 text-white p-6 rounded-t-3xl text-center relative overflow-hidden">
           <div className="relative z-10">
@@ -143,6 +173,14 @@ export default function TicketVerify() {
           </div>
         </div>
       </div>
+
+      {/* Manual Download Button (Outside the ticket image) */}
+      <button 
+        onClick={downloadTicket}
+        className="mt-8 flex items-center justify-center gap-2 bg-white border-2 border-primary text-primary px-8 py-3 rounded-full font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
+      >
+        <Download size={20} /> Download Ticket (JPG)
+      </button>
     </div>
   );
 }

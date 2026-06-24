@@ -28,6 +28,7 @@ import AdminHomeCMS from './pages/admin/AdminHomeCMS';
 import AdminSettings from './pages/admin/AdminSettings';
 import CreateEvent from './pages/admin/CreateEvent';
 import AdminScanner from './pages/admin/AdminScanner';
+import AdminPromoCodes from './pages/admin/AdminPromoCodes';
 import ScannerLogin from './pages/ScannerLogin';
 import StandaloneScanner from './pages/StandaloneScanner';
 
@@ -74,6 +75,7 @@ function App() {
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="gallery" element={<AdminGallery />} />
               <Route path="home-cms" element={<AdminHomeCMS />} />
+              <Route path="promocodes" element={<AdminPromoCodes />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
             

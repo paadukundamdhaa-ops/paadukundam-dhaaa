@@ -13,7 +13,8 @@ import {
   Menu, 
   Bell,
   Search,
-  X
+  X,
+  Tag
 } from 'lucide-react';
 
 const navItems = [
@@ -25,6 +26,7 @@ const navItems = [
   { name: 'Scanner', path: '/admin/scanner', icon: <Search size={20} /> },
   { name: 'Gallery', path: '/admin/gallery', icon: <ImageIcon size={20} /> },
   { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
+  { name: 'Promo Codes', path: '/admin/promocodes', icon: <Tag size={20} /> },
   { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
 ];
 

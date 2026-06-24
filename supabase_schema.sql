@@ -58,6 +58,18 @@ CREATE TABLE gallery (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 6. Create the PROMO CODES table
+CREATE TABLE promo_codes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  discount_percentage INTEGER NOT NULL CHECK (discount_percentage > 0 AND discount_percentage <= 100),
+  event_id UUID REFERENCES events(id) ON DELETE CASCADE, -- if null, it applies to all events
+  max_uses INTEGER DEFAULT 100,
+  current_uses INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'Active', -- Active, Inactive
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Insert some dummy data so the app isn't empty!
 INSERT INTO events (title, artist, category, event_date, event_time, venue, status, total_tickets, tickets_sold, img_url)
 VALUES 

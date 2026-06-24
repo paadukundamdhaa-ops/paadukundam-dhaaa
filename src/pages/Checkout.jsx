@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Users, Info, ShieldCheck, Ticket, CreditCard, Wallet, Lock, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Info, ShieldCheck, Ticket, CreditCard, Wallet, Lock, ArrowLeft, Tag } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { supabase } from '../lib/supabase';
 
@@ -17,6 +17,11 @@ export default function Checkout() {
   
   // Ticket State (Initialize from location state if available)
   const [selectedTickets, setSelectedTickets] = useState(state?.selectedTickets || {});
+  
+  // Promo Code State
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -47,12 +52,60 @@ export default function Checkout() {
 
   // Calculate derived state dynamically
   const totalTickets = Object.values(selectedTickets).reduce((a, b) => a + b, 0);
-  const totalPrice = allTicketsInfo.reduce((total, ticket) => total + (selectedTickets[ticket.id] || 0) * ticket.price, 0);
+  const subtotalBeforeDiscount = allTicketsInfo.reduce((total, ticket) => total + (selectedTickets[ticket.id] || 0) * ticket.price, 0);
   
+  const promoDiscountAmount = appliedPromo ? Math.round(subtotalBeforeDiscount * (appliedPromo.discount_percentage / 100)) : 0;
+  const discountedSubtotal = subtotalBeforeDiscount - promoDiscountAmount;
+
   // Calculate fees
   const bookingFee = totalTickets * 50; // ₹50 per ticket flat fee
-  const taxes = Math.round(totalPrice * 0.18); // 18% GST
-  const grandTotal = totalPrice + bookingFee + taxes;
+  const taxes = Math.round((discountedSubtotal + bookingFee) * 0.18); // 18% GST
+  const grandTotal = discountedSubtotal + bookingFee + taxes;
+
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim()) return;
+    setIsApplyingPromo(true);
+    try {
+      const code = promoInput.toUpperCase().trim();
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', code)
+        .single();
+        
+      if (error || !data) {
+        Swal.fire({ icon: 'error', title: 'Invalid Code', text: 'This promo code does not exist.', confirmButtonColor: '#e11d48' });
+        return;
+      }
+      
+      if (data.status !== 'Active') {
+        Swal.fire({ icon: 'warning', title: 'Inactive Code', text: 'This promo code is no longer active.', confirmButtonColor: '#e11d48' });
+        return;
+      }
+      
+      if (data.max_uses !== null && data.current_uses >= data.max_uses) {
+        Swal.fire({ icon: 'warning', title: 'Limit Reached', text: 'This promo code has reached its maximum usage limit.', confirmButtonColor: '#e11d48' });
+        return;
+      }
+      
+      if (data.event_id && data.event_id !== event.id) {
+        Swal.fire({ icon: 'warning', title: 'Not Applicable', text: 'This promo code cannot be applied to this event.', confirmButtonColor: '#e11d48' });
+        return;
+      }
+      
+      setAppliedPromo(data);
+      setPromoInput('');
+      Swal.fire({ icon: 'success', title: 'Applied!', text: `${data.discount_percentage}% discount applied to your tickets.`, timer: 2000, showConfirmButton: false });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+  };
 
   const handleTicketChange = (ticketId, delta) => {
     setSelectedTickets(prev => {
@@ -132,6 +185,16 @@ export default function Checkout() {
         });
 
       if (bookingError) throw bookingError;
+
+      // 3.5 Increment promo code usage if applied
+      if (appliedPromo) {
+        const { error: promoError } = await supabase
+          .from('promo_codes')
+          .update({ current_uses: appliedPromo.current_uses + 1 })
+          .eq('id', appliedPromo.id);
+          
+        if (promoError) console.error("Failed to update promo uses:", promoError);
+      }
 
       // 4. Send Confirmation Email via Serverless API
       try {
@@ -329,12 +392,49 @@ export default function Checkout() {
               ))}
             </div>
 
+            {/* Promo Code Section */}
+            <div className="mb-6 border-t border-gray-100 pt-6">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Promo Code</h4>
+              {appliedPromo ? (
+                <div className="flex justify-between items-center bg-green-50 border border-green-200 p-3 rounded-xl">
+                  <div>
+                    <span className="font-black text-green-700 flex items-center gap-1.5"><Tag size={14}/> {appliedPromo.code} Applied</span>
+                    <span className="text-xs font-bold text-green-600 block mt-0.5">{appliedPromo.discount_percentage}% off on tickets</span>
+                  </div>
+                  <button onClick={handleRemovePromo} className="text-xs font-bold text-red-500 hover:text-red-700 hover:underline">Remove</button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    value={promoInput} 
+                    onChange={e => setPromoInput(e.target.value)} 
+                    placeholder="Enter discount code" 
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm text-black uppercase focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  />
+                  <button 
+                    onClick={handleApplyPromo}
+                    disabled={isApplyingPromo || !promoInput.trim()}
+                    className="bg-black hover:bg-gray-800 text-white font-bold text-sm px-5 py-2 rounded-xl transition-all disabled:opacity-50"
+                  >
+                    {isApplyingPromo ? 'Applying...' : 'Apply'}
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Calculations */}
             <div className="space-y-3 mb-6 text-sm font-medium text-gray-600 border-t border-gray-100 pt-6">
               <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span className="font-bold text-black">₹{totalPrice.toLocaleString()}</span>
+                <span>Tickets Subtotal</span>
+                <span className="font-bold text-black">₹{subtotalBeforeDiscount.toLocaleString()}</span>
               </div>
+              {appliedPromo && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount ({appliedPromo.discount_percentage}%)</span>
+                  <span className="font-bold">-₹{promoDiscountAmount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Platform Booking Fee</span>
                 <span className="font-bold text-black">₹{bookingFee.toLocaleString()}</span>

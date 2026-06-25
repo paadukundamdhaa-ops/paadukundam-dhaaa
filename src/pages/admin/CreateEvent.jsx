@@ -23,6 +23,12 @@ export default function CreateEvent() {
   const [mapUrlInput, setMapUrlInput] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
 
+  // Optional Module Toggles
+  const [enableArtist, setEnableArtist] = useState(false);
+  const [enableHighlights, setEnableHighlights] = useState(false);
+  const [enableAmenities, setEnableAmenities] = useState(false);
+  const [enablePolicies, setEnablePolicies] = useState(false);
+
   // Form States
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -524,10 +530,17 @@ export default function CreateEvent() {
 
           {/* Step 5: Artist Details */}
           <section id="artist-details" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"><Music size={18} /></div>
-              <h2 className="text-lg font-bold">5. Artist Details</h2>
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center"><Music size={18} /></div>
+                <h2 className="text-lg font-bold">5. Artist Details</h2>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={enableArtist} onChange={(e) => setEnableArtist(e.target.checked)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
+            {enableArtist ? (
             <div className="p-6">
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Headline Artist *</label>
@@ -548,6 +561,9 @@ export default function CreateEvent() {
               </div>
               <button className="mt-4 text-sm font-bold text-primary hover:underline flex items-center gap-1"><Plus size={16} /> Add Supporting Artist</button>
             </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">Artist module is disabled. Toggle above to enable.</div>
+            )}
           </section>
 
           {/* Step 6: Tickets */}
@@ -667,10 +683,17 @@ export default function CreateEvent() {
 
           {/* Step 10: Event Highlights */}
           <section id="event-highlights" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Star size={18} /></div>
-              <h2 className="text-lg font-bold">10. Event Highlights</h2>
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Star size={18} /></div>
+                <h2 className="text-lg font-bold">10. Event Highlights</h2>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={enableHighlights} onChange={(e) => setEnableHighlights(e.target.checked)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
+            {enableHighlights ? (
             <div className="p-6">
               <div className="flex flex-wrap gap-3">
                 {['Live Performance', 'VIP Lounge', 'Meet & Greet', 'Merchandise', 'Food Court', 'Free Parking'].map(h => (
@@ -678,14 +701,24 @@ export default function CreateEvent() {
                 ))}
               </div>
             </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">Highlights module is disabled.</div>
+            )}
           </section>
 
           {/* Step 11: Amenities */}
           <section id="amenities" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Shield size={18} /></div>
-              <h2 className="text-lg font-bold">11. Amenities</h2>
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Shield size={18} /></div>
+                <h2 className="text-lg font-bold">11. Amenities</h2>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={enableAmenities} onChange={(e) => setEnableAmenities(e.target.checked)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
+            {enableAmenities ? (
             <div className="p-6 grid grid-cols-2 md:grid-cols-3 gap-4">
               {['Food & Beverages', 'Parking', 'Restrooms', 'Air Conditioning', 'Medical Support', 'Wheelchair Access'].map(amenity => (
                 <label key={amenity} className="flex items-center gap-2 cursor-pointer">
@@ -694,14 +727,24 @@ export default function CreateEvent() {
                 </label>
               ))}
             </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">Amenities module is disabled.</div>
+            )}
           </section>
 
           {/* Step 12: Policies */}
           <section id="policies" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><AlertCircle size={18} /></div>
-              <h2 className="text-lg font-bold">12. Policies</h2>
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><AlertCircle size={18} /></div>
+                <h2 className="text-lg font-bold">12. Policies</h2>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={enablePolicies} onChange={(e) => setEnablePolicies(e.target.checked)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
+            {enablePolicies ? (
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Age Restriction</label>
@@ -712,6 +755,9 @@ export default function CreateEvent() {
                 <textarea rows="3" value={refundPolicy} onChange={e => setRefundPolicy(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="No refunds..."></textarea>
               </div>
             </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">Policies module is disabled.</div>
+            )}
           </section>
 
           {/* Step 13: SEO Settings */}

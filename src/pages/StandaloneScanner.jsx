@@ -3,7 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Swal from 'sweetalert2';
 import { Html5Qrcode } from 'html5-qrcode';
-import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode, Flashlight } from 'lucide-react';
+
+const playSound = (type) => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    if (type === 'success') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } else {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, ctx.currentTime);
+      gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    }
+  } catch(e) { console.error("Audio error", e) }
+};
 
 export default function StandaloneScanner() {
   const [events, setEvents] = useState([]);
@@ -13,6 +43,7 @@ export default function StandaloneScanner() {
   const [recentScans, setRecentScans] = useState([]);
   const [stats, setStats] = useState({ total: 0, checkedIn: 0 });
   const [partialQty, setPartialQty] = useState(1);
+  const [torchOn, setTorchOn] = useState(false);
   const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
   const navigate = useNavigate();
@@ -121,9 +152,26 @@ export default function StandaloneScanner() {
     if (scannerRef.current) {
       scannerRef.current.stop().then(() => {
         setScanning(false);
+        setTorchOn(false);
       }).catch(err => console.error("Error stopping", err));
     } else {
       setScanning(false);
+      setTorchOn(false);
+    }
+  };
+
+  const toggleTorch = async () => {
+    if (scannerRef.current && scanning) {
+      try {
+        const state = !torchOn;
+        await scannerRef.current.applyVideoConstraints({
+          advanced: [{ torch: state }]
+        });
+        setTorchOn(state);
+      } catch (err) {
+        console.error("Torch error", err);
+        Swal.fire({ icon: 'error', title: 'Not Supported', text: 'Flashlight control is not supported on this device.', timer: 2000, showConfirmButton: false });
+      }
     }
   };
 
@@ -142,6 +190,7 @@ export default function StandaloneScanner() {
         .single();
 
       if (error || !data) {
+        playSound('error');
         setScanResult({
           status: 'invalid',
           message: 'FAKE TICKET! Not found in our system.',
@@ -151,6 +200,7 @@ export default function StandaloneScanner() {
       }
 
       if (data.event_id !== selectedEventId) {
+        playSound('error');
         setScanResult({
           status: 'wrong_event',
           message: `WRONG EVENT! This ticket is for "${data.events?.title || 'Another Event'}". It is not valid here.`,
@@ -161,6 +211,7 @@ export default function StandaloneScanner() {
 
       const checkedInQty = data.checked_in_qty || 0;
       if (checkedInQty >= data.qty) {
+        playSound('error');
         setScanResult({
           status: 'already_scanned',
           data
@@ -168,6 +219,7 @@ export default function StandaloneScanner() {
         return;
       }
 
+      playSound('success');
       setPartialQty(1); // Reset partial qty to 1 when a valid ticket is scanned
       setScanResult({
         status: 'valid',
@@ -175,6 +227,7 @@ export default function StandaloneScanner() {
       });
 
     } catch (err) {
+      playSound('error');
       setScanResult({ status: 'invalid', message: 'Error verifying ticket.' });
     }
   };
@@ -292,12 +345,18 @@ export default function StandaloneScanner() {
           {/* Scanner View */}
           <div className={`w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border-2 ${scanning ? 'border-primary' : 'hidden'}`}>
             <div id="qr-reader" className="w-full"></div>
-            <div className="p-4 bg-zinc-900 text-center">
+            <div className="p-4 bg-zinc-900 text-center flex justify-center gap-4">
+              <button 
+                onClick={toggleTorch}
+                className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold text-sm transition-colors ${torchOn ? 'bg-primary text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
+              >
+                <Flashlight size={16} /> Flashlight
+              </button>
               <button 
                 onClick={stopScanner}
                 className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2 rounded-full font-bold text-sm transition-colors"
               >
-                Cancel Scanning
+                Cancel
               </button>
             </div>
           </div>

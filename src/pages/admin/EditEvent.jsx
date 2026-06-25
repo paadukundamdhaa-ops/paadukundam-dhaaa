@@ -5,10 +5,11 @@ import {
   Trash2, Copy, PlayCircle, Info, Image as ImageIcon, Music, Star, Search
 } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
-export default function CreateEvent() {
+export default function EditEvent() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('basic-info');
   const [ticketTypes, setTicketTypes] = useState([
@@ -134,8 +135,56 @@ export default function CreateEvent() {
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
+    
+    // Fetch event if ID exists
+    const fetchEvent = async () => {
+      if (!id) return;
+      try {
+        const { data, error } = await supabase.from('events').select('*').eq('id', id).single();
+        if (error) throw error;
+        if (data) {
+          setTitle(data.title || '');
+          setSlug(data.slug || '');
+          setCategory(data.category || 'Concert');
+          setEventDate(data.event_date || '');
+          setEventTime(data.event_time || '');
+          const [v, c] = (data.venue || '').split(', ');
+          setVenueName(v || '');
+          setCity(c || '');
+          setArtistName(data.artist || '');
+          setShortDescription(data.short_description || '');
+          setFullDescription(data.description || '');
+          setAgeRestriction(data.age_restriction || '18+ Only');
+          setRefundPolicy(data.refund_policy || '');
+          setSeoTitle(data.seo_title || '');
+          setSeoDescription(data.seo_description || '');
+          setOrganizerName(data.organizer_name || '');
+          setOrganizerEmail(data.organizer_email || '');
+          setIsCountdownEnabled(data.is_countdown_enabled ?? true);
+          setHeroImage(data.img_url || null);
+          setMapUrlInput(data.google_maps_url || '');
+          setAmenities(data.amenities || []);
+          
+          // Fetch tickets
+          const { data: tickets, error: ticketError } = await supabase.from('ticket_tiers').select('*').eq('event_id', id);
+          if (!ticketError && tickets) {
+            setTicketTypes(tickets.map(t => ({
+              id: t.id,
+              name: t.tier_name,
+              price: t.price,
+              qty: t.total_capacity,
+              refundable: false // Handle properly if added to DB
+            })));
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching event:", err);
+      }
+    };
+    fetchEvent();
+
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [id]);
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -191,10 +240,10 @@ export default function CreateEvent() {
       // Format Venue
       const fullVenue = `${venueName}, ${city}`;
 
-      // Insert Event
+      // Update Event
       const { data: eventData, error: eventError } = await supabase
         .from('events')
-        .insert({
+        .update({
           title,
           slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           artist: artistName,
@@ -202,10 +251,8 @@ export default function CreateEvent() {
           event_date: eventDate,
           event_time: eventTime,
           venue: fullVenue,
-          status: 'Upcoming',
           total_tickets: totalTickets,
-          tickets_sold: 0,
-          img_url: uploadedImgUrl,
+          ...(heroImageFile ? { img_url: uploadedImgUrl } : {}),
           short_description: shortDescription,
           description: fullDescription,
           google_maps_url: mapUrlInput,
@@ -220,14 +267,17 @@ export default function CreateEvent() {
           organizer_email: organizerEmail,
           is_countdown_enabled: isCountdownEnabled
         })
+        .eq('id', id)
         .select()
         .single();
 
       if (eventError) throw eventError;
 
-      // Insert Ticket Tiers
+      // Update tickets - for simplicity we just delete old ones and insert new ones
+      await supabase.from('ticket_tiers').delete().eq('event_id', id);
+
       const tiersToInsert = ticketTypes.map(t => ({
-        event_id: eventData.id,
+        event_id: id,
         tier_name: t.name || 'General Admission',
         price: Number(t.price) || 0,
         total_capacity: Number(t.qty) || 0,
@@ -275,9 +325,9 @@ export default function CreateEvent() {
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Link to="/admin/events" className="hover:text-black">Events</Link>
               <span>/</span>
-              <span className="font-bold text-black">Create New</span>
+              <span className="font-bold text-black">Edit Event</span>
             </div>
-            <span className="ml-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-yellow-100 text-yellow-800 border border-yellow-200">Draft</span>
+            <span className="ml-4 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">Editing</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -317,8 +367,8 @@ export default function CreateEvent() {
 
           {/* Header Title */}
           <div>
-            <h1 className="text-3xl font-black text-black tracking-tight mb-2">Create New Event</h1>
-            <p className="text-gray-500 text-sm">Configure all settings, tickets, and media for your upcoming concert.</p>
+            <h1 className="text-3xl font-black text-black tracking-tight mb-2">Edit Event</h1>
+            <p className="text-gray-500 text-sm">Update settings, tickets, and media for your event.</p>
           </div>
 
           {/* Step 1: Basic Information */}

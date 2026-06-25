@@ -1,0 +1,55 @@
+# Dynamic Access Control & Email OTP Implementation Plan
+
+Based on your requirement, we will implement a fully dynamic **Access Control Manager** inside the Admin Portal, secured by **Email OTP (One-Time Password)**. Instead of using Google OAuth (which redirects to Google), admins will type their Gmail address and receive a secure 6-digit OTP or Magic Link to log in. 
+
+## User Review Required
+
+> [!IMPORTANT]
+> To bootstrap this system, we need to inject at least **one "Main Admin" (Super Admin) email** directly into the database so you can log in via OTP for the first time and start managing the other 4 members from the dashboard.
+> **Please provide the specific Gmail address that you want to set as the Main Admin.**
+
+## Proposed Changes
+
+### 1. Database Setup (Supabase)
+#### [NEW] `admin_users` table
+We will create a table to manage admin users and their fine-grained permissions.
+* Columns: 
+  * `id`
+  * `email` (unique)
+  * `role` (enum: 'superadmin', 'staff')
+  * `permissions` (JSON array of allowed modules, e.g., `["users", "events", "bookings"]`)
+  * `created_at`
+
+### 2. Frontend Implementation
+
+#### [MODIFY] `src/pages/admin/AdminLogin.jsx`
+* Replace the hardcoded email/password form with an **Email OTP Login Form**.
+* **Flow:**
+  1. Admin types their email and clicks "Send OTP".
+  2. The form switches to an OTP input field.
+  3. The Admin enters the 6-digit code received in their Gmail.
+  4. Upon successful login, the system verifies the email against the `admin_users` table. If authorized, it saves their role and permissions. If not, it signs them out with an "Unauthorized" message.
+
+#### [MODIFY] `src/layouts/AdminLayout.jsx`
+* Dynamically render the sidebar navigation. 
+* The system will check the `permissions` JSON array for the logged-in user. If they don't have the checkbox for "events", the Events tab will completely disappear from their sidebar.
+* Protect the routes so that users cannot manually type a URL they aren't assigned to.
+
+#### [NEW] `src/pages/admin/AdminAccess.jsx` (Access Manager Module)
+* We will build a brand new page in the admin dashboard (visible only to Super Admins).
+* **Features of this page:**
+  * **Add Member:** Input field to add a new team member by email.
+  * **Role Assignment:** Dropdown to set them as a Superadmin (full access) or Staff (custom access).
+  * **Permission Checkboxes:** A list of all modules (Dashboard, Users, Events, Tickets, Bookings, Scanner, Gallery, Home CMS, Promo Codes, Settings). The Super Admin can check/uncheck these boxes to grant or revoke access instantly.
+  * **Manage Members:** A table listing all current admins, their roles, and a button to edit their checkboxes or revoke access completely.
+
+#### [MODIFY] `src/App.jsx`
+* Add the route for `/admin/access` (restricted to Super Admins).
+* Add route guards to all admin routes verifying they exist in the user's `permissions` array.
+
+## Verification Plan
+
+### Manual Verification
+1. I will log in using the Main Admin email via the new OTP flow and navigate to the "Access Management" tab.
+2. I will add a test team member and assign them exactly 2 checkboxes (e.g., "Scanner" and "Tickets").
+3. I will log in as the test team member via OTP and verify that their sidebar *only* shows Scanner and Tickets, and attempting to visit `/admin/events` redirects them away.

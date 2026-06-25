@@ -9,6 +9,11 @@ export default function AdminEvents() {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All Status');
+  const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -201,22 +206,32 @@ export default function AdminEvents() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input 
             type="text" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by event title, artist, or venue..." 
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-black"
           />
         </div>
-        <select className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-gray-600 bg-white min-w-[150px]">
-          <option>All Status</option>
-          <option>Live</option>
-          <option>Upcoming</option>
-          <option>Completed</option>
-          <option>Draft</option>
+        <select 
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-gray-600 bg-white min-w-[150px]"
+        >
+          <option value="All Status">All Status</option>
+          <option value="Live">Live</option>
+          <option value="Upcoming">Upcoming</option>
+          <option value="Completed">Completed</option>
+          <option value="Draft">Draft</option>
         </select>
-        <select className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-gray-600 bg-white min-w-[150px]">
-          <option>All Categories</option>
-          <option>Concert</option>
-          <option>EDM</option>
-          <option>Indie Rock</option>
+        <select 
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-gray-600 bg-white min-w-[150px]"
+        >
+          <option value="All Categories">All Categories</option>
+          {Array.from(new Set(events.map(e => e.category))).filter(Boolean).map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
         </select>
       </div>
 
@@ -227,7 +242,17 @@ export default function AdminEvents() {
         ) : events.length === 0 ? (
           <div className="col-span-1 lg:col-span-2 p-12 text-center text-gray-500 font-medium">No events found in the database.</div>
         ) : (
-          events.map((event) => {
+          events
+            .filter(event => 
+              (statusFilter === 'All Status' || event.status === statusFilter) &&
+              (categoryFilter === 'All Categories' || event.category === categoryFilter) &&
+              (
+                (event.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (event.artist || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (event.venue || '').toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            )
+            .map((event) => {
             const percentageSold = Math.round((event.tickets_sold / event.total_tickets) * 100) || 0;
             return (
               <div key={event.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col sm:flex-row hover:border-primary/50 transition-colors group">
@@ -253,7 +278,7 @@ export default function AdminEvents() {
                       <p className="text-xs text-primary font-bold uppercase">{event.category}</p>
                     </div>
                     <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleOpenModal(event)} className="p-1.5 text-gray-400 hover:text-primary hover:bg-red-50 rounded" title="Edit"><Edit size={16}/></button>
+                      <button onClick={() => navigate('/admin/events/edit/' + event.id)} className="p-1.5 text-gray-400 hover:text-primary hover:bg-red-50 rounded" title="Edit"><Edit size={16}/></button>
                       <button onClick={() => handleDelete(event.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 size={16}/></button>
                     </div>
                   </div>

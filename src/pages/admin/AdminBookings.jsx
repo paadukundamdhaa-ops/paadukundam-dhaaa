@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchBookings = async () => {
     const { data, error } = await supabase
@@ -49,6 +50,8 @@ export default function AdminBookings() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by Booking ID, User, or Event..." 
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
@@ -79,7 +82,13 @@ export default function AdminBookings() {
                   <td colSpan="7" className="p-8 text-center text-gray-500">No bookings found.</td>
                 </tr>
               ) : (
-                bookings.map((booking) => {
+                bookings
+                  .filter(b => 
+                    b.booking_ref?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    b.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    b.events?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((booking) => {
                   const eventDate = booking.events?.event_date ? new Date(booking.events.event_date).toLocaleDateString() : '';
                   const purchaseDate = new Date(booking.created_at).toLocaleString();
                   const isCheckedIn = booking.check_in_status === 'checked_in';

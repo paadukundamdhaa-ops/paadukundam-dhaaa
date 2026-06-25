@@ -186,6 +186,22 @@ export default function Checkout() {
 
       if (bookingError) throw bookingError;
 
+      // 3.1 Update Event Tickets Sold
+      const { data: currentEvent } = await supabase.from('events').select('tickets_sold').eq('id', event.id).single();
+      if (currentEvent) {
+        await supabase.from('events').update({ tickets_sold: (currentEvent.tickets_sold || 0) + totalTickets }).eq('id', event.id);
+      }
+
+      // 3.2 Update Ticket Tiers Tickets Sold
+      for (const [tierId, quantity] of Object.entries(selectedTickets)) {
+        if (quantity > 0) {
+          const { data: currentTier } = await supabase.from('ticket_tiers').select('tickets_sold').eq('id', tierId).single();
+          if (currentTier) {
+            await supabase.from('ticket_tiers').update({ tickets_sold: (currentTier.tickets_sold || 0) + quantity }).eq('id', tierId);
+          }
+        }
+      }
+
       // 3.5 Increment promo code usage if applied
       if (appliedPromo) {
         const { error: promoError } = await supabase

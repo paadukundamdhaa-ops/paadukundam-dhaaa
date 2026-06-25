@@ -28,6 +28,7 @@ import AdminGallery from './pages/admin/AdminGallery';
 import AdminHomeCMS from './pages/admin/AdminHomeCMS';
 import AdminSettings from './pages/admin/AdminSettings';
 import CreateEvent from './pages/admin/CreateEvent';
+import EditEvent from './pages/admin/EditEvent';
 import AdminScanner from './pages/admin/AdminScanner';
 import AdminPromoCodes from './pages/admin/AdminPromoCodes';
 import ScannerLogin from './pages/ScannerLogin';
@@ -72,6 +73,7 @@ function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="events" element={<AdminEvents />} />
               <Route path="events/create" element={<CreateEvent />} />
+              <Route path="events/edit/:id" element={<EditEvent />} />
               <Route path="tickets" element={<AdminTickets />} />
               <Route path="bookings" element={<AdminBookings />} />
               <Route path="gallery" element={<AdminGallery />} />

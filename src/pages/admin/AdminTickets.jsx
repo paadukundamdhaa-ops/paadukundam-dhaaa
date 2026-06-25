@@ -6,6 +6,8 @@ export default function AdminTickets() {
   const [ticketTiers, setTicketTiers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState('All Events');
+  const [uniqueEvents, setUniqueEvents] = useState([]);
 
   const fetchTickets = async () => {
     try {
@@ -16,16 +18,21 @@ export default function AdminTickets() {
         
       if (error) throw error;
       
-      const formatted = data.map(t => ({
-        id: t.id,
-        event: t.events?.title || 'Unknown',
-        type: t.tier_name,
-        price: `₹${t.price}`,
-        total: t.total_capacity,
-        sold: t.tickets_sold,
-        status: t.status
-      }));
+      const formatted = data.map(t => {
+        return {
+          id: t.id,
+          event: t.events?.title || 'Unknown',
+          type: t.tier_name,
+          price: `₹${t.price}`,
+          total: t.total_capacity || 0,
+          sold: t.tickets_sold || 0,
+          status: t.status
+        };
+      });
       setTicketTiers(formatted);
+      
+      const eventsList = [...new Set(formatted.map(t => t.event))].filter(e => e !== 'Unknown');
+      setUniqueEvents(eventsList);
     } catch (err) {
       console.error('Error fetching tickets:', err);
     } finally {
@@ -66,14 +73,21 @@ export default function AdminTickets() {
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by event or ticket type..." 
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
-          <select className="w-full sm:w-auto px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-gray-600 bg-white">
-            <option>All Events</option>
-            <option>Arijit Singh Live</option>
-            <option>Martin Garrix NYE</option>
+          <select 
+            value={selectedEvent}
+            onChange={(e) => setSelectedEvent(e.target.value)}
+            className="w-full sm:w-auto px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary text-gray-600 bg-white"
+          >
+            <option value="All Events">All Events</option>
+            {uniqueEvents.map((evt, idx) => (
+              <option key={idx} value={evt}>{evt}</option>
+            ))}
           </select>
         </div>
 
@@ -91,8 +105,13 @@ export default function AdminTickets() {
               </tr>
             </thead>
             <tbody className="text-sm divide-y divide-gray-100">
-              {ticketTiers.map((tier, idx) => {
-                const percentageSold = (tier.sold / tier.total) * 100;
+              {ticketTiers
+                .filter(tier => 
+                  (selectedEvent === 'All Events' || tier.event === selectedEvent) &&
+                  (tier.event.toLowerCase().includes(searchTerm.toLowerCase()) || tier.type.toLowerCase().includes(searchTerm.toLowerCase()))
+                )
+                .map((tier, idx) => {
+                const percentageSold = tier.total > 0 ? (tier.sold / tier.total) * 100 : 0;
                 
                 return (
                 <tr key={idx} className="hover:bg-gray-50 transition-colors group">
@@ -106,7 +125,7 @@ export default function AdminTickets() {
                   <td className="p-4 font-black text-black text-lg">{tier.price}</td>
                   <td className="p-4">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold">{tier.sold} <span className="text-gray-400 font-normal">/ {tier.total}</span></span>
+                      <span className="text-xs font-bold text-black">{tier.sold} <span className="text-gray-400 font-normal">/ {tier.total}</span></span>
                       <span className="text-[10px] text-gray-500 font-bold">{percentageSold.toFixed(0)}%</span>
                     </div>
                     <div className="h-1.5 w-48 bg-gray-200 rounded-full overflow-hidden">

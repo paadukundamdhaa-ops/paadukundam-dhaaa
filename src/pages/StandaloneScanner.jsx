@@ -43,7 +43,6 @@ export default function StandaloneScanner() {
   const [recentScans, setRecentScans] = useState([]);
   const [stats, setStats] = useState({ total: 0, checkedIn: 0 });
   const [partialQty, setPartialQty] = useState(1);
-  const [torchOn, setTorchOn] = useState(false);
   const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
   const navigate = useNavigate();
@@ -152,45 +151,13 @@ export default function StandaloneScanner() {
     if (scannerRef.current) {
       scannerRef.current.stop().then(() => {
         setScanning(false);
-        setTorchOn(false);
       }).catch(err => console.error("Error stopping", err));
     } else {
       setScanning(false);
-      setTorchOn(false);
     }
   };
 
-  const toggleTorch = async () => {
-    if (scanning) {
-      try {
-        const state = !torchOn;
-        let success = false;
-        
-        const videoElement = document.querySelector("#qr-reader video");
-        if (videoElement && videoElement.srcObject) {
-          const track = videoElement.srcObject.getVideoTracks()[0];
-          if (track && track.getCapabilities) {
-             await track.applyConstraints({ advanced: [{ torch: state }] });
-             success = true;
-          }
-        }
-        
-        if (!success && scannerRef.current) {
-          await scannerRef.current.applyVideoConstraints({ advanced: [{ torch: state }] });
-          success = true;
-        }
 
-        if (success) {
-          setTorchOn(state);
-        } else {
-          throw new Error("Could not toggle torch");
-        }
-      } catch (err) {
-        console.error("Torch error", err);
-        Swal.fire({ icon: 'error', title: 'Not Supported', text: 'Flashlight control is not supported by this browser.', timer: 2000, showConfirmButton: false });
-      }
-    }
-  };
 
   const verifyTicket = async (ticketUrl) => {
     try {
@@ -362,18 +329,12 @@ export default function StandaloneScanner() {
           {/* Scanner View */}
           <div className={`w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border-2 ${scanning ? 'border-primary' : 'hidden'}`}>
             <div id="qr-reader" className="w-full"></div>
-            <div className="p-4 bg-zinc-900 text-center flex justify-center gap-4">
-              <button 
-                onClick={toggleTorch}
-                className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold text-sm transition-colors ${torchOn ? 'bg-primary text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-white'}`}
-              >
-                <Flashlight size={16} /> Flashlight
-              </button>
+            <div className="p-4 bg-zinc-900 text-center">
               <button 
                 onClick={stopScanner}
                 className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2 rounded-full font-bold text-sm transition-colors"
               >
-                Cancel
+                Cancel Scanning
               </button>
             </div>
           </div>

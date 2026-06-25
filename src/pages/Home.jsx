@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -163,6 +164,24 @@ export default function Home() {
 
   return (
     <div className="bg-white min-h-screen text-black font-sans">
+      <Helmet>
+        <title>PaadukundamDhaa | Home of Live Concerts</title>
+        <meta name="description" content="Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds." />
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "PaadukundamDhaa",
+              "url": "https://paadukundamdhaa.com",
+              "logo": "https://paadukundamdhaa.com/favicon.png",
+              "sameAs": [
+                "https://www.instagram.com/paadukundamdhaa"
+              ]
+            }
+          `}
+        </script>
+      </Helmet>
       
       {/* ULTRA-PREMIUM HERO SECTION */}
       <section className="bg-[#0a0a0a] text-white relative pt-32 pb-20 min-h-[90vh] flex items-center border-b border-white/10 overflow-hidden">

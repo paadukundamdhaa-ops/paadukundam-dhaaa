@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, MapPin, Clock, Users, ArrowLeft, Share2, Info, Star, ShieldCheck, Ticket, X, ChevronRight } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
 import Loading from '../components/Loading';
 
@@ -139,6 +140,41 @@ export default function EventDetails() {
 
   return (
     <div className="min-h-screen bg-white pb-24 font-sans">
+      <Helmet>
+        <title>{event.title} Tickets | PaadukundamDhaa</title>
+        <meta name="description" content={`Book tickets for ${event.title} live at ${event.venue}, ${event.city} on ${event.date}.`} />
+        <meta property="og:title" content={`${event.title} - Live Concert`} />
+        <meta property="og:description" content={`Book tickets for ${event.title} live at ${event.venue}, ${event.city} on ${event.date}.`} />
+        <meta property="og:image" content={event.heroImage} />
+        <script type="application/ld+json">
+          {`
+            {
+              "@context": "https://schema.org",
+              "@type": "Event",
+              "name": "${event.title}",
+              "startDate": "${eventData.event_date || ''}",
+              "location": {
+                "@type": "Place",
+                "name": "${event.venue}",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": "${event.city}"
+                }
+              },
+              "image": [
+                "${event.heroImage}"
+              ],
+              "description": "${event.description.replace(/"/g, '\\"')}",
+              "offers": {
+                "@type": "AggregateOffer",
+                "priceCurrency": "INR",
+                "lowPrice": "${event.tickets.length > 0 ? Math.min(...event.tickets.map(t => t.price)) : 0}",
+                "availability": "https://schema.org/InStock"
+              }
+            }
+          `}
+        </script>
+      </Helmet>
 
       {/* Hero Section */}
       <div className="relative h-[400px] md:h-[450px]">

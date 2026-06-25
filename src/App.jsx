@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import SplashScreen from './components/SplashScreen';
 import MainLayout from './layouts/MainLayout';
@@ -44,7 +45,7 @@ function App() {
   };
 
   return (
-    <>
+    <HelmetProvider>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <Router>
         <AuthProvider>
@@ -92,7 +93,7 @@ function App() {
           </Routes>
         </AuthProvider>
       </Router>
-    </>
+    </HelmetProvider>
   );
 }
 

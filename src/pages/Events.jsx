@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, MapPin, Calendar, SlidersHorizontal, Grid, List, ChevronLeft, ChevronRight, Heart, ChevronDown } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
 
 export default function Events() {
@@ -154,6 +155,10 @@ export default function Events() {
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen font-sans pb-20 text-black">
+      <Helmet>
+        <title>Explore All Events | PaadukundamDhaa</title>
+        <meta name="description" content="Browse and book tickets for the upcoming live music concerts, comedy shows, and premium events in your city." />
+      </Helmet>
       {/* HERO BANNER */}
       <section className="relative pt-32 pb-24 border-b border-black/10 overflow-hidden">
         <div className="absolute inset-0 z-0">

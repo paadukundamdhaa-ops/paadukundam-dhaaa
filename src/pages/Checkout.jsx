@@ -58,9 +58,8 @@ export default function Checkout() {
   const discountedSubtotal = subtotalBeforeDiscount - promoDiscountAmount;
 
   // Calculate fees
-  const bookingFee = totalTickets * 50; // ₹50 per ticket flat fee
-  const taxes = Math.round((discountedSubtotal + bookingFee) * 0.18); // 18% GST
-  const grandTotal = discountedSubtotal + bookingFee + taxes;
+  const bookingFee = 15; // ₹15 flat fee
+  const grandTotal = discountedSubtotal + bookingFee;
 
   const handleApplyPromo = async () => {
     if (!promoInput.trim()) return;
@@ -454,10 +453,6 @@ export default function Checkout() {
               <div className="flex justify-between">
                 <span>Platform Booking Fee</span>
                 <span className="font-bold text-black">₹{bookingFee.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>GST (18%)</span>
-                <span className="font-bold text-black">₹{taxes.toLocaleString()}</span>
               </div>
             </div>
 

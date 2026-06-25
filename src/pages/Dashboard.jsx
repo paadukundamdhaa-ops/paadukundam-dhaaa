@@ -226,93 +226,85 @@ export default function Dashboard() {
                     <div className="flex justify-center" key={booking.id}>
                       <div id={`ticket-${booking.id}`} className="bg-white rounded-[2rem] w-full max-w-[400px] shadow-xl border border-gray-100 overflow-hidden flex flex-col relative">
                         
-                        {/* Ticket Logo */}
-                        <div className="pt-8 pb-2 bg-white flex justify-center border-b border-gray-50">
-                          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-12 object-contain opacity-100" crossOrigin="anonymous" />
+                        {/* Logo Header */}
+                        <div className="pt-6 pb-4 bg-white flex justify-center items-center px-6">
+                          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-10 object-contain" crossOrigin="anonymous" />
                         </div>
 
-                        {/* Header */}
-                        <div className="p-6 flex gap-5 relative bg-white">
-                          {/* Vertical Text */}
-                          <div className="absolute right-0 top-1/2 origin-center translate-x-3 -translate-y-1/2 -rotate-90 whitespace-nowrap">
-                            <span className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em]">E-Ticket</span>
-                          </div>
+                        {/* Event Image Banner with Overlay Text */}
+                        <div className="relative h-[220px] w-full">
+                          <img 
+                            src={event.img_url || event.hero_image || "https://images.unsplash.com/photo-1540039155732-61ee14b12756?auto=format&fit=crop&q=80&w=800"} 
+                            alt={event.title || "Event"} 
+                            className="w-full h-full object-cover" 
+                            crossOrigin="anonymous"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
                           
-                          {/* Image */}
-                          <div className="w-[110px] h-[150px] shrink-0 rounded-2xl overflow-hidden relative shadow-sm border border-gray-100">
-                            <img 
-                              src={event.img_url || event.hero_image || "https://images.unsplash.com/photo-1540039155732-61ee14b12756?auto=format&fit=crop&q=80&w=800"} 
-                              alt={event.title || "Event"} 
-                              className="w-full h-full object-cover" 
-                              crossOrigin="anonymous"
-                            />
-                            <div className="absolute bottom-0 left-0 right-0 bg-primary py-1.5 text-center">
-                              <span className="text-[10px] font-black text-white uppercase tracking-wider">{event.status || 'Confirmed'}</span>
+                          {/* Event Info on Image */}
+                          <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end text-white">
+                            <div className="inline-block bg-primary/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3 w-max">
+                              {event.status || 'Confirmed'}
                             </div>
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex flex-col justify-center pr-8 py-2">
-                            <h3 className="text-[17px] font-black text-black leading-snug mb-2 pr-2">{event.title || 'Untitled Event'}</h3>
-                            <p className="text-[13px] text-gray-500 mb-3">{event.category || 'Live Event'}</p>
-                            <p className="text-[13px] font-bold text-gray-700 mb-1.5">{eventDate} | {eventTime}</p>
-                            <p className="text-[13px] text-gray-600 leading-tight pr-2">{event.venue || 'TBA'}, {event.city || ''}</p>
-                          </div>
-                        </div>
-
-                        {/* Middle separator with cutouts */}
-                        <div className="relative bg-white py-5">
-                          {/* Left Cutout */}
-                          <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full border border-gray-100 shadow-inner z-10"></div>
-                          {/* Right Cutout */}
-                          <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full border border-gray-100 shadow-inner z-10"></div>
-                          
-                          {/* Dashed line */}
-                          <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-gray-200"></div>
-                          
-                          {/* Action Buttons */}
-                          <div className="relative flex justify-center gap-3 z-10 px-4" data-html2canvas-ignore="true">
-                            <button 
-                              onClick={() => handleDownloadTicket(booking.id, booking.booking_ref)} 
-                              disabled={isDownloading} 
-                              className="flex-1 bg-primary hover:bg-primary-dark transition-colors py-2.5 rounded-full text-[11px] font-bold text-white flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-primary/20"
-                            >
-                              {isDownloading ? <Loader2 size={12} className="animate-spin text-white" /> : <Download size={12} className="text-white" />}
-                              {isDownloading ? 'Saving...' : 'Save JPG'}
-                            </button>
-                            <button 
-                              onClick={() => setSelectedBooking(booking)} 
-                              className="flex-1 bg-white hover:bg-gray-50 transition-colors py-2.5 rounded-full text-[11px] font-bold text-gray-700 flex items-center justify-center border border-gray-200 cursor-pointer shadow-sm"
-                            >
-                              View Details
-                            </button>
+                            <h3 className="text-2xl font-black leading-tight mb-2 drop-shadow-md">{event.title || 'Untitled Event'}</h3>
+                            <p className="text-[13px] font-medium text-gray-200 flex items-center gap-2 mb-1">
+                              <Calendar size={14} className="text-primary"/> {eventDate} | {eventTime}
+                            </p>
+                            <p className="text-[13px] font-medium text-gray-200 flex items-center gap-2">
+                              <MapPin size={14} className="text-primary"/> {event.venue || 'TBA'}, {event.city || ''}
+                            </p>
                           </div>
                         </div>
 
-                        {/* Bottom Section */}
-                        <div className="px-8 py-6 bg-white flex justify-between items-center gap-4">
+                        {/* Ticket Stub (QR and Details) */}
+                        <div className="relative bg-white pt-8 pb-8 px-6 flex justify-between items-center border-t-2 border-dashed border-gray-300">
+                          {/* Cutouts */}
+                          <div className="absolute -left-4 top-0 -translate-y-1/2 w-8 h-8 bg-gray-50 rounded-full border-r border-gray-200 shadow-inner z-10"></div>
+                          <div className="absolute -right-4 top-0 -translate-y-1/2 w-8 h-8 bg-gray-50 rounded-full border-l border-gray-200 shadow-inner z-10"></div>
+                          
                           {/* QR Code */}
-                          <div className="bg-white p-2 rounded-xl border border-gray-200 shrink-0">
+                          <div className="bg-white p-2.5 rounded-2xl border-2 border-gray-100 shadow-sm shrink-0">
                             <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(qrValue)}`} 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrValue)}`} 
                               alt="QR Code" 
-                              width="110" 
-                              height="110" 
+                              width="120" 
+                              height="120" 
                               crossOrigin="anonymous" 
                             />
                           </div>
 
                           {/* Ticket Details */}
-                          <div className="text-center flex flex-col justify-center items-center w-full">
-                            <p className="text-gray-500 text-[13px] font-medium mb-3">{booking.qty} Ticket(s)</p>
-                            <h4 className="text-xl font-black text-black mb-1 uppercase tracking-wider">GENERAL</h4>
-                            <p className="text-[13px] text-gray-500 mb-2 uppercase tracking-widest">Entry</p>
-                            <p className="text-[11px] font-bold text-black uppercase tracking-widest bg-gray-50 py-1.5 px-2 rounded-lg inline-block mx-auto">ID: {booking.booking_ref}</p>
+                          <div className="text-right flex flex-col justify-center w-full pl-4">
+                            <p className="text-primary font-black text-xs uppercase tracking-[0.2em] mb-1">Entry Pass</p>
+                            <h4 className="text-3xl font-black text-black leading-none mb-1 tracking-tight">GENERAL</h4>
+                            <p className="text-gray-500 text-sm font-medium mb-4">{booking.qty} Ticket(s)</p>
+                            <div className="inline-block bg-gray-50 py-2 px-3 rounded-xl border border-gray-200 ml-auto text-center">
+                              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">Booking ID</p>
+                              <p className="text-sm font-black text-black tracking-wider">{booking.booking_ref}</p>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Payment Breakdown & Total */}
-                        <div className="bg-gray-50 pt-4 pb-6 text-center border-t border-gray-100 flex flex-col justify-between h-full" data-html2canvas-ignore="true">
+                        {/* Action Buttons (Ignored in HTML2Canvas) */}
+                        <div className="px-6 pb-6 pt-2 bg-white flex gap-3 relative z-10" data-html2canvas-ignore="true">
+                          <button 
+                            onClick={() => handleDownloadTicket(booking.id, booking.booking_ref)} 
+                            disabled={isDownloading} 
+                            className="flex-1 bg-primary hover:bg-primary-dark transition-all py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/25"
+                          >
+                            {isDownloading ? <Loader2 size={16} className="animate-spin text-white" /> : <Download size={16} className="text-white" />}
+                            {isDownloading ? 'Saving...' : 'Save Ticket'}
+                          </button>
+                          <button 
+                            onClick={() => setSelectedBooking(booking)} 
+                            className="flex-1 bg-black hover:bg-gray-800 transition-all py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center cursor-pointer shadow-lg shadow-black/20"
+                          >
+                            View Details
+                          </button>
+                        </div>
+
+                        {/* Payment Breakdown & Total (Ignored in HTML2Canvas) */}
+                        <div className="bg-gray-50 pt-5 pb-6 text-center border-t border-gray-200" data-html2canvas-ignore="true">
                           {expandedBookings[booking.id] && (
                             <div className="mb-4 animate-in slide-in-from-top-2 fade-in duration-200">
                               <div className="flex justify-between items-center px-8 mb-2">

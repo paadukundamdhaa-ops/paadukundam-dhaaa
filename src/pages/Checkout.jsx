@@ -223,7 +223,10 @@ export default function Checkout() {
             eventDate: event.date,
             bookingRef: bookingRef,
             qty: totalTickets,
-            amount: grandTotal
+            amount: grandTotal,
+            subtotal: subtotalBeforeDiscount,
+            discount: promoDiscountAmount,
+            platformFee: bookingFee
           })
         }).catch(err => console.error("API error:", err));
       } catch (emailError) {

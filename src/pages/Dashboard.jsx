@@ -38,7 +38,7 @@ export default function Dashboard() {
         // Fetch Bookings
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
-          .select('*, events(*)')
+          .select('*, events(*), ticket_tiers(price)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -301,11 +301,24 @@ export default function Dashboard() {
                           </div>
                         </div>
 
-                        {/* Cancellation policy & Total */}
-                        <div className="bg-gray-50 pt-5 pb-6 text-center border-t border-gray-100 flex flex-col justify-between h-full">
-                          <p className="text-[11px] text-gray-500 mb-5 px-8 leading-relaxed">Cancellation available: cut-off time of 24 hours before showtime</p>
-                          <div className="flex justify-between items-center pt-4 border-t border-gray-200 px-8">
-                            <span className="font-bold text-[14px] text-black">Total Amount</span>
+                        {/* Payment Breakdown & Total */}
+                        <div className="bg-gray-50 pt-4 pb-6 text-center border-t border-gray-100 flex flex-col justify-between h-full">
+                          <div className="flex justify-between items-center px-8 mb-2">
+                            <span className="text-[12px] text-gray-500">Ticket Cost ({booking.qty}x)</span>
+                            <span className="text-[12px] font-bold text-gray-700">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
+                          </div>
+                          <div className="flex justify-between items-center px-8 mb-2">
+                            <span className="text-[12px] text-gray-500">Platform Fee</span>
+                            <span className="text-[12px] font-bold text-gray-700">₹15</span>
+                          </div>
+                          {((booking.ticket_tiers?.price * booking.qty) + 15) > booking.total_amount && (
+                            <div className="flex justify-between items-center px-8 mb-3">
+                              <span className="text-[12px] text-green-600 font-bold">Discount</span>
+                              <span className="text-[12px] font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + 15) - booking.total_amount}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center pt-3 border-t border-gray-200 px-8 mt-1">
+                            <span className="font-bold text-[14px] text-black">Total Paid</span>
                             <span className="font-black text-lg text-black">₹{booking.total_amount.toLocaleString()}</span>
                           </div>
                         </div>
@@ -490,13 +503,19 @@ export default function Dashboard() {
                     <span className="font-mono text-sm font-bold text-black">{selectedBooking.booking_ref}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Tickets</span>
-                    <span className="text-sm font-bold text-black">{selectedBooking.qty} Ticket(s)</span>
+                    <span className="text-sm text-gray-600">Tickets ({selectedBooking.qty}x)</span>
+                    <span className="text-sm font-bold text-black">₹{(selectedBooking.ticket_tiers?.price * selectedBooking.qty) || selectedBooking.total_amount}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Status</span>
-                    <span className="text-xs font-black text-green-600 bg-green-100 px-2 py-1 rounded-md uppercase tracking-wider">{selectedBooking.status}</span>
+                    <span className="text-sm text-gray-600">Platform Fee</span>
+                    <span className="text-sm font-bold text-black">₹15</span>
                   </div>
+                  {((selectedBooking.ticket_tiers?.price * selectedBooking.qty) + 15) > selectedBooking.total_amount && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-green-600">Discount Applied</span>
+                      <span className="text-sm font-bold text-green-600">-₹{((selectedBooking.ticket_tiers?.price * selectedBooking.qty) + 15) - selectedBooking.total_amount}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-1">
                     <span className="font-bold text-black">Total Paid</span>
                     <span className="font-black text-lg text-primary">₹{selectedBooking.total_amount.toLocaleString()}</span>

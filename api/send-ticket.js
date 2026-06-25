@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { email, name, eventTitle, eventDate, bookingRef, qty, amount } = req.body;
+  const { email, name, eventTitle, eventDate, bookingRef, qty, amount, subtotal, discount, platformFee } = req.body;
 
   if (!email || !bookingRef) {
     return res.status(400).json({ message: 'Missing required fields: email and bookingRef are required' });
@@ -61,11 +61,21 @@ export default async function handler(req, res) {
               <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${bookingRef}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Quantity</td>
-              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${qty} Ticket(s)</td>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Ticket Cost (${qty}x)</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">₹${subtotal || amount}</td>
             </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Platform Fee</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">₹${platformFee || 15}</td>
+            </tr>
+            ${discount > 0 ? `
+            <tr>
+              <td style="padding: 8px 0; color: #16a34a; font-size: 14px; font-weight: bold;">Discount Applied</td>
+              <td style="padding: 8px 0; color: #16a34a; font-weight: bold; text-align: right;">-₹${discount}</td>
+            </tr>
+            ` : ''}
             <tr style="border-top: 1px solid #e2e8f0;">
-              <td style="padding: 12px 0 0 0; color: #64748b; font-size: 14px;">Amount Paid</td>
+              <td style="padding: 12px 0 0 0; color: #64748b; font-size: 14px; font-weight: bold;">Total Paid</td>
               <td style="padding: 12px 0 0 0; color: #0f172a; font-weight: 900; font-size: 18px; text-align: right;">₹${amount}</td>
             </tr>
           </table>

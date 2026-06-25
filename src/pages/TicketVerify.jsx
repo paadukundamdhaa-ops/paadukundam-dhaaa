@@ -20,7 +20,7 @@ export default function TicketVerify() {
         
         const { data, error } = await supabase
           .from('bookings')
-          .select('*, events(*), profiles(*)')
+          .select('*, events(*), profiles(*), ticket_tiers(*)')
           .eq('booking_ref', searchRef)
           .single();
 
@@ -165,18 +165,31 @@ export default function TicketVerify() {
             </div>
 
             <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Ticket Info</h3>
-              <div className="flex items-center justify-between bg-primary/5 p-4 rounded-xl border border-primary/10">
-                <div className="flex items-center gap-3">
-                  <Ticket className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-bold text-black">General Admission</p>
-                    <p className="text-xs text-primary font-medium">{booking.qty} Ticket(s)</p>
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Order Summary</h3>
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center gap-2">
+                    <Ticket className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-bold text-black">{booking.ticket_tiers?.tier_name || 'General Admission'} ({booking.qty}x)</span>
                   </div>
+                  <span className="text-sm font-bold text-black">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
                 </div>
-                <div className="text-right">
-                  <span className="block text-sm font-black text-black">₹{booking.total_amount.toLocaleString()}</span>
-                  <span className="block text-[10px] text-gray-500 font-bold uppercase">Total Paid</span>
+                
+                <div className="flex justify-between items-center mb-3 text-sm">
+                  <span className="text-gray-600">Platform Fee</span>
+                  <span className="font-bold text-black">₹15</span>
+                </div>
+
+                {((booking.ticket_tiers?.price * booking.qty) + 15) > booking.total_amount && (
+                  <div className="flex justify-between items-center mb-3 text-sm">
+                    <span className="text-green-600 font-bold">Discount Applied</span>
+                    <span className="font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + 15) - booking.total_amount}</span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between items-center pt-3 border-t border-primary/20">
+                  <span className="text-sm font-bold text-black">Total Paid</span>
+                  <span className="text-lg font-black text-primary">₹{booking.total_amount.toLocaleString()}</span>
                 </div>
               </div>
             </div>

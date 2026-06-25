@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Image as ImageIcon, Type, LayoutTemplate, Star, CheckCircle, Settings } from 'lucide-react';
+import { Save, Image as ImageIcon, Type, LayoutTemplate, Star, CheckCircle, Settings, Loader2 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import Swal from 'sweetalert2';
 
 export default function AdminHomeCMS() {
   const [activeTab, setActiveTab] = useState('hero');
@@ -24,23 +26,73 @@ export default function AdminHomeCMS() {
     { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
   ]);
 
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
-    const savedHero = localStorage.getItem('cms_hero');
-    const savedStats = localStorage.getItem('cms_stats');
-    const savedTestimonials = localStorage.getItem('cms_testimonials');
-    if (savedHero) setHeroSettings(JSON.parse(savedHero));
-    if (savedStats) setStats(JSON.parse(savedStats));
-    if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
+    fetchCMSData();
   }, []);
 
-  const handleSaveAll = () => {
-    localStorage.setItem('cms_hero', JSON.stringify(heroSettings));
-    localStorage.setItem('cms_stats', JSON.stringify(stats));
-    localStorage.setItem('cms_testimonials', JSON.stringify(testimonials));
-    
-    setToast({ show: true, message: 'CMS settings saved to LocalStorage successfully!' });
-    setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  const fetchCMSData = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.from('cms_content').select('*');
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const hero = data.find(d => d.section_name === 'hero');
+        const statsData = data.find(d => d.section_name === 'stats');
+        const testData = data.find(d => d.section_name === 'testimonials');
+        
+        if (hero) setHeroSettings(hero.content_data);
+        if (statsData) setStats(statsData.content_data);
+        if (testData) setTestimonials(testData.content_data);
+      }
+    } catch (error) {
+      console.error('Error fetching CMS data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      const updates = [
+        { section_name: 'hero', content_data: heroSettings },
+        { section_name: 'stats', content_data: stats },
+        { section_name: 'testimonials', content_data: testimonials }
+      ];
+      
+      const { error } = await supabase.from('cms_content').upsert(updates, { onConflict: 'section_name' });
+      if (error) throw error;
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'CMS Saved',
+        text: 'CMS settings saved to database successfully!',
+        confirmButtonColor: '#e11d48'
+      });
+    } catch (error) {
+      console.error('Error saving CMS:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        text: 'Failed to save CMS settings.',
+        confirmButtonColor: '#e11d48'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'hero', name: 'Hero Section', icon: <ImageIcon size={18} /> },
@@ -56,17 +108,11 @@ export default function AdminHomeCMS() {
           <h2 className="text-2xl font-black text-black">Home Page CMS</h2>
           <p className="text-sm text-gray-500">Edit the content blocks specifically on the main landing page.</p>
         </div>
-        <button onClick={handleSaveAll} className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0">
-          <Save size={16} /> Save All Changes
+        <button onClick={handleSaveAll} disabled={saving} className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0 disabled:opacity-50">
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} 
+          {saving ? 'Saving...' : 'Save All Changes'}
         </button>
       </div>
-
-      {toast.show && (
-        <div className="bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2">
-          <CheckCircle size={18} />
-          <span className="font-bold text-sm">{toast.message}</span>
-        </div>
-      )}
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* CMS Tabs Sidebar */}

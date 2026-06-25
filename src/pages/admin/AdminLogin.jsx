@@ -59,7 +59,7 @@ export default function AdminLogin() {
         <div className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 xl:p-16">
           <div>
               <div className="flex items-end space-x-[3px] h-8">
-                <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa" className="h-10 object-contain" />
+                <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa" className="h-10 object-contain" />
               </div>
 
             <h1 className="text-5xl xl:text-6xl font-black text-white mb-4 leading-tight tracking-tight">
@@ -104,7 +104,7 @@ export default function AdminLogin() {
         <div className="lg:hidden px-6 pt-10 pb-4 relative z-10">
           <div className="flex justify-between items-start mb-10">
               <div className="flex items-end space-x-[2px] h-6">
-                <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa" className="h-8 object-contain" />
+                <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa" className="h-8 object-contain" />
               </div>
              <div className="flex items-center gap-1 text-gray-300 text-xs border border-white/20 rounded-full px-3 py-1 bg-black/40 backdrop-blur-sm cursor-pointer">
                 <span>🛡️</span> Admin <span className="ml-1 text-[10px]">▼</span>

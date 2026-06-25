@@ -120,6 +120,11 @@ export default function TicketVerify() {
         {/* Details Container */}
         <div className="bg-white rounded-b-3xl shadow-xl shadow-gray-200/50 p-6 border-b border-l border-r border-gray-100 border-t-2 border-t-dashed">
           
+          {/* Logo Header */}
+          <div className="pb-6 border-b border-gray-100 flex justify-center mb-6">
+            <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-12 object-contain opacity-100" crossOrigin="anonymous" />
+          </div>
+
           <div className="mb-6 border-b border-gray-100 pb-6 text-center">
             <h2 className="text-xl font-black text-black mb-2">{event.title}</h2>
             <div className="inline-block bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full mb-4">

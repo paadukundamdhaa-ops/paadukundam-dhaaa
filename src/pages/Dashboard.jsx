@@ -226,6 +226,11 @@ export default function Dashboard() {
                     <div className="flex justify-center" key={booking.id}>
                       <div id={`ticket-${booking.id}`} className="bg-white rounded-[2rem] w-full max-w-[400px] shadow-xl border border-gray-100 overflow-hidden flex flex-col relative">
                         
+                        {/* Ticket Logo */}
+                        <div className="pt-8 pb-2 bg-white flex justify-center border-b border-gray-50">
+                          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-12 object-contain opacity-100" crossOrigin="anonymous" />
+                        </div>
+
                         {/* Header */}
                         <div className="p-6 flex gap-5 relative bg-white">
                           {/* Vertical Text */}
@@ -299,8 +304,7 @@ export default function Dashboard() {
 
                           {/* Ticket Details */}
                           <div className="text-center flex flex-col justify-center items-center w-full">
-                            <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-10 object-contain mb-3 opacity-100" crossOrigin="anonymous" />
-                            <p className="text-gray-500 text-[13px] font-medium mb-2">{booking.qty} Ticket(s)</p>
+                            <p className="text-gray-500 text-[13px] font-medium mb-3">{booking.qty} Ticket(s)</p>
                             <h4 className="text-xl font-black text-black mb-1 uppercase tracking-wider">GENERAL</h4>
                             <p className="text-[13px] text-gray-500 mb-2 uppercase tracking-widest">Entry</p>
                             <p className="text-[11px] font-bold text-black uppercase tracking-widest bg-gray-50 py-1.5 px-2 rounded-lg inline-block mx-auto">ID: {booking.booking_ref}</p>

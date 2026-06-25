@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, NavLink, Link, useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import { 
   LayoutDashboard, 
   Users, 
@@ -33,11 +35,55 @@ const navItems = [
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(true);
 
-  const handleLogout = () => {
-    // In the future, clear auth tokens here
+  useEffect(() => {
+    const checkRole = async () => {
+      if (authLoading) return;
+      
+      if (!user) {
+        setRoleLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        setIsAdmin(data?.role === 'admin');
+      } catch (error) {
+        console.error('Error checking admin role:', error);
+        setIsAdmin(false);
+      } finally {
+        setRoleLoading(false);
+      }
+    };
+
+    checkRole();
+  }, [user, authLoading]);
+
+  const handleLogout = async () => {
+    await signOut();
     navigate('/admin/login');
   };
+
+  if (authLoading || roleLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

@@ -242,16 +242,16 @@ export default function Dashboard() {
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90"></div>
                           
                           {/* Event Info on Image */}
-                          <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col justify-end text-white">
-                            <div className="inline-block bg-primary/90 backdrop-blur-md text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-3 w-max">
+                          <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col justify-end text-white">
+                            <div className="inline-block bg-primary/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full mb-1.5 w-max">
                               {event.status || 'Confirmed'}
                             </div>
-                            <h3 className="text-2xl font-black leading-tight mb-2 drop-shadow-md">{event.title || 'Untitled Event'}</h3>
-                            <p className="text-[13px] font-medium text-gray-200 flex items-center gap-2 mb-1">
-                              <Calendar size={14} className="text-primary"/> {eventDate} | {eventTime}
+                            <h3 className="text-lg font-black leading-tight mb-1.5 drop-shadow-md">{event.title || 'Untitled Event'}</h3>
+                            <p className="text-[11px] font-medium text-gray-200 flex items-center gap-1.5 mb-0.5">
+                              <Calendar size={12} className="text-primary"/> {eventDate} | {eventTime}
                             </p>
-                            <p className="text-[13px] font-medium text-gray-200 flex items-center gap-2">
-                              <MapPin size={14} className="text-primary"/> {event.venue || 'TBA'}, {event.city || ''}
+                            <p className="text-[11px] font-medium text-gray-200 flex items-center gap-1.5">
+                              <MapPin size={12} className="text-primary"/> {event.venue || 'TBA'}, {event.city || ''}
                             </p>
                           </div>
                         </div>

@@ -15,9 +15,9 @@ export default function AdminEvents() {
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   
   // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentEventId, setCurrentEventId] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Old state kept just in case
+  const [viewEventModal, setViewEventModal] = useState(false);
+  const [selectedViewEvent, setSelectedViewEvent] = useState(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -309,7 +309,7 @@ export default function AdminEvents() {
                         ></div>
                       </div>
                     </div>
-                    <button onClick={() => window.open(`/events/${event.id}`, '_blank')} className="text-primary text-sm font-bold flex items-center hover:underline">
+                    <button onClick={() => { setSelectedViewEvent(event); setViewEventModal(true); }} className="text-primary text-sm font-bold flex items-center hover:underline">
                       <Eye size={14} className="mr-1" /> View
                     </button>
                   </div>
@@ -320,87 +320,101 @@ export default function AdminEvents() {
         )}
       </div>
 
-      {/* MODAL OVERLAY */}
-      {isModalOpen && (
+      {/* EVENT DETAILS VIEW MODAL */}
+      {viewEventModal && selectedViewEvent && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
             <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50">
-              <h3 className="text-xl font-black text-black uppercase tracking-wide">
-                {isEditing ? 'Edit Event' : 'Create New Event'}
+              <h3 className="text-xl font-black text-black uppercase tracking-wide flex items-center gap-2">
+                <Eye size={20} className="text-primary" /> Event Details View
               </h3>
-              <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 hover:bg-gray-200 p-2 rounded-full transition-colors">
+              <button onClick={() => setViewEventModal(false)} className="text-gray-400 hover:text-gray-600 hover:bg-gray-200 p-2 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto">
-              <form id="event-form" onSubmit={handleSaveEvent} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Event Title *</label>
-                    <input required name="title" value={formData.title} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. Arijit Singh Live" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Artist Name *</label>
-                    <input required name="artist" value={formData.artist} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. Arijit Singh" />
+            <div className="p-6 overflow-y-auto space-y-6 flex-grow bg-white">
+              
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="w-full md:w-1/3">
+                  <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200 aspect-square">
+                    <img src={selectedViewEvent.img_url || '/images/arijit.png'} alt={selectedViewEvent.title} className="w-full h-full object-cover" />
                   </div>
                 </div>
+                
+                <div className="w-full md:w-2/3 space-y-4">
+                  <div>
+                    <h2 className="text-2xl font-black text-black leading-tight mb-1">{selectedViewEvent.title}</h2>
+                    <p className="text-sm text-primary font-bold uppercase tracking-wider">{selectedViewEvent.category}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <p className="text-xs text-gray-500 font-bold uppercase mb-1">Artist</p>
+                      <p className="font-semibold text-black">{selectedViewEvent.artist || 'Not specified'}</p>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <p className="text-xs text-gray-500 font-bold uppercase mb-1">Status</p>
+                      <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider text-white shadow-sm inline-block mt-1 ${
+                        selectedViewEvent.status === 'Live' ? 'bg-secondary text-black' :
+                        selectedViewEvent.status === 'Upcoming' ? 'bg-blue-500' :
+                        selectedViewEvent.status === 'Completed' ? 'bg-gray-600' : 'bg-gray-400'
+                      }`}>
+                        {selectedViewEvent.status}
+                      </span>
+                    </div>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Date *</label>
-                    <input required name="event_date" value={formData.event_date} onChange={handleInputChange} type="date" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Time *</label>
-                    <input required name="event_time" value={formData.event_time} onChange={handleInputChange} type="time" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Category</label>
-                    <select name="category" value={formData.category} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                      <option>Concert</option>
-                      <option>EDM</option>
-                      <option>Indie Rock</option>
-                      <option>Sufi</option>
-                      <option>Comedy</option>
-                    </select>
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-start gap-3">
+                      <Calendar size={18} className="text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-black">{new Date(selectedViewEvent.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                        <p className="text-xs text-gray-500">Event Date</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <Clock size={18} className="text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-black">{selectedViewEvent.event_time}</p>
+                        <p className="text-xs text-gray-500">Event Time</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <MapPin size={18} className="text-gray-400 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-black">{selectedViewEvent.venue}</p>
+                        <p className="text-xs text-gray-500">Venue Location</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Venue Location *</label>
-                  <input required name="venue" value={formData.venue} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. Gachibowli Stadium, Hyderabad" />
-                </div>
+              <hr className="border-gray-100" />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Status</label>
-                    <select name="status" value={formData.status} onChange={handleInputChange} className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none">
-                      <option>Upcoming</option>
-                      <option>Live</option>
-                      <option>Completed</option>
-                      <option>Draft</option>
-                    </select>
+              <div>
+                <h4 className="text-sm font-bold text-black uppercase mb-3">Ticket Statistics</h4>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-bold text-gray-700">Tickets Sold</span>
+                    <span className="text-sm font-black text-black">{selectedViewEvent.tickets_sold} / {selectedViewEvent.total_tickets}</span>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Total Tickets *</label>
-                    <input required name="total_tickets" value={formData.total_tickets} onChange={handleInputChange} type="number" min="1" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. 5000" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1">Image URL</label>
-                    <input name="img_url" value={formData.img_url} onChange={handleInputChange} type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm text-black focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g. /images/sunburn.png" />
+                  <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full" 
+                      style={{ width: `${Math.round((selectedViewEvent.tickets_sold / selectedViewEvent.total_tickets) * 100) || 0}%` }}
+                    ></div>
                   </div>
                 </div>
-              </form>
+              </div>
+
             </div>
             
-            <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-              <button type="button" onClick={handleCloseModal} className="px-6 py-2 rounded-lg font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition-colors">
-                Cancel
-              </button>
-              <button type="submit" form="event-form" className="px-6 py-2 rounded-lg font-bold text-white bg-primary hover:bg-red-700 shadow-md shadow-primary/20 transition-colors">
-                {isEditing ? 'Save Changes' : 'Create Event'}
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+              <button type="button" onClick={() => setViewEventModal(false)} className="px-6 py-2 rounded-lg font-bold text-white bg-black hover:bg-gray-800 transition-colors">
+                Close Preview
               </button>
             </div>
             

@@ -11,12 +11,10 @@ export default function AdminSettings() {
     instagram_url: '',
     twitter_url: '',
     facebook_url: '',
-    stripe_public_key: '',
-    stripe_secret_key: '',
+    razorpay_key_id: '',
+    razorpay_key_secret: '',
     enable_email_notifications: true,
-    enable_sms_notifications: false,
-    enforce_2fa: false,
-    session_timeout: '30'
+    enable_sms_notifications: false
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -119,11 +117,6 @@ export default function AdminSettings() {
             className={`w-full flex items-center gap-3 px-4 py-3 font-bold text-sm rounded-lg transition-colors ${activeTab === 'notifications' ? 'bg-white text-primary border-l-4 border-l-primary shadow-sm rounded-l-none' : 'text-gray-600 hover:bg-white hover:shadow-sm border-l-4 border-l-transparent'}`}>
             <Bell size={18} /> Notifications
           </button>
-          <button 
-            onClick={() => setActiveTab('security')}
-            className={`w-full flex items-center gap-3 px-4 py-3 font-bold text-sm rounded-lg transition-colors ${activeTab === 'security' ? 'bg-white text-primary border-l-4 border-l-primary shadow-sm rounded-l-none' : 'text-gray-600 hover:bg-white hover:shadow-sm border-l-4 border-l-transparent'}`}>
-            <Lock size={18} /> Security & Passwords
-          </button>
         </div>
 
         {/* Settings Form */}
@@ -177,16 +170,16 @@ export default function AdminSettings() {
                 <CreditCard className="text-primary" size={24} />
                 <h3 className="font-bold text-lg text-black">Payment Gateways</h3>
               </div>
-              <p className="text-sm text-gray-500">Configure your Stripe integration to accept ticket payments.</p>
+              <p className="text-sm text-gray-500">Configure your Razorpay integration to accept ticket payments.</p>
               
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Stripe Publishable Key</label>
-                  <input type="text" name="stripe_public_key" value={settings.stripe_public_key || ''} onChange={handleChange} placeholder="pk_live_..." className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-mono text-sm" />
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Razorpay Key ID</label>
+                  <input type="text" name="razorpay_key_id" value={settings.razorpay_key_id || ''} onChange={handleChange} placeholder="rzp_live_..." className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-mono text-sm" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Stripe Secret Key</label>
-                  <input type="password" name="stripe_secret_key" value={settings.stripe_secret_key || ''} onChange={handleChange} placeholder="sk_live_..." className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-mono text-sm" />
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Razorpay Key Secret</label>
+                  <input type="password" name="razorpay_key_secret" value={settings.razorpay_key_secret || ''} onChange={handleChange} placeholder="••••••••••••" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-mono text-sm" />
                 </div>
               </div>
             </div>
@@ -223,40 +216,6 @@ export default function AdminSettings() {
                     <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${settings.enable_sms_notifications ? 'transform translate-x-6' : ''}`}></div>
                   </div>
                 </label>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-              <div className="flex items-center gap-3 border-b border-gray-200 pb-4">
-                <Lock className="text-primary" size={24} />
-                <h3 className="font-bold text-lg text-black">Security & Passwords</h3>
-              </div>
-              
-              <div className="space-y-6">
-                <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <div>
-                    <span className="block font-bold text-black text-sm">Enforce Two-Factor Authentication (2FA)</span>
-                    <span className="block text-xs text-gray-500 mt-1">Require all admin users to setup 2FA to access the dashboard.</span>
-                  </div>
-                  <div className="relative">
-                    <input type="checkbox" name="enforce_2fa" checked={settings.enforce_2fa} onChange={handleChange} className="sr-only" />
-                    <div className={`block w-14 h-8 rounded-full transition-colors ${settings.enforce_2fa ? 'bg-primary' : 'bg-gray-300'}`}></div>
-                    <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${settings.enforce_2fa ? 'transform translate-x-6' : ''}`}></div>
-                  </div>
-                </label>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Admin Session Timeout (Minutes)</label>
-                  <select name="session_timeout" value={settings.session_timeout || '30'} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black">
-                    <option value="15">15 Minutes</option>
-                    <option value="30">30 Minutes</option>
-                    <option value="60">1 Hour</option>
-                    <option value="120">2 Hours</option>
-                    <option value="1440">24 Hours</option>
-                  </select>
-                </div>
               </div>
             </div>
           )}

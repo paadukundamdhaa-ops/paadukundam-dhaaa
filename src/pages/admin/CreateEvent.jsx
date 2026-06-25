@@ -28,6 +28,7 @@ export default function CreateEvent() {
   const [enableHighlights, setEnableHighlights] = useState(false);
   const [enableAmenities, setEnableAmenities] = useState(false);
   const [enablePolicies, setEnablePolicies] = useState(false);
+  const [enableAnalytics, setEnableAnalytics] = useState(false);
 
   // Form States
   const [title, setTitle] = useState('');
@@ -813,10 +814,17 @@ export default function CreateEvent() {
 
           {/* Step 16: Analytics & Tracking */}
           <section id="analytics" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Shield size={18} /></div>
-              <h2 className="text-lg font-bold">16. Analytics & Tracking</h2>
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Shield size={18} /></div>
+                <h2 className="text-lg font-bold">16. Analytics & Tracking</h2>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" checked={enableAnalytics} onChange={(e) => setEnableAnalytics(e.target.checked)} className="sr-only peer" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
+            {enableAnalytics ? (
             <div className="p-6 grid grid-cols-2 gap-6">
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Google Analytics ID</label>
@@ -827,6 +835,9 @@ export default function CreateEvent() {
                 <input type="text" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
               </div>
             </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 text-sm">Analytics module is disabled.</div>
+            )}
           </section>
 
           {/* Step 17: Preview */}

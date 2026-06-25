@@ -168,8 +168,8 @@ export default function AdminBookings() {
         {/* Filters Toolbar */}
         <div className="p-4 border-b border-gray-200 flex flex-col xl:flex-row justify-between gap-4 bg-gray-50">
           
-          <div className="relative w-full xl:w-96 shrink-0">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative w-full xl:w-96 shrink-0 flex items-center">
+            <Search size={16} className="absolute left-3 text-gray-400 pointer-events-none" />
             <input 
               type="text" 
               value={searchTerm}

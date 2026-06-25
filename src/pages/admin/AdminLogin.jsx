@@ -18,6 +18,7 @@ export default function AdminLogin() {
       setIsLoading(false);
       // Hardcoded Admin Credentials
       if (email === 'admin@paadukundamdhaa.com' && password === 'admin123') {
+        localStorage.setItem('admin_auth_dummy', 'true');
         navigate('/admin');
       } else {
         setError('Invalid admin credentials. Please try again.');

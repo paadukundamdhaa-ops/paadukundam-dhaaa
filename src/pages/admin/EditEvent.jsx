@@ -173,7 +173,8 @@ export default function EditEvent() {
               name: t.tier_name,
               price: t.price,
               qty: t.total_capacity,
-              refundable: false // Handle properly if added to DB
+              tickets_sold: t.tickets_sold || 0,
+              refundable: false 
             })));
           }
         }
@@ -281,7 +282,7 @@ export default function EditEvent() {
         tier_name: t.name || 'General Admission',
         price: Number(t.price) || 0,
         total_capacity: Number(t.qty) || 0,
-        tickets_sold: 0,
+        tickets_sold: t.tickets_sold || 0,
         status: 'Active'
       }));
 

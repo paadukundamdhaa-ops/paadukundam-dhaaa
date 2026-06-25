@@ -309,7 +309,7 @@ export default function AdminEvents() {
                         ></div>
                       </div>
                     </div>
-                    <button className="text-primary text-sm font-bold flex items-center hover:underline">
+                    <button onClick={() => window.open(`/events/${event.id}`, '_blank')} className="text-primary text-sm font-bold flex items-center hover:underline">
                       <Eye size={14} className="mr-1" /> View
                     </button>
                   </div>

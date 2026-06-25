@@ -21,13 +21,13 @@ import {
 
 const navItems = [
   { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
+  { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
   { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
   { name: 'Events', path: '/admin/events', icon: <Music size={20} /> },
   { name: 'Tickets', path: '/admin/tickets', icon: <Ticket size={20} /> },
   { name: 'Bookings', path: '/admin/bookings', icon: <ShoppingBag size={20} /> },
   { name: 'Scanner', path: '/admin/scanner', icon: <Search size={20} /> },
   { name: 'Gallery', path: '/admin/gallery', icon: <ImageIcon size={20} /> },
-  { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
   { name: 'Promo Codes', path: '/admin/promocodes', icon: <Tag size={20} /> },
   { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
 ];

@@ -60,7 +60,9 @@ export default function AdminLayout() {
       const ADMIN_EMAILS = [
         'sirisairavitejateeda@gmail.com',
         'jnaneshwarmoturi123@gmail.com',
-        'iamdesign81@gmail.com'
+        'iamdesign81@gmail.com',
+        'balajirockzz9030@gmail.com', // For testing
+        'balajiprojects049@gmail.com' // For testing
       ];
       if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
         setIsAdmin(true);

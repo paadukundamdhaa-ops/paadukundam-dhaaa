@@ -3,6 +3,7 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { CheckCircle, XCircle, MapPin, Calendar, Clock, User, Mail, Phone, Ticket, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
+import Swal from 'sweetalert2';
 
 export default function TicketVerify() {
   const { bookingRef } = useParams();
@@ -41,10 +42,19 @@ export default function TicketVerify() {
     if (booking && !loading) {
       const searchParams = new URLSearchParams(location.search);
       if (searchParams.get('download') === 'true') {
-        // Small delay to ensure the component is fully rendered
-        setTimeout(() => {
-          downloadTicket();
-        }, 500);
+        Swal.fire({
+          title: 'Ticket Ready',
+          text: 'Your ticket is ready! Click the button below to save it to your device.',
+          icon: 'success',
+          showCancelButton: true,
+          confirmButtonText: 'Download Ticket',
+          cancelButtonText: 'View Only',
+          confirmButtonColor: '#e11d48'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            downloadTicket();
+          }
+        });
       }
     }
   }, [booking, loading, location]);

@@ -271,6 +271,7 @@ export default function EventDetails() {
                     <div>
                       <h4 className={`font-bold text-base ${ticket.available ? 'text-black' : 'text-gray-400'}`}>{ticket.name}</h4>
                       <p className={`text-xs ${ticket.available ? 'text-gray-500' : 'text-gray-400'}`}>{ticket.description}</p>
+                      <p className="text-[10px] text-red-500 font-bold mt-1">* Non-refundable</p>
                     </div>
                     {!ticket.available && <span className="bg-gray-100 text-gray-500 text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded ml-2">Sold Out</span>}
                   </div>

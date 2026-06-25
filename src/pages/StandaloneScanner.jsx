@@ -161,16 +161,33 @@ export default function StandaloneScanner() {
   };
 
   const toggleTorch = async () => {
-    if (scannerRef.current && scanning) {
+    if (scanning) {
       try {
         const state = !torchOn;
-        await scannerRef.current.applyVideoConstraints({
-          advanced: [{ torch: state }]
-        });
-        setTorchOn(state);
+        let success = false;
+        
+        const videoElement = document.querySelector("#qr-reader video");
+        if (videoElement && videoElement.srcObject) {
+          const track = videoElement.srcObject.getVideoTracks()[0];
+          if (track && track.getCapabilities) {
+             await track.applyConstraints({ advanced: [{ torch: state }] });
+             success = true;
+          }
+        }
+        
+        if (!success && scannerRef.current) {
+          await scannerRef.current.applyVideoConstraints({ advanced: [{ torch: state }] });
+          success = true;
+        }
+
+        if (success) {
+          setTorchOn(state);
+        } else {
+          throw new Error("Could not toggle torch");
+        }
       } catch (err) {
         console.error("Torch error", err);
-        Swal.fire({ icon: 'error', title: 'Not Supported', text: 'Flashlight control is not supported on this device.', timer: 2000, showConfirmButton: false });
+        Swal.fire({ icon: 'error', title: 'Not Supported', text: 'Flashlight control is not supported by this browser.', timer: 2000, showConfirmButton: false });
       }
     }
   };

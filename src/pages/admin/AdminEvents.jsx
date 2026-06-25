@@ -394,6 +394,60 @@ export default function AdminEvents() {
 
               <hr className="border-gray-100" />
 
+              <div className="space-y-6">
+                {selectedViewEvent.description && (
+                  <div>
+                    <h4 className="text-sm font-bold text-black uppercase mb-2">About the Event</h4>
+                    <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100" dangerouslySetInnerHTML={{ __html: selectedViewEvent.description }}></div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {selectedViewEvent.amenities && selectedViewEvent.amenities.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-bold text-black uppercase mb-2">Amenities</h4>
+                      <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                        {selectedViewEvent.amenities.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedViewEvent.highlights && selectedViewEvent.highlights.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-bold text-black uppercase mb-2">Event Rules / Highlights</h4>
+                      <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                        {selectedViewEvent.highlights.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">Age Restriction</p>
+                    <p className="text-sm text-black font-semibold">{selectedViewEvent.age_restriction || 'None specified'}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-xs font-bold text-gray-500 uppercase mb-1">Refund Policy</p>
+                    <p className="text-sm text-black font-semibold">{selectedViewEvent.refund_policy || 'None specified'}</p>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                  <h4 className="text-sm font-bold text-blue-900 uppercase mb-2">Organizer Info</h4>
+                  <div className="text-sm text-blue-800">
+                    <p><span className="font-semibold">Name:</span> {selectedViewEvent.organizer_name || 'Not provided'}</p>
+                    <p><span className="font-semibold">Email:</span> {selectedViewEvent.organizer_email || 'Not provided'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
               <div>
                 <h4 className="text-sm font-bold text-black uppercase mb-3">Ticket Statistics</h4>
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">

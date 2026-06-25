@@ -489,6 +489,9 @@ export default function Dashboard() {
             </div>
             
             <div className="p-6 overflow-y-auto">
+              <div className="flex justify-center mb-6">
+                <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-10 object-contain" />
+              </div>
               <div className="mb-6 pb-6 border-b border-gray-100">
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Event Info</h4>
                 <p className="font-black text-lg text-black mb-1">{selectedBooking.events?.title || 'Unknown Event'}</p>

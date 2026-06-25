@@ -220,33 +220,58 @@ export default function AdminLogin() {
                     className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Sending...' : (
-                      <>Send Secure Login Link <ArrowRight size={18} /></>
+                      <>Send Magic Link & OTP <ArrowRight size={18} /></>
                     )}
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="space-y-4 lg:space-y-4 text-center pb-4">
-                <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/20">
-                  <Mail className="w-8 h-8 text-green-500" />
+              <form onSubmit={handleVerifyOtp} className="space-y-4 lg:space-y-4">
+                {message && (
+                  <div className="text-green-500 text-sm font-medium bg-green-500/10 p-3 rounded-lg border border-green-500/20 mb-4">
+                    {message}
+                  </div>
+                )}
+                
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                    <Key size={18} className="text-gray-500 lg:text-gray-400" />
+                  </div>
+                  <input 
+                    type="text" 
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal tracking-widest" 
+                    placeholder="Enter 6-digit OTP code" 
+                  />
                 </div>
-                <h3 className="text-xl font-bold text-white lg:text-gray-900">Check Your Email</h3>
-                <p className="text-sm text-gray-400 lg:text-gray-500 leading-relaxed">
-                  We sent a secure magic link to <span className="font-bold text-white lg:text-gray-900">{email}</span>. 
-                  <br/><br/>
-                  Please open your email inbox and click the blue <strong>"Sign In"</strong> link to securely access the dashboard.
-                </p>
 
-                <div className="pt-6">
+                {error && (
+                  <div className="text-red-500 text-sm font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-3 lg:pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Verifying...' : (
+                      <>Verify OTP & Login <ArrowRight size={18} /></>
+                    )}
+                  </button>
                   <button
                     type="button"
-                    onClick={() => { setStep('email'); setError(''); }}
-                    className="text-sm text-gray-500 hover:text-white lg:hover:text-gray-900 transition-colors underline underline-offset-4"
+                    onClick={() => { setStep('email'); setOtp(''); setError(''); setMessage(''); }}
+                    className="w-full mt-3 text-sm text-gray-500 hover:text-white lg:hover:text-gray-900 transition-colors"
                   >
-                    Use a different email address
+                    Use a different email
                   </button>
                 </div>
-              </div>
+              </form>
             )}
 
             <div className="mt-6 lg:mt-6 text-center text-[12px] font-medium text-gray-500 lg:text-gray-400">

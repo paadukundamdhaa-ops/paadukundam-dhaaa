@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,6 +9,7 @@ export default function ScannerLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -201,14 +202,18 @@ export default function ScannerLogin() {
                   <Lock size={18} className="text-gray-500 lg:text-gray-400" />
                 </div>
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-10 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
                   placeholder="Scanner Password" 
                 />
-                <button type="button" className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600">
-                  <EyeOff size={18} />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                 </button>
               </div>
 

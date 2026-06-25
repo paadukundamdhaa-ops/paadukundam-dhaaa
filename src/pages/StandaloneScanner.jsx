@@ -128,8 +128,10 @@ export default function StandaloneScanner() {
 
   const verifyTicket = async (ticketUrl) => {
     try {
-      const match = ticketUrl.match(/#?BK-\d+/);
-      const bookingRef = match ? match[0] : ticketUrl;
+      let bookingRef = ticketUrl;
+      if (ticketUrl.includes('/ticket/')) {
+        bookingRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
+      }
       const searchRef = bookingRef.startsWith('#') ? bookingRef : `#${bookingRef}`;
 
       const { data, error } = await supabase

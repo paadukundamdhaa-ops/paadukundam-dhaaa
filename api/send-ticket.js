@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { email, name, eventTitle, eventDate, bookingRef, qty, amount, subtotal, discount, platformFee } = req.body;
+  const { email, name, eventTitle, eventDate, eventVenue, eventCity, bookingRef, qty, amount, subtotal, discount, platformFee } = req.body;
 
   if (!email || !bookingRef) {
     return res.status(400).json({ message: 'Missing required fields: email and bookingRef are required' });
@@ -35,6 +35,11 @@ export default async function handler(req, res) {
     // Generate a QR code URL for the ticket
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
 
+    const locationString = [eventVenue, eventCity].filter(Boolean).join(', ') || 'TBA';
+    const mapsUrl = locationString !== 'TBA' 
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationString)}`
+      : '#';
+
     const htmlContent = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px; background-color: #ffffff;">
         
@@ -55,6 +60,13 @@ export default async function handler(req, res) {
             <tr>
               <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date</td>
               <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">${eventDate}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #64748b; font-size: 14px; vertical-align: top;">Location</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">
+                ${locationString}<br/>
+                ${mapsUrl !== '#' ? `<a href="${mapsUrl}" target="_blank" style="color: #e50914; font-size: 12px; text-decoration: underline;">View on Maps</a>` : ''}
+              </td>
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Booking Ref</td>

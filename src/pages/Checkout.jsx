@@ -221,6 +221,8 @@ export default function Checkout() {
             name: firstName,
             eventTitle: event.title,
             eventDate: event.date,
+            eventVenue: event.venue,
+            eventCity: event.city,
             bookingRef: bookingRef,
             qty: totalTickets,
             amount: grandTotal,

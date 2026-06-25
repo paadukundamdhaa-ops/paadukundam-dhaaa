@@ -52,7 +52,11 @@ export default function AdminDashboard() {
 
     const revenue = filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
     const sold = filteredBookings.reduce((sum, b) => sum + (b.qty || 1), 0);
-    const checkedIn = filteredBookings.filter(b => b.check_in_status === 'checked_in' || b.check_in_status === 'allowed').length;
+    const checkedIn = filteredBookings.reduce((sum, b) => {
+      if (b.checked_in_qty > 0) return sum + b.checked_in_qty;
+      if (b.check_in_status === 'allowed' || b.check_in_status === 'checked_in') return sum + (b.qty || 1);
+      return sum;
+    }, 0);
 
     setStats([
       { title: 'Total Revenue', value: `₹${revenue.toLocaleString()}`, increase: '', icon: <DollarSign size={24} className="text-primary" /> },

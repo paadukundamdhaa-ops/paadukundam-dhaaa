@@ -167,21 +167,38 @@ export default function Checkout() {
       const eventInitials = getInitials(event.title);
       const bookingRef = `#${eventInitials}-` + Math.floor(100000 + Math.random() * 900000);
 
-      // Find primary ticket tier (the first one they selected)
-      const primaryTicketTierId = Object.keys(selectedTickets).find(id => selectedTickets[id] > 0);
+      // 3. Save Bookings to Database
+      // Create a separate booking record for each ticket tier purchased
+      const bookingsToInsert = [];
+      let index = 1;
+      const numTiers = Object.keys(selectedTickets).filter(id => selectedTickets[id] > 0).length;
+      
+      for (const [tierId, qty] of Object.entries(selectedTickets)) {
+        if (qty > 0) {
+          const tierInfo = allTicketsInfo.find(t => t.id === tierId);
+          const tierPrice = tierInfo ? tierInfo.price : 0;
+          
+          const tierSubtotal = tierPrice * qty;
+          const tierDiscount = appliedPromo ? Math.round(tierSubtotal * (appliedPromo.discount_percentage / 100)) : 0;
+          // Dashboard math expects platform fee to be 15 for each ticket to calculate discount properly.
+          const tierTotalAmount = tierSubtotal - tierDiscount + 15;
+          
+          bookingsToInsert.push({
+            booking_ref: numTiers > 1 ? `${bookingRef}-${index}` : bookingRef,
+            user_id: currentUser.id,
+            event_id: event.id,
+            ticket_tier_id: tierId,
+            qty: qty,
+            total_amount: tierTotalAmount,
+            status: 'Completed'
+          });
+          index++;
+        }
+      }
 
-      // 3. Save Booking to Database
       const { error: bookingError } = await supabase
         .from('bookings')
-        .insert({
-          booking_ref: bookingRef,
-          user_id: currentUser.id,
-          event_id: event.id,
-          ticket_tier_id: primaryTicketTierId || null,
-          qty: totalTickets,
-          total_amount: grandTotal,
-          status: 'Completed'
-        });
+        .insert(bookingsToInsert);
 
       if (bookingError) throw bookingError;
 

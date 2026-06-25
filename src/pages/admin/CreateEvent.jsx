@@ -644,14 +644,10 @@ export default function CreateEvent() {
               <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><Shield size={18} /></div>
               <h2 className="text-lg font-bold">8. Pricing & Taxes</h2>
             </div>
-            <div className="p-6 grid grid-cols-2 gap-6">
+            <div className="p-6">
               <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Platform Booking Fee (₹)</label>
-                <input type="number" defaultValue="50" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
-              </div>
-              <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">GST / Tax Percentage (%)</label>
-                <input type="number" defaultValue="18" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
+                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Platform Booking Fee (₹) <span className="text-gray-400 font-normal">(Fixed)</span></label>
+                <input type="number" value="15" disabled className="w-full border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed rounded-lg px-4 py-2.5 text-sm outline-none" />
               </div>
             </div>
           </section>

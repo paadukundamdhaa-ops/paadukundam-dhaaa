@@ -101,7 +101,7 @@ export default function AdminLayout() {
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20">
         <div className="p-6 border-b border-gray-200 flex items-center justify-center">
-          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Admin" className="h-10 object-contain" />
+          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Admin" className="h-16 object-contain" />
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 hide-scrollbar">
@@ -144,7 +144,7 @@ export default function AdminLayout() {
           >
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Admin" className="h-8 object-contain" />
+                <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Admin" className="h-12 object-contain" />
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 hover:text-primary">
                 <X size={24} />

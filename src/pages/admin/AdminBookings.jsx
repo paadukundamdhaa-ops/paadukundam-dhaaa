@@ -175,7 +175,7 @@ export default function AdminBookings() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by ID, User, or Event..." 
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              className="w-full pl-9 pr-4 py-2 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
 
@@ -184,7 +184,7 @@ export default function AdminBookings() {
             <select 
               value={eventFilter} 
               onChange={(e) => setEventFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white min-w-[140px] flex-grow sm:flex-grow-0"
+              className="px-3 py-2 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white min-w-[140px] flex-grow sm:flex-grow-0"
             >
               <option value="all">All Events</option>
               {uniqueEvents.map(evt => (
@@ -196,7 +196,7 @@ export default function AdminBookings() {
             <select 
               value={statusFilter} 
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white flex-grow sm:flex-grow-0"
+              className="px-3 py-2 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white flex-grow sm:flex-grow-0"
             >
               <option value="all">All Statuses</option>
               <option value="completed">Completed</option>
@@ -210,7 +210,7 @@ export default function AdminBookings() {
                 type="date" 
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white w-full sm:w-auto"
+                className="px-3 py-2 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white w-full sm:w-auto"
                 title="Start Date"
               />
               <span className="text-gray-400">to</span>
@@ -218,7 +218,7 @@ export default function AdminBookings() {
                 type="date" 
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white w-full sm:w-auto"
+                className="px-3 py-2 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white w-full sm:w-auto"
                 title="End Date"
               />
             </div>
@@ -227,7 +227,7 @@ export default function AdminBookings() {
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white flex-grow sm:flex-grow-0"
+              className="px-3 py-2 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:border-primary bg-white flex-grow sm:flex-grow-0"
             >
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>

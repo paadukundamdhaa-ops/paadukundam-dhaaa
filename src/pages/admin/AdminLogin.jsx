@@ -243,7 +243,7 @@ export default function AdminLogin() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal tracking-widest" 
-                    placeholder="Enter 6-digit OTP code" 
+                    placeholder="Enter OTP code" 
                   />
                 </div>
 

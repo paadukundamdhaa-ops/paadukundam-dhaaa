@@ -278,7 +278,7 @@ export default function AdminPromoCodes() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50">
-              <h3 className="font-bold text-lg">{isEditing ? 'Edit Promo Code' : 'Create Promo Code'}</h3>
+              <h3 className="font-bold text-lg text-black">{isEditing ? 'Edit Promo Code' : 'Create Promo Code'}</h3>
             </div>
             <div className="p-5">
               <form id="promo-form" onSubmit={handleSavePromo} className="space-y-4">

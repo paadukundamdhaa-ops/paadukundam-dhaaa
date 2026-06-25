@@ -219,9 +219,13 @@ export default function AdminLayout() {
             </button>
             <div className="flex items-center gap-3 cursor-pointer group">
               <img 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150" 
+                src={`/images/${user?.email?.split('@')[0]}.jpg`}
+                onError={(e) => {
+                  e.target.onerror = null; 
+                  e.target.src = "https://ui-avatars.com/api/?name=" + (user?.email?.split('@')[0] || 'Admin') + "&background=8c1c24&color=fff";
+                }}
                 alt="Admin" 
-                className="w-8 h-8 rounded-full object-cover border-2 border-transparent group-hover:border-primary transition-all"
+                className="w-8 h-8 rounded-full object-cover border-2 border-transparent group-hover:border-[#8c1c24] transition-all bg-gray-200"
               />
               <div className="hidden sm:block text-sm">
                 <p className="font-bold text-black leading-tight">

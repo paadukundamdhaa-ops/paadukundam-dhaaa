@@ -56,6 +56,18 @@ export default function AdminLayout() {
         return;
       }
 
+      // Hardcoded Admin Emails Check
+      const ADMIN_EMAILS = [
+        'sirisairavitejateeda@gmail.com',
+        'jnaneshwarmoturi123@gmail.com',
+        'iamdesign81@gmail.com'
+      ];
+      if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+        setIsAdmin(true);
+        setRoleLoading(false);
+        return;
+      }
+
       try {
         const { data, error } = await supabase
           .from('profiles')

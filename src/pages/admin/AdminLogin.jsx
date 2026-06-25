@@ -1,29 +1,67 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft, Key } from 'lucide-react';
 import { useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState('email');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
-  const handleLogin = (e) => {
+  const ADMIN_EMAILS = [
+    'sirisairavitejateeda@gmail.com',
+    'jnaneshwarmoturi123@gmail.com',
+    'iamdesign81@gmail.com'
+  ];
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    
+    const formattedEmail = email.toLowerCase().trim();
+    if (!ADMIN_EMAILS.includes(formattedEmail)) {
+      setError('Unauthorized email address. Access denied.');
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: formattedEmail,
+      options: { shouldCreateUser: true }
+    });
+    setIsLoading(false);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setStep('otp');
+      setMessage('A secure login link and OTP have been sent to your email.');
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    setTimeout(() => {
-      setIsLoading(false);
-      // Hardcoded Admin Credentials
-      if (email === 'admin@paadukundamdhaa.com' && password === 'admin123') {
-        localStorage.setItem('admin_auth_dummy', 'true');
-        navigate('/admin');
-      } else {
-        setError('Invalid admin credentials. Please try again.');
-      }
-    }, 1000);
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email.toLowerCase().trim(),
+      token: otp.trim(),
+      type: 'email'
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+      setError(error.message);
+    } else if (data.session) {
+      navigate('/admin');
+    }
   };
 
   return (
@@ -151,64 +189,88 @@ export default function AdminLogin() {
               <p className="text-gray-500 text-xs font-medium">Please verify your identity to access the dashboard.</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4 lg:space-y-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
-                  <Mail size={18} className="text-gray-500 lg:text-gray-400" />
+            {step === 'email' ? (
+              <form onSubmit={handleSendOtp} className="space-y-4 lg:space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                    <Mail size={18} className="text-gray-500 lg:text-gray-400" />
+                  </div>
+                  <input 
+                    type="email" 
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
+                    placeholder="Enter admin email address" 
+                  />
                 </div>
-                <input 
-                  type="email" 
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
-                  placeholder="admin@paadukundamdhaa.com" 
-                />
-              </div>
-              
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
-                  <Lock size={18} className="text-gray-500 lg:text-gray-400" />
+
+                {error && (
+                  <div className="text-red-500 text-sm font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-3 lg:pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Sending...' : (
+                      <>Send Magic Link & OTP <ArrowRight size={18} /></>
+                    )}
+                  </button>
                 </div>
-                <input 
-                  type="password" 
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-10 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
-                  placeholder="Password" 
-                />
-                <button type="button" className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600">
-                  <EyeOff size={18} />
-                </button>
-              </div>
-
-              {error && (
-                <div className="text-red-500 text-sm font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                  {error}
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="space-y-4 lg:space-y-4">
+                {message && (
+                  <div className="text-green-500 text-sm font-medium bg-green-500/10 p-3 rounded-lg border border-green-500/20 mb-4">
+                    {message}
+                  </div>
+                )}
+                
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                    <Key size={18} className="text-gray-500 lg:text-gray-400" />
+                  </div>
+                  <input 
+                    type="text" 
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal tracking-widest" 
+                    placeholder="Enter 6-digit OTP code" 
+                  />
                 </div>
-              )}
 
-              <div className="flex items-center justify-between pt-1 lg:pt-1.5 mb-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 lg:w-3.5 lg:h-3.5 rounded border-[#2a1618] lg:border-gray-300 bg-transparent lg:bg-white text-[#8c1c24] focus:ring-[#8c1c24] accent-[#8c1c24]" />
-                  <span className="text-[13px] lg:text-[13px] font-medium text-gray-400 lg:text-gray-700">Remember me</span>
-                </label>
-                <a href="#" className="text-[13px] lg:text-[13px] font-bold text-[#facc15] lg:text-[#8c1c24] hover:text-[#eab308] lg:hover:text-[#6b151b] transition-colors">Forgot Password?</a>
-              </div>
+                {error && (
+                  <div className="text-red-500 text-sm font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                    {error}
+                  </div>
+                )}
 
-              <div className="pt-3 lg:pt-2">
-                <button 
-                  type="submit" 
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Authenticating...' : (
-                    <>Log In to Dashboard <ArrowRight size={18} /></>
-                  )}
-                </button>
-              </div>
-            </form>
+                <div className="pt-3 lg:pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Verifying...' : (
+                      <>Verify OTP & Login <ArrowRight size={18} /></>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setStep('email'); setOtp(''); setError(''); setMessage(''); }}
+                    className="w-full mt-3 text-sm text-gray-500 hover:text-white lg:hover:text-gray-900 transition-colors"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              </form>
+            )}
 
             <div className="mt-6 lg:mt-6 text-center text-[12px] font-medium text-gray-500 lg:text-gray-400">
               <Shield size={14} className="inline-block mr-1 -mt-0.5" />

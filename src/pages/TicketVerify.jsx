@@ -169,7 +169,7 @@ export default function TicketVerify() {
               </div>
             </div>
 
-            <div>
+            <div data-html2canvas-ignore="true">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Order Summary</h3>
               <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
                 <div className="flex justify-between items-center mb-3">

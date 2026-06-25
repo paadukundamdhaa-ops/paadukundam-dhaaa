@@ -312,7 +312,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Payment Breakdown & Total */}
-                        <div className="bg-gray-50 pt-4 pb-6 text-center border-t border-gray-100 flex flex-col justify-between h-full">
+                        <div className="bg-gray-50 pt-4 pb-6 text-center border-t border-gray-100 flex flex-col justify-between h-full" data-html2canvas-ignore="true">
                           {expandedBookings[booking.id] && (
                             <div className="mb-4 animate-in slide-in-from-top-2 fade-in duration-200">
                               <div className="flex justify-between items-center px-8 mb-2">

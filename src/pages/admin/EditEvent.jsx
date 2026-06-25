@@ -194,11 +194,11 @@ export default function EditEvent() {
   };
 
   const handlePublish = async () => {
-    if (!title || !artistName || !category || !eventDate || !eventTime || !venueName || !city) {
+    if (!title || !category || !eventDate || !eventTime || !venueName || !city) {
       Swal.fire({
         icon: 'warning',
         title: 'Missing Fields',
-        text: 'Please fill in all required fields (Title, Artist, Category, Date, Time, Venue, City).',
+        text: 'Please fill in all required fields (Title, Category, Date, Time, Venue, City).',
         confirmButtonColor: '#e11d48'
       });
       return;

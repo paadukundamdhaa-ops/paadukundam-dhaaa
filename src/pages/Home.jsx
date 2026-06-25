@@ -80,7 +80,7 @@ export default function Home() {
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('*')
+          .select('*, ticket_tiers(price)')
           .in('status', ['Live', 'Upcoming'])
           .order('event_date', { ascending: true })
           .limit(8);
@@ -90,13 +90,16 @@ export default function Home() {
         if (data) {
           const formattedEvents = data.map(event => {
             const d = new Date(event.event_date);
+            const lowestPrice = event.ticket_tiers && event.ticket_tiers.length > 0 
+              ? Math.min(...event.ticket_tiers.map(t => t.price || 0)) 
+              : 0;
             return {
               id: event.id,
               title: event.title,
               date: d.getDate().toString().padStart(2, '0'),
               month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
               venue: event.venue,
-              price: '999',
+              price: lowestPrice,
               img: event.img_url || '/images/arijit.png'
             };
           });

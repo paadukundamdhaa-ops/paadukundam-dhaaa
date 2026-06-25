@@ -39,7 +39,7 @@ export default function Events() {
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('*')
+          .select('*, ticket_tiers(price)')
           .order('event_date', { ascending: true });
 
         if (error) throw error;
@@ -54,6 +54,9 @@ export default function Events() {
             const city = venueParts.length > 1 ? venueParts[venueParts.length - 1].trim() : venueString;
 
             const isFree = (event.title || '').toLowerCase().includes('free') || (event.title || '').toLowerCase().includes('meetup');
+            const lowestPrice = event.ticket_tiers && event.ticket_tiers.length > 0 
+              ? Math.min(...event.ticket_tiers.map(t => t.price || 0)) 
+              : 0;
 
             return {
               id: event.id,
@@ -67,7 +70,7 @@ export default function Events() {
               venue: venueString,
               city: city,
               category: event.category || 'Uncategorized',
-              price: isFree ? 0 : 999, // dynamic fallback price
+              price: isFree ? 0 : lowestPrice,
               img: event.img_url || '/images/arijit.png',
               tag: event.status || 'Draft'
             };

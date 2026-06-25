@@ -224,7 +224,9 @@ export default function AdminLayout() {
                 className="w-8 h-8 rounded-full object-cover border-2 border-transparent group-hover:border-primary transition-all"
               />
               <div className="hidden sm:block text-sm">
-                <p className="font-bold text-black leading-tight">Admin User</p>
+                <p className="font-bold text-black leading-tight">
+                  {user?.email?.split('@')[0] || 'Admin User'}
+                </p>
                 <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Superadmin</p>
               </div>
             </div>

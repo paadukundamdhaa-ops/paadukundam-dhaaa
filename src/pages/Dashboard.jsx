@@ -15,6 +15,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [expandedBookings, setExpandedBookings] = useState({});
+
+  const toggleBreakdown = (id) => {
+    setExpandedBookings(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const [activeTab, setActiveTab] = useState('My Tickets');
 
@@ -303,23 +308,35 @@ export default function Dashboard() {
 
                         {/* Payment Breakdown & Total */}
                         <div className="bg-gray-50 pt-4 pb-6 text-center border-t border-gray-100 flex flex-col justify-between h-full">
-                          <div className="flex justify-between items-center px-8 mb-2">
-                            <span className="text-[12px] text-gray-500">Ticket Cost ({booking.qty}x)</span>
-                            <span className="text-[12px] font-bold text-gray-700">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
-                          </div>
-                          <div className="flex justify-between items-center px-8 mb-2">
-                            <span className="text-[12px] text-gray-500">Platform Fee</span>
-                            <span className="text-[12px] font-bold text-gray-700">₹15</span>
-                          </div>
-                          {((booking.ticket_tiers?.price * booking.qty) + 15) > booking.total_amount && (
-                            <div className="flex justify-between items-center px-8 mb-3">
-                              <span className="text-[12px] text-green-600 font-bold">Discount</span>
-                              <span className="text-[12px] font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + 15) - booking.total_amount}</span>
+                          {expandedBookings[booking.id] && (
+                            <div className="mb-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                              <div className="flex justify-between items-center px-8 mb-2">
+                                <span className="text-[12px] text-gray-500">Ticket Cost ({booking.qty}x)</span>
+                                <span className="text-[12px] font-bold text-gray-700">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
+                              </div>
+                              <div className="flex justify-between items-center px-8 mb-2">
+                                <span className="text-[12px] text-gray-500">Platform Fee</span>
+                                <span className="text-[12px] font-bold text-gray-700">₹15</span>
+                              </div>
+                              {((booking.ticket_tiers?.price * booking.qty) + 15) > booking.total_amount && (
+                                <div className="flex justify-between items-center px-8 mb-3">
+                                  <span className="text-[12px] text-green-600 font-bold">Discount</span>
+                                  <span className="text-[12px] font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + 15) - booking.total_amount}</span>
+                                </div>
+                              )}
                             </div>
                           )}
-                          <div className="flex justify-between items-center pt-3 border-t border-gray-200 px-8 mt-1">
+                          <div className={`flex justify-between items-center px-8 ${expandedBookings[booking.id] ? 'pt-3 border-t border-gray-200 mt-1' : ''}`}>
                             <span className="font-bold text-[14px] text-black">Total Paid</span>
-                            <span className="font-black text-lg text-black">₹{booking.total_amount.toLocaleString()}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="font-black text-lg text-black">₹{booking.total_amount.toLocaleString()}</span>
+                              <button 
+                                onClick={() => toggleBreakdown(booking.id)}
+                                className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold px-2 py-1 rounded transition-colors uppercase tracking-wider"
+                              >
+                                {expandedBookings[booking.id] ? 'Hide' : 'View'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

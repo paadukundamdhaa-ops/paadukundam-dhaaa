@@ -12,6 +12,7 @@ export default function StandaloneScanner() {
   const [scanResult, setScanResult] = useState(null);
   const [recentScans, setRecentScans] = useState([]);
   const [stats, setStats] = useState({ total: 0, checkedIn: 0 });
+  const [partialQty, setPartialQty] = useState(1);
   const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
   const navigate = useNavigate();
@@ -158,8 +159,18 @@ export default function StandaloneScanner() {
         return;
       }
 
+      const checkedInQty = data.checked_in_qty || 0;
+      if (checkedInQty >= data.qty) {
+        setScanResult({
+          status: 'already_scanned',
+          data
+        });
+        return;
+      }
+
+      setPartialQty(1); // Reset partial qty to 1 when a valid ticket is scanned
       setScanResult({
-        status: data.check_in_status === 'allowed' ? 'already_scanned' : 'valid',
+        status: 'valid',
         data
       });
 
@@ -172,12 +183,25 @@ export default function StandaloneScanner() {
     if (!scanResult || !scanResult.data) return;
     
     try {
+      const currentCheckedIn = scanResult.data.checked_in_qty || 0;
+      
+      let updatePayload = {};
+      if (status === 'allowed') {
+        const newCheckedInQty = currentCheckedIn + partialQty;
+        updatePayload = {
+          checked_in_qty: newCheckedInQty,
+          check_in_status: newCheckedInQty >= scanResult.data.qty ? 'allowed' : scanResult.data.check_in_status,
+          checked_in_at: new Date().toISOString()
+        };
+      } else {
+        updatePayload = {
+          check_in_status: status
+        };
+      }
+
       const { error } = await supabase
         .from('bookings')
-        .update({ 
-          check_in_status: status,
-          checked_in_at: new Date().toISOString()
-        })
+        .update(updatePayload)
         .eq('id', scanResult.data.id);
 
       if (error) throw error;
@@ -291,10 +315,12 @@ export default function StandaloneScanner() {
               )}
 
               {scanResult.status === 'already_scanned' && (
-                <div className="p-6 text-center bg-yellow-500/10 border-b border-yellow-500/20">
-                  <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-2" />
-                  <h3 className="text-2xl font-black text-yellow-500">ALREADY SCANNED</h3>
-                  <p className="text-yellow-400 font-bold text-sm">Checked in at: {new Date(scanResult.data.checked_in_at).toLocaleTimeString()}</p>
+                <div className="p-6 text-center bg-red-600 border-b border-red-700">
+                  <XCircle className="w-20 h-20 text-white mx-auto mb-3" />
+                  <h3 className="text-3xl font-black text-white leading-tight">INVALID<br/>ALL TICKETS USED</h3>
+                  <p className="text-red-100 font-bold text-sm mt-3 bg-black/20 py-2 px-4 rounded-lg inline-block">
+                    Total {scanResult.data.qty} of {scanResult.data.qty} people entered
+                  </p>
                 </div>
               )}
 
@@ -326,13 +352,45 @@ export default function StandaloneScanner() {
                       <p className="font-bold text-white">{scanResult.data.profiles?.name || scanResult.data.profiles?.email}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Ticket className="w-5 h-5 text-zinc-500" />
-                    <div>
-                      <p className="text-sm text-zinc-400 font-bold uppercase text-[10px]">Ticket Quantity</p>
-                      <p className="font-black text-xl text-white">{scanResult.data.qty} <span className="text-sm font-medium text-zinc-500">Admissions</span></p>
+                  <div className="flex items-center justify-between border-t border-zinc-800 pt-4 mt-4">
+                    <div className="text-center w-1/3 border-r border-zinc-800">
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Total</p>
+                      <p className="text-lg font-black text-white">{scanResult.data.qty}</p>
+                    </div>
+                    <div className="text-center w-1/3 border-r border-zinc-800">
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Entered</p>
+                      <p className="text-lg font-black text-white">{scanResult.data.checked_in_qty || 0}</p>
+                    </div>
+                    <div className="text-center w-1/3">
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Remaining</p>
+                      <p className="text-lg font-black text-primary">{scanResult.data.qty - (scanResult.data.checked_in_qty || 0)}</p>
                     </div>
                   </div>
+
+                  {scanResult.status === 'valid' && (
+                    <div className="mt-4 pt-4 border-t border-zinc-800 flex flex-col items-center">
+                      <p className="text-sm font-bold text-zinc-400 mb-3">How many entering now?</p>
+                      <div className="flex items-center gap-4 bg-zinc-950 p-2 rounded-2xl border border-zinc-800">
+                        <button 
+                          onClick={() => setPartialQty(Math.max(1, partialQty - 1))}
+                          className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center font-bold text-xl text-white disabled:opacity-50"
+                          disabled={partialQty <= 1}
+                        >
+                          -
+                        </button>
+                        <div className="w-12 text-center text-2xl font-black text-white">
+                          {partialQty}
+                        </div>
+                        <button 
+                          onClick={() => setPartialQty(Math.min(scanResult.data.qty - (scanResult.data.checked_in_qty || 0), partialQty + 1))}
+                          className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center font-bold text-xl text-white disabled:opacity-50"
+                          disabled={partialQty >= scanResult.data.qty - (scanResult.data.checked_in_qty || 0)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

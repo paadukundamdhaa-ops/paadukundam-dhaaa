@@ -138,13 +138,21 @@ export default function StandaloneScanner() {
         .from('bookings')
         .select('*, events(*), profiles(*)')
         .eq('booking_ref', searchRef)
-        .eq('event_id', selectedEventId)
         .single();
 
       if (error || !data) {
         setScanResult({
           status: 'invalid',
-          message: 'Ticket not found for this event.',
+          message: 'FAKE TICKET! Not found in our system.',
+          ref: searchRef
+        });
+        return;
+      }
+
+      if (data.event_id !== selectedEventId) {
+        setScanResult({
+          status: 'wrong_event',
+          message: `WRONG EVENT! This ticket is for "${data.events?.title || 'Another Event'}". It is not valid here.`,
           ref: searchRef
         });
         return;
@@ -295,6 +303,16 @@ export default function StandaloneScanner() {
                   <XCircle className="w-16 h-16 text-red-500 mx-auto mb-2" />
                   <h3 className="text-2xl font-black text-red-500">INVALID TICKET</h3>
                   <p className="text-red-400 font-bold text-sm">{scanResult.message || 'Ticket not found'}</p>
+                </div>
+              )}
+
+              {scanResult.status === 'wrong_event' && (
+                <div className="p-6 text-center bg-orange-500/10 border-b border-orange-500/20">
+                  <AlertTriangle className="w-16 h-16 text-orange-500 mx-auto mb-2" />
+                  <h3 className="text-2xl font-black text-orange-500">WRONG EVENT</h3>
+                  <p className="text-orange-400 font-bold text-sm leading-relaxed max-w-xs mx-auto">
+                    {scanResult.message}
+                  </p>
                 </div>
               )}
 

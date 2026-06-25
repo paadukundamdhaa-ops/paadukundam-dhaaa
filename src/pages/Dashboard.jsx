@@ -43,7 +43,7 @@ export default function Dashboard() {
         // Fetch Bookings
         const { data: bookingsData, error: bookingsError } = await supabase
           .from('bookings')
-          .select('*, events(*), ticket_tiers(price)')
+          .select('*, events(*), ticket_tiers(*)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 

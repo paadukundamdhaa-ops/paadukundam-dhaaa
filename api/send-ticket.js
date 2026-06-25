@@ -39,8 +39,8 @@ export default async function handler(req, res) {
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px; background-color: #ffffff;">
         
         <div style="text-align: center; margin-bottom: 20px;">
-          <h2 style="color: #e50914; margin: 0; font-size: 24px; font-weight: 900;">PAADUKUNDAMDHAA</h2>
-          <p style="color: #666; font-size: 14px; margin-top: 5px;">Your Official Event Ticket</p>
+          <img src="https://paadukundam-dhaaa.vercel.app/images/LOGO%20__%20Option%2001.png" alt="PaadukundamDhaa Logo" style="height: 50px; object-fit: contain; margin: 0 auto;" />
+          <p style="color: #666; font-size: 14px; margin-top: 10px;">Your Official Event Ticket</p>
         </div>
         
         <p style="font-size: 16px; color: #333;">Hi <strong>${name || 'there'}</strong>,</p>

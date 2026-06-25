@@ -100,14 +100,8 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20">
-        <div className="p-6 border-b border-gray-200 flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Music size={18} className="text-white" />
-          </div>
-          <div>
-            <h1 className="font-black text-lg leading-tight uppercase tracking-wide text-black">Paadukundam<span className="text-primary">Dhaa</span></h1>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Admin Panel</p>
-          </div>
+        <div className="p-6 border-b border-gray-200 flex items-center justify-center">
+          <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa Admin" className="h-10 object-contain" />
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 hide-scrollbar">
@@ -150,10 +144,7 @@ export default function AdminLayout() {
           >
             <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                  <Music size={18} className="text-white" />
-                </div>
-                <h1 className="font-black text-lg uppercase text-black">PaadukundamDhaa Admin</h1>
+                <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa Admin" className="h-8 object-contain" />
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 hover:text-primary">
                 <X size={24} />

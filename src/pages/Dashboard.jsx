@@ -298,10 +298,11 @@ export default function Dashboard() {
                           </div>
 
                           {/* Ticket Details */}
-                          <div className="text-center flex flex-col justify-center w-full">
-                            <p className="text-gray-500 text-[13px] font-medium mb-3">{booking.qty} Ticket(s)</p>
+                          <div className="text-center flex flex-col justify-center items-center w-full">
+                            <img src="/images/LOGO __ Option 01.png" alt="PaadukundamDhaa Logo" className="h-6 object-contain mb-2 opacity-90" crossOrigin="anonymous" />
+                            <p className="text-gray-500 text-[13px] font-medium mb-2">{booking.qty} Ticket(s)</p>
                             <h4 className="text-xl font-black text-black mb-1 uppercase tracking-wider">GENERAL</h4>
-                            <p className="text-[13px] text-gray-500 mb-3 uppercase tracking-widest">Entry</p>
+                            <p className="text-[13px] text-gray-500 mb-2 uppercase tracking-widest">Entry</p>
                             <p className="text-[11px] font-bold text-black uppercase tracking-widest bg-gray-50 py-1.5 px-2 rounded-lg inline-block mx-auto">ID: {booking.booking_ref}</p>
                           </div>
                         </div>

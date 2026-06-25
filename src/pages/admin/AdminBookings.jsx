@@ -20,17 +20,27 @@ export default function AdminBookings() {
   const [uniqueEvents, setUniqueEvents] = useState([]);
 
   const fetchBookings = async () => {
-    const { data, error } = await supabase
+    // Fetch all bookings
+    const { data: bookingsData } = await supabase
       .from('bookings')
       .select('*, events(title, event_date), profiles(name)')
       .order('created_at', { ascending: false });
     
-    if (data) {
-      setBookings(data);
-      // Extract unique event titles for the dropdown
-      const events = [...new Set(data.map(b => b.events?.title).filter(Boolean))];
+    // Fetch all events for the dropdown
+    const { data: eventsData } = await supabase
+      .from('events')
+      .select('title')
+      .order('created_at', { ascending: false });
+    
+    if (bookingsData) {
+      setBookings(bookingsData);
+    }
+    
+    if (eventsData) {
+      const events = [...new Set(eventsData.map(e => e.title).filter(Boolean))];
       setUniqueEvents(events);
     }
+    
     setLoading(false);
   };
 

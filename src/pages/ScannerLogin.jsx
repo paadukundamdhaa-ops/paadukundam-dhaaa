@@ -269,7 +269,7 @@ export default function ScannerLogin() {
           </div>
 
           {/* --- DESKTOP BOTTOM BADGES (Outside Card) --- */}
-          <div className="hidden lg:grid w-full max-w-[600px] grid-cols-4 gap-4 mt-auto opacity-80">
+          <div className="hidden lg:grid w-full max-w-[600px] grid-cols-4 gap-4 mt-16 opacity-80">
             <div className="flex items-center gap-3 justify-start">
               <div className="w-10 h-10 rounded-full border border-[#8c1c24]/20 flex items-center justify-center shrink-0">
                 <Lock className="text-[#8c1c24]" size={16} />

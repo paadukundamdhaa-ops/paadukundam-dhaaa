@@ -879,7 +879,7 @@ export default function CreateEvent() {
             <button className="px-6 py-2.5 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm border border-transparent">
               <Save size={18} /> Save Draft
             </button>
-            <button className="px-6 py-2.5 rounded-lg font-bold text-white bg-black hover:bg-gray-900 transition-colors flex items-center gap-2 text-sm shadow-md">
+            <button onClick={() => scrollToSection('preview')} className="px-6 py-2.5 rounded-lg font-bold text-white bg-black hover:bg-gray-900 transition-colors flex items-center gap-2 text-sm border border-gray-800">
               <Eye size={18} /> Preview Page
             </button>
             <button onClick={handlePublish} disabled={isPublishing} className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-50">

@@ -55,7 +55,7 @@ export default function EditEvent() {
       const parsed = new URL(url);
       const q = parsed.searchParams.get('q') || parsed.searchParams.get('query');
       if (q) return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
-      
+
       // Fallback for google.com/maps/place/...
       if (url.includes('/place/')) {
         const parts = url.split('/place/')[1].split('/');
@@ -135,7 +135,7 @@ export default function EditEvent() {
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
-    
+
     // Fetch event if ID exists
     const fetchEvent = async () => {
       if (!id) return;
@@ -164,7 +164,7 @@ export default function EditEvent() {
           setHeroImage(data.img_url || null);
           setMapUrlInput(data.google_maps_url || '');
           setAmenities(data.amenities || []);
-          
+
           // Fetch tickets
           const { data: tickets, error: ticketError } = await supabase.from('ticket_tiers').select('*').eq('event_id', id);
           if (!ticketError && tickets) {
@@ -220,7 +220,7 @@ export default function EditEvent() {
       if (heroImageFile) {
         const fileExt = heroImageFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        
+
         const { error: uploadError } = await supabase.storage
           .from('event-images')
           .upload(fileName, heroImageFile);
@@ -230,7 +230,7 @@ export default function EditEvent() {
         const { data: { publicUrl } } = supabase.storage
           .from('event-images')
           .getPublicUrl(fileName);
-          
+
         uploadedImgUrl = publicUrl;
       }
 
@@ -351,8 +351,8 @@ export default function EditEvent() {
                 key={section.id}
                 onClick={() => scrollToSection(section.id)}
                 className={`w-full text-left px-3 py-2 text-[13px] font-semibold rounded-lg flex items-center transition-all ${activeSection === section.id
-                    ? 'text-primary bg-primary/5'
-                    : 'text-gray-500 hover:text-black hover:bg-white'
+                  ? 'text-primary bg-primary/5'
+                  : 'text-gray-500 hover:text-black hover:bg-white'
                   }`}
               >
                 <div className={`w-1.5 h-1.5 rounded-full mr-3 ${activeSection === section.id ? 'bg-primary scale-150' : 'bg-gray-300'} transition-all`}></div>
@@ -539,25 +539,25 @@ export default function EditEvent() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Google Maps URL</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={mapUrlInput}
                     onChange={(e) => setMapUrlInput(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none text-blue-600 focus:ring-2 focus:ring-primary/20" 
-                    placeholder="Paste Google Maps link or enter a location name..." 
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none text-blue-600 focus:ring-2 focus:ring-primary/20"
+                    placeholder="Paste Google Maps link or enter a location name..."
                   />
                 </div>
               </div>
-              
+
               {mapEmbedUrl ? (
                 <div className="h-64 rounded-xl overflow-hidden border border-gray-200">
-                  <iframe 
-                    src={mapEmbedUrl} 
-                    width="100%" 
-                    height="100%" 
-                    style={{ border: 0 }} 
-                    allowFullScreen="" 
-                    loading="lazy" 
+                  <iframe
+                    src={mapEmbedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen=""
+                    loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
                   ></iframe>
                 </div>
@@ -585,7 +585,7 @@ export default function EditEvent() {
                   <label className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer shrink-0 overflow-hidden relative">
                     <input type="file" className="hidden" accept="image/*" onChange={handleArtistUpload} />
                     {artistImage ? (
-                      <img src={artistImage} className="w-full h-full object-cover" alt="Artist Preview"/>
+                      <img src={artistImage} className="w-full h-full object-cover" alt="Artist Preview" />
                     ) : (
                       <ImageIcon size={20} />
                     )}

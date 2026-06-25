@@ -12,33 +12,16 @@ export default function AdminDashboard() {
   ]);
 
   const [recentBookings, setRecentBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
+  const [eventsList, setEventsList] = useState([]);
+  const [selectedEventId, setSelectedEventId] = useState('all');
 
   const fetchDashboardData = async () => {
     const { data: bookings } = await supabase.from('bookings').select('*, events(*), profiles(*)').order('created_at', { ascending: false });
-    const { count: eventCount } = await supabase.from('events').select('*', { count: 'exact', head: true });
+    const { data: eventsData } = await supabase.from('events').select('*').order('created_at', { ascending: false });
     
-    if (bookings) {
-      const revenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
-      const sold = bookings.reduce((sum, b) => sum + (b.qty || 1), 0);
-      const checkedIn = bookings.filter(b => b.check_in_status === 'checked_in').length;
-
-      setStats([
-        { title: 'Total Revenue', value: `₹${revenue.toLocaleString()}`, increase: '', icon: <DollarSign size={24} className="text-primary" /> },
-        { title: 'Tickets Sold', value: sold.toString(), increase: '', icon: <Ticket size={24} className="text-secondary" /> },
-        { title: 'Checked In', value: checkedIn.toString(), increase: `${Math.round((checkedIn/(sold||1))*100)}% of sold`, icon: <CheckCircle size={24} className="text-green-500" /> },
-        { title: 'Events', value: eventCount?.toString() || '0', increase: '', icon: <Calendar size={24} className="text-blue-500" /> },
-      ]);
-
-      const formattedBookings = bookings.slice(0, 5).map(b => ({
-        id: b.booking_ref,
-        user: b.profiles?.name || 'Unknown User',
-        event: b.events?.title || 'Unknown Event',
-        date: new Date(b.created_at).toLocaleDateString(),
-        amount: `₹${b.total_amount}`,
-        status: b.check_in_status === 'checked_in' ? 'Checked In' : b.status || 'Pending'
-      }));
-      setRecentBookings(formattedBookings);
-    }
+    if (eventsData) setEventsList(eventsData);
+    if (bookings) setAllBookings(bookings);
   };
 
   useEffect(() => {
@@ -62,6 +45,33 @@ export default function AdminDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    const filteredBookings = selectedEventId === 'all' 
+      ? allBookings 
+      : allBookings.filter(b => b.event_id === selectedEventId);
+
+    const revenue = filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+    const sold = filteredBookings.reduce((sum, b) => sum + (b.qty || 1), 0);
+    const checkedIn = filteredBookings.filter(b => b.check_in_status === 'checked_in' || b.check_in_status === 'allowed').length;
+
+    setStats([
+      { title: 'Total Revenue', value: `₹${revenue.toLocaleString()}`, increase: '', icon: <DollarSign size={24} className="text-primary" /> },
+      { title: 'Tickets Sold', value: sold.toString(), increase: '', icon: <Ticket size={24} className="text-secondary" /> },
+      { title: 'Checked In', value: checkedIn.toString(), increase: sold > 0 ? `${Math.round((checkedIn/sold)*100)}% of sold` : '0% of sold', icon: <CheckCircle size={24} className="text-green-500" /> },
+      { title: 'Events', value: eventsList.length.toString(), increase: '', icon: <Calendar size={24} className="text-blue-500" /> },
+    ]);
+
+    const formattedBookings = filteredBookings.slice(0, 5).map(b => ({
+      id: b.booking_ref,
+      user: b.profiles?.name || 'Unknown User',
+      event: b.events?.title || 'Unknown Event',
+      date: new Date(b.created_at).toLocaleDateString(),
+      amount: `₹${b.total_amount}`,
+      status: (b.check_in_status === 'checked_in' || b.check_in_status === 'allowed') ? 'Checked In' : b.status || 'Pending'
+    }));
+    setRecentBookings(formattedBookings);
+  }, [allBookings, selectedEventId, eventsList]);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -69,9 +79,21 @@ export default function AdminDashboard() {
           <h2 className="text-2xl font-black text-black">Dashboard Overview</h2>
           <p className="text-sm text-gray-500">Welcome back, here's what's happening today.</p>
         </div>
-        <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
-          <TrendingUp size={16} /> Generate Report
-        </button>
+        <div className="flex items-center gap-3">
+          <select 
+            className="border border-gray-300 rounded-lg px-4 py-2 text-sm outline-none focus:border-primary font-bold bg-white text-black"
+            value={selectedEventId}
+            onChange={(e) => setSelectedEventId(e.target.value)}
+          >
+            <option value="all">All Events</option>
+            {eventsList.map(e => (
+              <option key={e.id} value={e.id}>{e.title}</option>
+            ))}
+          </select>
+          <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
+            <TrendingUp size={16} /> Generate Report
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}

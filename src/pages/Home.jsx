@@ -381,7 +381,9 @@ export default function Home() {
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Starting From</p>
-                    <p className="text-2xl font-black text-white">₹1,499</p>
+                    <p className="text-2xl font-black text-white">
+                      {featuredEvents[0]?.price === 0 ? 'Free' : `₹${featuredEvents[0]?.price?.toLocaleString('en-IN') || '0'}`}
+                    </p>
                   </div>
                   <div className="flex items-center space-x-2 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-full">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>

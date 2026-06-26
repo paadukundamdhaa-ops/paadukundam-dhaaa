@@ -533,17 +533,20 @@ export default function Home() {
       </section>
 
       {/* ARTIST SPOTLIGHT */}
-      <section className="bg-white py-20 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-primary/5 to-white"></div>
+      <section 
+        className="py-20 relative bg-cover bg-center bg-fixed" 
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&q=80')" }}
+      >
+        <div className="absolute inset-0 bg-black/85"></div>
         <div className="container mx-auto px-6 relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 sm:gap-0 mb-12">
             <div className="flex items-center">
               <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
-              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">Artist Spotlight</h2>
+              <h2 className="text-white text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">Artist Spotlight</h2>
             </div>
             <div className="flex space-x-2 shrink-0">
-              <button className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 text-black transition-colors"><ChevronLeft size={16} /></button>
-              <button className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"><ChevronRight size={16} /></button>
+              <button className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10 text-white transition-colors"><ChevronLeft size={16} /></button>
+              <button className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/10 text-white transition-colors"><ChevronRight size={16} /></button>
             </div>
           </div>
 
@@ -555,28 +558,28 @@ export default function Home() {
                   <img src={featuredEvents[0].img} alt={featuredEvents[0].title} className="w-full md:w-64 h-64 object-cover rounded-xl" />
                   <div>
                     <div className="flex items-center mb-2">
-                      <h3 className="text-3xl font-black mr-3">{featuredEvents[0].title}</h3>
+                      <h3 className="text-3xl text-white font-black mr-3">{featuredEvents[0].title}</h3>
                       <span className="bg-secondary text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">Live</span>
                     </div>
-                    <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                    <p className="text-gray-300 text-sm leading-relaxed mb-6">
                       Get ready for an unforgettable night filled with amazing music and magical moments. Book your tickets before they run out!
                     </p>
                     <div className="flex flex-wrap gap-2 mb-6">
-                      <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Featured</span>
-                      <span className="border border-gray-300 text-gray-700 px-3 py-1 text-xs rounded-full">Concert</span>
+                      <span className="border border-white/30 text-gray-300 px-3 py-1 text-xs rounded-full">Featured</span>
+                      <span className="border border-white/30 text-gray-300 px-3 py-1 text-xs rounded-full">Concert</span>
                     </div>
                     <Link to={`/events/${featuredEvents[0].id}`} className="inline-block bg-primary text-white font-bold px-6 py-2 rounded hover:bg-red-700 transition-colors">Book Now</Link>
                   </div>
                 </div>
 
                 {/* Other Artists */}
-                <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mt-8 lg:mt-0">
+                <div className="lg:w-1/2 flex space-x-4 overflow-x-auto hide-scrollbar pb-4 mt-8 lg:mt-0">
                   {featuredEvents.slice(1, 5).map((artist, idx) => (
-                    <Link to={`/events/${artist.id}`} key={idx} className="relative rounded-xl overflow-hidden h-64 group cursor-pointer border border-gray-200 shadow-md block">
+                    <Link to={`/events/${artist.id}`} key={idx} className="relative rounded-xl overflow-hidden h-64 min-w-[200px] sm:min-w-[240px] group cursor-pointer border border-white/20 shadow-lg block shrink-0">
                       <img src={artist.img} alt={artist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                      <div className="absolute bottom-4 left-4">
-                        <h4 className="font-bold text-sm mb-1 text-white">{artist.title}</h4>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <h4 className="font-bold text-sm mb-1 text-white truncate">{artist.title}</h4>
                         <p className="text-[10px] text-gray-300">{artist.date} {artist.month}</p>
                       </div>
                     </Link>

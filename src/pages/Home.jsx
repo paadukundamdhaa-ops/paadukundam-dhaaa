@@ -14,8 +14,23 @@ export default function Home() {
   const [heroSettings, setHeroSettings] = useState({
     heading: 'FEEL THE RHYTHM LIVE THE MUSIC',
     subheading: 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
-    bgMedia: 'hero_bg.mp4'
+    bgImages: ['/images/sunburn.png', '', '', '']
   });
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const validBgImages = (heroSettings.bgImages || []).filter(img => img && img.trim() !== '');
+
+  useEffect(() => {
+    let timer;
+    if (validBgImages.length > 1) {
+      timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % validBgImages.length);
+      }, 5000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [validBgImages.length]);
   const [stats, setStats] = useState([
     { label: 'Stat 1', val: '500+', desc: 'Concerts Hosted' },
     { label: 'Stat 2', val: '2M+', desc: 'Tickets Sold' },
@@ -168,21 +183,28 @@ export default function Home() {
       }
     };
 
-    const fetchCMS = () => {
-      const savedHero = localStorage.getItem('cms_hero');
-      const savedStats = localStorage.getItem('cms_stats');
-      const savedTestimonials = localStorage.getItem('cms_testimonials');
-      if (savedHero) {
-        const parsed = JSON.parse(savedHero);
-        setHeroSettings({
-          heading: parsed.heading || 'FEEL THE RHYTHM LIVE THE MUSIC',
-          subheading: parsed.subheading || 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
-          bgMedia: parsed.bgMedia || 'hero_bg.mp4'
-        });
-      }
-      if (savedStats) setStats(JSON.parse(savedStats));
-      if (savedTestimonials) {
-        setTestimonials(JSON.parse(savedTestimonials));
+    const fetchCMS = async () => {
+      try {
+        const { data, error } = await supabase.from('cms_content').select('*');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          const hero = data.find(d => d.section_name === 'hero');
+          const statsData = data.find(d => d.section_name === 'stats');
+          const testData = data.find(d => d.section_name === 'testimonials');
+          
+          if (hero && hero.content_data) {
+            setHeroSettings({
+              heading: hero.content_data.heading || 'FEEL THE RHYTHM LIVE THE MUSIC',
+              subheading: hero.content_data.subheading || 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
+              bgImages: hero.content_data.bgImages || ['/images/sunburn.png', '', '', '']
+            });
+          }
+          if (statsData && statsData.content_data) setStats(statsData.content_data);
+          if (testData && testData.content_data) setTestimonials(testData.content_data);
+        }
+      } catch (err) {
+        console.error('Error fetching CMS:', err);
       }
     };
 
@@ -238,17 +260,35 @@ export default function Home() {
       <section className="bg-[#0a0a0a] text-white relative pt-32 pb-20 min-h-[90vh] flex items-center border-b border-white/10 overflow-hidden">
         {/* Background Animation */}
         <div className="absolute inset-0 z-0 bg-black">
-          <motion.img 
-            initial={{ scale: 1 }}
-            animate={{ scale: 1.1 }}
-            transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-            src="/images/sunburn.png" 
-            alt="Concert" 
-            className="w-full h-full object-cover opacity-40" 
-          />
+          {validBgImages.length > 1 ? (
+            validBgImages.map((img, idx) => (
+              <motion.img 
+                key={idx}
+                initial={{ opacity: 0, scale: 1 }}
+                animate={{ 
+                  opacity: idx === currentSlide ? 0.4 : 0, 
+                  scale: idx === currentSlide ? 1.05 : 1 
+                }}
+                transition={{ opacity: { duration: 1.5 }, scale: { duration: 10 } }}
+                src={img} 
+                alt={`Concert Background ${idx + 1}`} 
+                className="absolute inset-0 w-full h-full object-cover" 
+              />
+            ))
+          ) : (
+            <motion.img 
+              initial={{ scale: 1 }}
+              animate={{ scale: 1.1 }}
+              transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+              src={validBgImages[0] || "/images/sunburn.png"} 
+              alt="Concert" 
+              className="w-full h-full object-cover opacity-40" 
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/60 to-[#0a0a0a]"></div>
         </div>
-
+        
+        {/* Hero Content */}
         {/* Floating Particles/Elements */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           {/* Abstract Ticket 1 */}

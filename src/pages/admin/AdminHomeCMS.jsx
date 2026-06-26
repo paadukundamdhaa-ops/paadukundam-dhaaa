@@ -10,7 +10,7 @@ export default function AdminHomeCMS() {
   const [heroSettings, setHeroSettings] = useState({
     heading: 'FEEL THE RHYTHM LIVE THE MUSIC',
     subheading: 'Book your tickets for the most happening concerts, live shows, and musical events in town.',
-    bgMedia: 'hero_bg.mp4'
+    bgImages: ['/images/sunburn.png', '', '', '']
   });
 
   const [stats, setStats] = useState([
@@ -154,11 +154,23 @@ export default function AdminHomeCMS() {
                   <textarea rows="3" value={heroSettings.subheading} onChange={(e) => setHeroSettings({...heroSettings, subheading: e.target.value})} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-gray-600 resize-none"></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Background Media</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-colors">
-                    <ImageIcon size={32} className="text-gray-400 mb-2" />
-                    <p className="font-semibold text-sm">Upload new Background Image or Video</p>
-                    <p className="text-xs text-gray-500 mt-1">Currently using: {heroSettings.bgMedia}</p>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Background Images (Up to 4)</label>
+                  <p className="text-xs text-gray-500 mb-3">Add image URLs. If more than 1 is added, the home page will automatically display a slideshow.</p>
+                  <div className="space-y-3">
+                    {[0, 1, 2, 3].map(idx => (
+                      <input 
+                        key={idx}
+                        type="text" 
+                        placeholder={`Image URL ${idx + 1}`}
+                        value={heroSettings.bgImages && heroSettings.bgImages[idx] ? heroSettings.bgImages[idx] : ''} 
+                        onChange={(e) => {
+                          const newImages = [...(heroSettings.bgImages || ['/images/sunburn.png', '', '', ''])];
+                          newImages[idx] = e.target.value;
+                          setHeroSettings({...heroSettings, bgImages: newImages});
+                        }}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-semibold text-sm" 
+                      />
+                    ))}
                   </div>
                 </div>
               </div>

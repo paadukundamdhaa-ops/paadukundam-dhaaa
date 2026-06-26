@@ -30,7 +30,8 @@ export default async function handler(req, res) {
       },
     });
 
-    const ticketUrl = `https://paadukundam-dhaaa.vercel.app/ticket/${bookingRef}`;
+    const cleanRef = bookingRef.startsWith('#') ? bookingRef.substring(1) : bookingRef;
+    const ticketUrl = `https://paadukundam-dhaaa.vercel.app/ticket/${cleanRef}`;
     
     // Generate a QR code URL for the ticket
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;

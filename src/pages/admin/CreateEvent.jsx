@@ -37,6 +37,8 @@ export default function CreateEvent() {
   const [category, setCategory] = useState('Concert');
   const [eventDate, setEventDate] = useState('');
   const [eventTime, setEventTime] = useState('');
+  const [gatesOpen, setGatesOpen] = useState('');
+  const [showEnds, setShowEnds] = useState('');
   const [venueName, setVenueName] = useState('');
   const [city, setCity] = useState('');
   const [artistName, setArtistName] = useState('');
@@ -229,6 +231,8 @@ export default function CreateEvent() {
           category,
           event_date: eventDate,
           event_time: eventTime,
+          gates_open: gatesOpen,
+          show_ends: showEnds,
           venue: fullVenue,
           status: isDraft ? 'Draft' : 'Upcoming',
           total_tickets: totalTickets,
@@ -470,7 +474,7 @@ export default function CreateEvent() {
               <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Gates Open</label>
-                  <input type="time" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
+                  <input type="time" value={gatesOpen} onChange={e => setGatesOpen(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Show Starts *</label>
@@ -478,7 +482,7 @@ export default function CreateEvent() {
                 </div>
                 <div>
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Show Ends</label>
-                  <input type="time" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
+                  <input type="time" value={showEnds} onChange={e => setShowEnds(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
                 </div>
               </div>
               <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">

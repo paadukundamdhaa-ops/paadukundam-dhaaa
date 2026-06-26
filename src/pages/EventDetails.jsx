@@ -187,22 +187,22 @@ export default function EventDetails() {
       </Helmet>
 
       {/* Hero Section */}
-      <div className="relative w-full" style={{ aspectRatio: '1920/900' }}>
-        <img src={event.heroImage} className="w-full h-full object-cover object-top" alt={event.title} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+      <div className="relative w-full min-h-[300px] md:min-h-0" style={{ aspectRatio: '1920/900' }}>
+        <img src={event.heroImage} className="absolute inset-0 w-full h-full object-cover object-top" alt={event.title} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
         {/* Hero Title Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 max-w-6xl mx-auto z-10 flex items-end gap-6 md:gap-8">
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 max-w-6xl mx-auto z-10 flex items-end gap-4 md:gap-8">
           {event.squareImage && (
-            <div className="hidden md:block w-32 h-32 md:w-48 md:h-48 rounded-xl overflow-hidden shadow-2xl border-4 border-white/20 shrink-0 transform translate-y-8">
+            <div className="w-20 h-20 md:w-48 md:h-48 rounded-xl overflow-hidden shadow-2xl border-2 md:border-4 border-white/20 shrink-0 md:transform md:translate-y-8">
               <img src={event.squareImage} alt={event.title} className="w-full h-full object-cover" crossOrigin="anonymous"/>
             </div>
           )}
-          <div className="pb-4">
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">{event.category}</span>
-              <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">Live Music</span>
+          <div className="pb-2 md:pb-4">
+            <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-4">
+              <span className="bg-primary text-white text-[9px] md:text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">{event.category}</span>
+              <span className="bg-white/20 backdrop-blur-md text-white text-[9px] md:text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">Live Music</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-2 leading-tight">{event.title}</h1>
+            <h1 className="text-2xl md:text-5xl font-black text-white mb-1 md:mb-2 leading-tight">{event.title}</h1>
           </div>
         </div>
       </div>

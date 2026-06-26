@@ -76,7 +76,26 @@ export default function BookingSuccess() {
           <Link to="/dashboard" className="w-full sm:w-auto flex items-center justify-center px-6 py-4 bg-primary hover:bg-primary-dark text-white font-black rounded-xl transition-all shadow-lg shadow-primary/30 transform hover:scale-[1.02] active:scale-95">
             <Download size={18} className="mr-2" /> Download E-Ticket
           </Link>
-          <button className="w-full sm:w-auto flex items-center justify-center px-6 py-4 bg-white border border-gray-200 hover:border-gray-300 text-black font-black rounded-xl transition-all shadow-sm transform hover:scale-[1.02] active:scale-95">
+          <button 
+            onClick={async () => {
+              try {
+                const shareUrl = window.location.origin + '/events';
+                if (navigator.share) {
+                  await navigator.share({
+                    title: 'I just booked tickets!',
+                    text: `I just got my tickets for ${event.title}! Join me!`,
+                    url: shareUrl,
+                  });
+                } else {
+                  await navigator.clipboard.writeText(shareUrl);
+                  alert('Link copied to clipboard!');
+                }
+              } catch (error) {
+                console.log('Error sharing:', error);
+              }
+            }}
+            className="w-full sm:w-auto flex items-center justify-center px-6 py-4 bg-white border border-gray-200 hover:border-gray-300 text-black font-black rounded-xl transition-all shadow-sm transform hover:scale-[1.02] active:scale-95"
+          >
             <Share2 size={18} className="mr-2" /> Share with Friends
           </button>
         </div>

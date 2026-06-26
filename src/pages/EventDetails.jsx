@@ -201,7 +201,25 @@ export default function EventDetails() {
             <Link to="/events" className="flex items-center text-gray-500 hover:text-primary font-bold transition-colors">
               <ArrowLeft size={18} className="mr-2" /> Back to Events
             </Link>
-            <button className="flex items-center text-gray-500 hover:text-primary font-bold transition-colors">
+            <button 
+              onClick={async () => {
+                try {
+                  if (navigator.share) {
+                    await navigator.share({
+                      title: event?.title || 'Event',
+                      text: `Check out ${event?.title}!`,
+                      url: window.location.href,
+                    });
+                  } else {
+                    await navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }
+                } catch (error) {
+                  console.log('Error sharing:', error);
+                }
+              }}
+              className="flex items-center text-gray-500 hover:text-primary font-bold transition-colors"
+            >
               <Share2 size={18} className="mr-2" /> Share Event
             </button>
           </div>

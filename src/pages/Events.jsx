@@ -436,25 +436,27 @@ export default function Events() {
                         </span>
                       </div>
 
-                      <div className={view === 'grid' ? 'grid grid-cols-3 gap-1.5' : 'flex space-x-1.5 sm:space-x-2'}>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} 
+                            className="bg-[#1a1a1a] hover:bg-black text-white font-bold rounded py-2 text-[11px] transition-colors"
+                          >
+                            View
+                          </button>
+                          <button 
+                            onClick={(e) => handleShare(e, event)}
+                            className="border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-bold rounded py-2 text-[11px] transition-colors flex items-center justify-center gap-1"
+                          >
+                            {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
+                            <span>{copiedId === event.id ? 'Copied!' : 'Share'}</span>
+                          </button>
+                        </div>
                         <button 
                           onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} 
-                          className={`bg-[#1a1a1a] hover:bg-black text-white font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 sm:px-4 md:px-5 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
+                          className="w-full bg-secondary hover:bg-[#e0b51f] text-black font-black rounded py-2.5 text-[12px] transition-colors tracking-wide"
                         >
-                          View
-                        </button>
-                        <button 
-                          onClick={(e) => handleShare(e, event)}
-                          className={`border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-bold rounded transition-colors flex items-center justify-center gap-1 ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 sm:px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
-                        >
-                          {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
-                          {view === 'grid' && <span>{copiedId === event.id ? 'Copied!' : 'Share'}</span>}
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} 
-                          className={`bg-secondary hover:bg-[#e0b51f] text-black font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 md:px-5 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
-                        >
-                          Book
+                          Book Now
                         </button>
                       </div>
                     </div>

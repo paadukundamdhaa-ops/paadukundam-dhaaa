@@ -300,11 +300,30 @@ export default function Checkout() {
         return;
       }
 
+      // Create Razorpay Order via Vercel Serverless Function
+      const orderResponse = await fetch('/api/create-razorpay-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: grandTotal * 100, // Amount in paisa
+          currency: 'INR'
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('Failed to create Razorpay order');
+      }
+
+      const orderData = await orderResponse.json();
+
       // Razorpay Checkout Options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: grandTotal * 100, // Amount in paisa
-        currency: "INR",
+        amount: orderData.amount, 
+        currency: orderData.currency,
+        order_id: orderData.id, // The order ID from backend
         name: "PaadukundamDhaa",
         description: `Payment for ${event.title}`,
         image: "/images/LOGO __ Option 02.png",

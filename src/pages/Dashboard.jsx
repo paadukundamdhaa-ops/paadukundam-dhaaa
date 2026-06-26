@@ -276,7 +276,7 @@ export default function Dashboard() {
                           {/* Ticket Details */}
                           <div className="text-right flex flex-col justify-center w-full pl-4 overflow-hidden">
                             <p className="text-primary font-black text-xs uppercase tracking-[0.2em] mb-1">Entry Pass</p>
-                            <h4 className="text-xl md:text-2xl font-black text-black leading-tight mb-1 tracking-tight uppercase line-clamp-2 break-words" title={booking.ticket_tiers?.tier_name || 'GENERAL'}>{booking.ticket_tiers?.tier_name || 'GENERAL'}</h4>
+                            <h4 className="text-base md:text-lg font-black text-black leading-tight mb-1 tracking-tight uppercase break-words" title={booking.ticket_tiers?.tier_name || 'GENERAL'}>{booking.ticket_tiers?.tier_name || 'GENERAL'}</h4>
                             <p className="text-gray-500 text-sm font-medium mb-4">{booking.qty} Ticket(s)</p>
                             <div className="inline-block bg-gray-50 py-2 px-3 rounded-xl border border-gray-200 ml-auto text-center">
                               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">Booking ID</p>

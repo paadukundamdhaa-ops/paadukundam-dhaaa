@@ -234,7 +234,7 @@ export default function Dashboard() {
                         {/* Event Image Banner with Overlay Text */}
                         <div className="relative h-[220px] w-full">
                           <img 
-                            src={event.img_url || event.hero_image || "https://images.unsplash.com/photo-1540039155732-61ee14b12756?auto=format&fit=crop&q=80&w=800"} 
+                            src={event.square_image || event.img_url || event.hero_image || "https://images.unsplash.com/photo-1540039155732-61ee14b12756?auto=format&fit=crop&q=80&w=800"} 
                             alt={event.title || "Event"} 
                             className="w-full h-full object-cover" 
                             crossOrigin="anonymous"

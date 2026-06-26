@@ -99,7 +99,7 @@ export default async function handler(req, res) {
         </div>
         
         <div style="text-align: center; margin-bottom: 30px;">
-          <a href="${ticketUrl}" style="background-color: #ffffff; border: 2px solid #e50914; color: #e50914; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; margin-right: 10px; margin-bottom: 10px;">View Ticket Online</a>
+          <a href="${ticketUrl}?view=image" style="background-color: #ffffff; border: 2px solid #e50914; color: #e50914; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; margin-right: 10px; margin-bottom: 10px;">View Ticket Online</a>
           <a href="${ticketUrl}?download=true" style="background-color: #e50914; border: 2px solid #e50914; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; margin-bottom: 10px;">Download Ticket (JPG)</a>
         </div>
         

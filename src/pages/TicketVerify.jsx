@@ -12,6 +12,8 @@ export default function TicketVerify() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const ticketRef = useRef(null);
+  const [ticketImage, setTicketImage] = useState(null);
+  const [generatingImage, setGeneratingImage] = useState(false);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -37,27 +39,42 @@ export default function TicketVerify() {
     fetchBooking();
   }, [bookingRef]);
 
-  // Handle auto-download from email link
+  // Handle auto-download or view image from email link
   useEffect(() => {
     if (booking && !loading) {
       const searchParams = new URLSearchParams(location.search);
-      if (searchParams.get('download') === 'true') {
-        Swal.fire({
-          title: 'Ticket Ready',
-          text: 'Your ticket is ready! Click the button below to save it to your device.',
-          icon: 'success',
-          showCancelButton: true,
-          confirmButtonText: 'Download Ticket',
-          cancelButtonText: 'View Only',
-          confirmButtonColor: '#e11d48'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            downloadTicket();
+      const isDownload = searchParams.get('download') === 'true';
+      const isViewImage = searchParams.get('view') === 'image';
+
+      if (isDownload || isViewImage) {
+        setGeneratingImage(true);
+        // Wait for fonts and images to load fully
+        setTimeout(() => {
+          if (ticketRef.current) {
+            html2canvas(ticketRef.current, { 
+              backgroundColor: '#f9fafb',
+              scale: 2,
+              useCORS: true,
+              allowTaint: true
+            }).then((canvas) => {
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+              if (isDownload) {
+                const link = document.createElement('a');
+                link.download = `ticket-${bookingRef}.jpg`;
+                link.href = dataUrl;
+                link.click();
+              }
+              setTicketImage(dataUrl);
+              setGeneratingImage(false);
+            }).catch(err => {
+              console.error("Canvas error:", err);
+              setGeneratingImage(false);
+            });
           }
-        });
+        }, 1200);
       }
     }
-  }, [booking, loading, location]);
+  }, [booking, loading, location, bookingRef]);
 
   const downloadTicket = () => {
     if (ticketRef.current) {
@@ -103,8 +120,24 @@ export default function TicketVerify() {
   const profile = booking.profiles;
   const eventDate = new Date(event.event_date || booking.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  if (ticketImage) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+        <img src={ticketImage} alt="Your Ticket" className="max-w-md w-full h-auto rounded-3xl shadow-2xl" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-24 font-sans flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 pt-24 pb-24 font-sans flex flex-col items-center justify-center p-6 relative">
+      {generatingImage && (
+        <div className="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+            <p className="text-gray-500 font-bold">Preparing your ticket image...</p>
+          </div>
+        </div>
+      )}
       <div className="max-w-md w-full" ref={ticketRef}>
         {/* Verification Status */}
         <div className="bg-green-500 text-white p-6 rounded-t-3xl text-center relative overflow-hidden">

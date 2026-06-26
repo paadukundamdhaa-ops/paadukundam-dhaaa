@@ -449,21 +449,40 @@ export default function Events() {
                         </div>
                       </div>
                     ) : (
-                      /* LIST: price on left, 3 buttons inline on right */
-                      <div className="flex flex-row items-center justify-between mt-auto pt-3 border-t border-gray-100 gap-3">
-                        <div className="shrink-0">
-                          <span className="font-bold text-primary text-[10px] md:text-[11px] block leading-tight">From</span>
-                          <span className="text-black font-black text-[14px] md:text-[16px] tracking-tight">
-                            {event.price === 0 ? 'Free' : `₹${event.price.toLocaleString('en-IN')}`}
-                          </span>
+                      /* LIST: responsive - stacked on mobile, inline on desktop */
+                      <div className="mt-auto pt-3 border-t border-gray-100">
+                        {/* Mobile: price + share row, then book now */}
+                        <div className="flex sm:hidden flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-black font-black text-[15px] tracking-tight">
+                              <span className="font-bold text-primary text-[10px] block leading-tight">From</span>
+                              {event.price === 0 ? 'Free' : `₹${event.price.toLocaleString('en-IN')}`}
+                            </span>
+                            <div className="flex gap-1.5">
+                              <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="bg-[#1a1a1a] hover:bg-black text-white font-bold rounded px-3 py-2 text-[11px] transition-colors">View</button>
+                              <button onClick={(e) => handleShare(e, event)} className="border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-bold rounded px-3 py-2 text-[11px] transition-colors flex items-center gap-1">
+                                {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
+                              </button>
+                            </div>
+                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="w-full bg-secondary hover:bg-[#e0b51f] text-black font-black rounded py-2 text-[12px] transition-colors">Book Now</button>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="bg-[#1a1a1a] hover:bg-black text-white font-bold rounded px-3 md:px-4 py-2 text-[11px] transition-colors whitespace-nowrap">View</button>
-                          <button onClick={(e) => handleShare(e, event)} className="border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-bold rounded px-3 py-2 text-[11px] transition-colors flex items-center gap-1 whitespace-nowrap">
-                            {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
-                            <span className="hidden sm:inline">{copiedId === event.id ? 'Copied!' : 'Share'}</span>
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="bg-secondary hover:bg-[#e0b51f] text-black font-black rounded px-3 md:px-5 py-2 text-[11px] transition-colors whitespace-nowrap">Book Now</button>
+                        {/* Desktop: all inline */}
+                        <div className="hidden sm:flex items-center justify-between gap-3">
+                          <div className="shrink-0">
+                            <span className="font-bold text-primary text-[11px] block leading-tight">From</span>
+                            <span className="text-black font-black text-[15px] tracking-tight">
+                              {event.price === 0 ? 'Free' : `₹${event.price.toLocaleString('en-IN')}`}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="bg-[#1a1a1a] hover:bg-black text-white font-bold rounded px-4 py-2 text-[11px] transition-colors whitespace-nowrap">View</button>
+                            <button onClick={(e) => handleShare(e, event)} className="border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-bold rounded px-3 py-2 text-[11px] transition-colors flex items-center gap-1 whitespace-nowrap">
+                              {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
+                              <span>{copiedId === event.id ? 'Copied!' : 'Share'}</span>
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="bg-secondary hover:bg-[#e0b51f] text-black font-black rounded px-5 py-2 text-[11px] transition-colors whitespace-nowrap">Book Now</button>
+                          </div>
                         </div>
                       </div>
                     )}

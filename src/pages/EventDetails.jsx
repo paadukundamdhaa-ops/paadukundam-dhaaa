@@ -88,10 +88,12 @@ export default function EventDetails() {
   // Mix real data with some placeholders for features we haven't built DB tables for yet
   const event = {
     title: eventData.title || "Untitled Event",
+    category: eventData.category || "Concert",
     date: formattedDate,
     time: eventData.event_time || "TBA",
     venue: venueString,
     city: city,
+    shortDescription: eventData.short_description || "",
     description: eventData.description || "Join us for an unforgettable experience! More details coming soon.",
     heroImage: eventData.hero_image || eventData.img_url || "https://images.unsplash.com/photo-1540039155732-61ee14b12756?auto=format&fit=crop&q=80&w=2000",
     squareImage: eventData.square_image,
@@ -100,10 +102,16 @@ export default function EventDetails() {
       image: eventData.artist_image || "https://images.unsplash.com/photo-1516280440502-6110f06a9284?auto=format&fit=crop&q=80&w=200",
       bio: eventData.artist_bio || "An incredible performance awaits you."
     },
+    highlights: eventData.highlights || [],
+    amenities: eventData.amenities || [],
+    ageRestriction: eventData.age_restriction || "18+ Only",
+    refundPolicy: eventData.refund_policy || "No Refunds",
+    organizerName: eventData.organizer_name || "PaadukundamDhaa",
+    organizerEmail: eventData.organizer_email || "support@paadukundamdhaa.com",
     tickets: ticketTiers.length > 0 ? ticketTiers : [] // using fetched tiers
   };
 
-  const mapEmbedUrl = eventData.map_url || `https://maps.google.com/maps?q=${encodeURIComponent(venueString + ', ' + city)}&output=embed`;
+  const mapEmbedUrl = eventData.map_embed_url || eventData.map_url || `https://maps.google.com/maps?q=${encodeURIComponent(venueString + ', ' + city)}&output=embed`;
 
   const handleTicketChange = (ticketId, delta) => {
     setSelectedTickets(prev => {
@@ -190,7 +198,7 @@ export default function EventDetails() {
           )}
           <div className="pb-4">
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">Concert</span>
+              <span className="bg-primary text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">{event.category}</span>
               <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest">Live Music</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-white mb-2 leading-tight">{event.title}</h1>
@@ -258,10 +266,45 @@ export default function EventDetails() {
           {/* About Section */}
           <section>
             <h2 className="text-xl font-black text-black mb-4">About the Event</h2>
+            {event.shortDescription && (
+              <p className="text-lg font-medium text-gray-800 mb-4">{event.shortDescription}</p>
+            )}
             <div className="prose prose-sm text-gray-600 max-w-none leading-relaxed">
               <p className="whitespace-pre-wrap">{event.description}</p>
             </div>
           </section>
+
+          {/* Highlights & Amenities */}
+          {(event.highlights?.length > 0 || event.amenities?.length > 0) && (
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {event.highlights?.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-black text-black mb-4">Event Highlights</h2>
+                  <ul className="space-y-2">
+                    {event.highlights.map((highlight, index) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-600 text-sm">
+                        <Star size={16} className="text-primary mt-0.5 shrink-0" />
+                        <span>{highlight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {event.amenities?.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-black text-black mb-4">Amenities</h2>
+                  <ul className="space-y-2">
+                    {event.amenities.map((amenity, index) => (
+                      <li key={index} className="flex items-start gap-2 text-gray-600 text-sm">
+                        <ShieldCheck size={16} className="text-primary mt-0.5 shrink-0" />
+                        <span>{amenity}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Artist Section */}
           <section>
@@ -278,8 +321,31 @@ export default function EventDetails() {
           {/* Venue Map */}
           <section>
             <h2 className="text-xl font-black text-black mb-4">Venue</h2>
-            <div className="h-64 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
+            <div className="h-64 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 mb-4">
               <iframe src={mapEmbedUrl} width="100%" height="100%" style={{ border: 0 }} allowFullScreen="" loading="lazy"></iframe>
+            </div>
+          </section>
+
+          {/* Organizer & Policies */}
+          <section className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-black mb-6">Policies & Info</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Age Restriction</h4>
+                <p className="text-sm font-bold text-gray-900">{event.ageRestriction}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Refund Policy</h4>
+                <p className="text-sm font-bold text-gray-900">{event.refundPolicy}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Organizer</h4>
+                <p className="text-sm font-bold text-gray-900">{event.organizerName}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Contact</h4>
+                <a href={`mailto:${event.organizerEmail}`} className="text-sm font-bold text-primary hover:underline">{event.organizerEmail}</a>
+              </div>
             </div>
           </section>
 

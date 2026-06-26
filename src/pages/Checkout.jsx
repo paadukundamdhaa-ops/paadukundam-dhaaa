@@ -411,40 +411,17 @@ export default function Checkout() {
           <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
             <h2 className="text-xl font-black text-black mb-6">Payment Method</h2>
             
-            <div className="space-y-4 mb-6">
-              <label className="flex items-center p-4 border-2 border-primary bg-primary/5 rounded-2xl cursor-pointer transition-all">
-                <input type="radio" name="payment" defaultChecked className="mr-4 w-5 h-5 accent-primary" />
-                <CreditCard className="mr-3 text-primary" size={24} />
-                <div>
-                  <span className="block font-bold text-black text-base">Credit / Debit Card</span>
-                  <span className="block text-xs text-gray-500">Visa, Mastercard, RuPay</span>
-                </div>
-              </label>
-              
-              <label className="flex items-center p-4 border-2 border-gray-100 hover:border-gray-200 bg-white rounded-2xl cursor-pointer transition-all opacity-60">
-                <input type="radio" name="payment" className="mr-4 w-5 h-5 accent-primary" disabled />
-                <Wallet className="mr-3 text-gray-500" size={24} />
-                <div>
-                  <span className="block font-bold text-black text-base">UPI / Digital Wallet</span>
-                  <span className="block text-xs text-gray-500">Coming Soon</span>
-                </div>
-              </label>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Card Number</label>
-                <input type="text" placeholder="0000 0000 0000 0000" className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
+              <div className="flex justify-center mb-4">
+                <ShieldCheck size={48} className="text-primary" />
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Expiry Date</label>
-                  <input type="text" placeholder="MM/YY" className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5">CVV</label>
-                  <input type="password" placeholder="•••" className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-black focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
-                </div>
+              <h3 className="font-bold text-lg text-black mb-2">Secure Payment Gateway</h3>
+              <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                Clicking "Pay Now" will securely open the Razorpay checkout portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <CreditCard className="text-gray-400" size={24} />
+                <Wallet className="text-gray-400" size={24} />
               </div>
             </div>
           </section>

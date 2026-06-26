@@ -437,16 +437,16 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="flex space-x-6 overflow-x-auto pb-8 hide-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pb-8">
             {featuredEvents.slice(0, 5).map((event) => (
-              <div key={event.id} className="min-w-[280px] bg-white border border-gray-200 shadow-md rounded-xl overflow-hidden relative group">
+              <Link to={`/events/${event.id}`} key={event.id} className="bg-white border border-gray-200 shadow-md rounded-xl overflow-hidden relative group block hover:border-primary hover:shadow-xl transition-all">
                 {/* Date Badge */}
                 <div className="absolute top-4 left-4 bg-primary text-white text-center w-12 h-12 flex flex-col justify-center rounded-md z-10 shadow-lg">
                   <span className="text-lg font-black leading-none">{event.date}</span>
                   <span className="text-[10px] uppercase font-bold">{event.month}</span>
                 </div>
                 {/* Heart */}
-                <button className="absolute top-4 right-4 text-white/50 hover:text-white z-10"><Heart size={20} /></button>
+                <button className="absolute top-4 right-4 text-white/50 hover:text-white z-10" onClick={(e) => e.preventDefault()}><Heart size={20} /></button>
                 
                 <div className="h-48 overflow-hidden">
                   <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -456,7 +456,7 @@ export default function Home() {
                   <p className="text-gray-600 text-xs mb-4 truncate">{event.venue}</p>
                   <p className="font-semibold text-sm text-black">From ₹{event.price}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

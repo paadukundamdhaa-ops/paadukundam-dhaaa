@@ -28,7 +28,7 @@ export default function CreateEvent() {
   const [enableArtist, setEnableArtist] = useState(false);
   const [enableHighlights, setEnableHighlights] = useState(false);
   const [enableAmenities, setEnableAmenities] = useState(false);
-  const [enablePolicies, setEnablePolicies] = useState(false);
+  const [enablePolicies, setEnablePolicies] = useState(true);
   const [enableAnalytics, setEnableAnalytics] = useState(false);
 
   // Form States
@@ -753,36 +753,28 @@ export default function CreateEvent() {
             )}
           </section>
 
-          {/* Step 12: Policies */}
+          {/* Step 13: Terms, Conditions & Policies */}
           <section id="policies" className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><AlertCircle size={18} /></div>
-                <h2 className="text-lg font-bold">12. Policies</h2>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={enablePolicies} onChange={(e) => setEnablePolicies(e.target.checked)} className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center"><AlertCircle size={18} /></div>
+              <h2 className="text-lg font-bold">12. Terms, Conditions & Policies</h2>
             </div>
-            {enablePolicies ? (
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Age Restriction</label>
-                <input type="text" value={ageRestriction} onChange={e => setAgeRestriction(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" />
+                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Terms and Conditions <span className="text-primary font-normal">(Shown on tickets & confirmation email)</span></label>
+                <textarea rows="5" value={termsAndConditions} onChange={e => setTermsAndConditions(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="e.g. No outside food or beverages. No recording devices. Management reserves the right to refuse entry..."></textarea>
               </div>
-              <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Refund Policy</label>
-                <textarea rows="3" value={refundPolicy} onChange={e => setRefundPolicy(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="No refunds..."></textarea>
-              </div>
-              <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Terms and Conditions</label>
-                <textarea rows="4" value={termsAndConditions} onChange={e => setTermsAndConditions(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="Enter terms and conditions for the ticket..."></textarea>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Age Restriction</label>
+                  <input type="text" value={ageRestriction} onChange={e => setAgeRestriction(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="e.g. 18+ Only" />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Refund Policy</label>
+                  <input type="text" value={refundPolicy} onChange={e => setRefundPolicy(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="e.g. No refunds after purchase" />
+                </div>
               </div>
             </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500 text-sm">Policies module is disabled.</div>
-            )}
           </section>
 
           {/* Step 13: SEO Settings */}

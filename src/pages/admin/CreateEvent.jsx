@@ -18,6 +18,7 @@ export default function CreateEvent() {
   const [amenities, setAmenities] = useState([]);
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [heroImage, setHeroImage] = useState(null);
+  const [squareImageFile, setSquareImageFile] = useState(null);
   const [squareImage, setSquareImage] = useState(null);
   const [artistImage, setArtistImage] = useState(null);
   const [mapUrlInput, setMapUrlInput] = useState("");
@@ -88,6 +89,7 @@ export default function CreateEvent() {
 
   const handleSquareUpload = (e) => {
     if (e.target.files && e.target.files[0]) {
+      setSquareImageFile(e.target.files[0]);
       setSquareImage(URL.createObjectURL(e.target.files[0]));
     }
   };
@@ -192,6 +194,24 @@ export default function CreateEvent() {
         uploadedImgUrl = publicUrl;
       }
 
+      let uploadedSquareImgUrl = null;
+      if (squareImageFile) {
+        const fileExt = squareImageFile.name.split('.').pop();
+        const fileName = `square_${Math.random()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('event-images')
+          .upload(fileName, squareImageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-images')
+          .getPublicUrl(fileName);
+          
+        uploadedSquareImgUrl = publicUrl;
+      }
+
       // Calculate total tickets
       const totalTickets = ticketTypes.reduce((acc, t) => acc + (Number(t.qty) || 0), 0);
 
@@ -213,6 +233,7 @@ export default function CreateEvent() {
           total_tickets: totalTickets,
           tickets_sold: 0,
           img_url: uploadedImgUrl,
+          ...(uploadedSquareImgUrl ? { square_image: uploadedSquareImgUrl } : {}),
           short_description: shortDescription,
           description: fullDescription,
           google_maps_url: mapUrlInput,

@@ -23,7 +23,7 @@ export default function AdminBookings() {
     // Fetch all bookings
     const { data: bookingsData } = await supabase
       .from('bookings')
-      .select('*, events(title, event_date), profiles(name)')
+      .select('*, events(title, event_date), profiles(name, email, phone), ticket_tiers(tier_name)')
       .order('created_at', { ascending: false });
     
     // Fetch all events for the dropdown
@@ -68,6 +68,8 @@ export default function AdminBookings() {
       filtered = filtered.filter(b => 
         b.booking_ref?.toLowerCase().includes(term) ||
         b.profiles?.name?.toLowerCase().includes(term) ||
+        b.profiles?.email?.toLowerCase().includes(term) ||
+        b.profiles?.phone?.toLowerCase().includes(term) ||
         b.events?.title?.toLowerCase().includes(term)
       );
     }
@@ -132,18 +134,30 @@ export default function AdminBookings() {
     }
 
     // Prepare Table Data
-    const tableColumn = ["Booking ID", "Date", "Customer", "Event", "Qty", "Amount", "Status"];
+    const tableColumn = ["Booking ID", "Customer", "Contact", "Event", "Ticket Type", "Qty", "Amount", "Status", "Check-In"];
     const tableRows = [];
 
     processedBookings.forEach(booking => {
+      const customerName = booking.profiles?.name || 'Unknown';
+      const contact = booking.profiles?.phone || booking.profiles?.email || 'N/A';
+      const ticketType = booking.ticket_tiers?.tier_name || 'General Admission';
+      const isCheckedIn = booking.check_in_status === 'checked_in';
+      const isDenied = booking.check_in_status === 'denied';
+      
+      let checkInText = 'Not Scanned';
+      if (isCheckedIn) checkInText = 'Checked In';
+      if (isDenied) checkInText = 'Denied';
+
       const bookingData = [
         booking.booking_ref || 'N/A',
-        new Date(booking.created_at).toLocaleDateString(),
-        booking.profiles?.name || 'Unknown',
+        customerName,
+        contact,
         booking.events?.title || 'Unknown',
+        ticketType,
         booking.qty?.toString() || '0',
         `Rs. ${booking.total_amount}`,
-        booking.status
+        booking.status.toUpperCase(),
+        checkInText
       ];
       tableRows.push(bookingData);
     });
@@ -285,13 +299,14 @@ export default function AdminBookings() {
                       </td>
                       <td className="p-4">
                         <p className="font-bold text-gray-800">{booking.profiles?.name || 'Unknown'}</p>
+                        <p className="text-xs text-gray-500 mt-1">{booking.profiles?.phone || booking.profiles?.email || ''}</p>
                       </td>
                       <td className="p-4">
                         <p className="font-bold text-primary">{booking.events?.title || 'Unknown Event'}</p>
                         <p className="text-xs text-gray-500 mt-1">{eventDate}</p>
                       </td>
                       <td className="p-4">
-                        <p className="font-bold text-gray-800">General</p>
+                        <p className="font-bold text-gray-800">{booking.ticket_tiers?.tier_name || 'General Admission'}</p>
                         <p className="text-xs text-gray-500 mt-1">Qty: {booking.qty}</p>
                       </td>
                       <td className="p-4 text-right">

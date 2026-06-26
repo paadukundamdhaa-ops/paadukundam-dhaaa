@@ -34,8 +34,8 @@ app.post('/api/create-razorpay-order', async (req, res) => {
 
   try {
     const razorpay = new Razorpay({
-      key_id: process.env.VITE_RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
+      key_id: process.env.VITE_RAZORPAY_KEY_ID.replace(/['"]/g, '').trim(),
+      key_secret: process.env.RAZORPAY_KEY_SECRET.replace(/['"]/g, '').trim(),
     });
 
     const options = {

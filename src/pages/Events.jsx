@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, MapPin, Calendar, SlidersHorizontal, Grid, List, ChevronLeft, ChevronRight, Heart, ChevronDown } from 'lucide-react';
+import { Search, MapPin, Calendar, SlidersHorizontal, Grid, List, ChevronLeft, ChevronRight, Heart, ChevronDown, Share2, Check } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
@@ -72,7 +72,8 @@ export default function Events() {
               category: event.category || 'Uncategorized',
               price: isFree ? 0 : lowestPrice,
               img: event.img_url || '/images/arijit.png',
-              tag: event.status || 'Draft'
+              tag: event.status || 'Draft',
+              slug: event.slug || event.id
             };
           });
           setAllEvents(formatted);
@@ -154,6 +155,20 @@ export default function Events() {
     setMaxPrice(20000);
     setSortOption('Sort By: Latest First');
     setCurrentPage(1);
+  };
+
+  const [copiedId, setCopiedId] = useState(null);
+  const handleShare = (e, event) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/events/${event.id}`;
+    if (navigator.share) {
+      navigator.share({ title: event.title, text: `Check out ${event.title}!`, url });
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopiedId(event.id);
+        setTimeout(() => setCopiedId(null), 2000);
+      });
+    }
   };
 
   return (
@@ -421,16 +436,23 @@ export default function Events() {
                         </span>
                       </div>
 
-                      <div className={view === 'grid' ? 'grid grid-cols-2 gap-2' : 'flex space-x-1.5 sm:space-x-2'}>
+                      <div className={view === 'grid' ? 'grid grid-cols-3 gap-1.5' : 'flex space-x-1.5 sm:space-x-2'}>
                         <button 
                           onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} 
-                          className={`bg-[#1a1a1a] hover:bg-black text-white font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 sm:px-4 md:px-6 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
+                          className={`bg-[#1a1a1a] hover:bg-black text-white font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 sm:px-4 md:px-5 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
                         >
                           View
                         </button>
                         <button 
+                          onClick={(e) => handleShare(e, event)}
+                          className={`border border-gray-300 hover:border-primary hover:text-primary text-gray-600 font-bold rounded transition-colors flex items-center justify-center gap-1 ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 sm:px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
+                        >
+                          {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
+                          {view === 'grid' && <span>{copiedId === event.id ? 'Copied!' : 'Share'}</span>}
+                        </button>
+                        <button 
                           onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} 
-                          className={`bg-secondary hover:bg-[#e0b51f] text-black font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 md:px-6 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
+                          className={`bg-secondary hover:bg-[#e0b51f] text-black font-bold rounded transition-colors ${view === 'grid' ? 'py-2 text-[11px]' : 'px-3 md:px-5 py-1.5 md:py-2 text-[10px] md:text-[11px]'}`}
                         >
                           Book
                         </button>

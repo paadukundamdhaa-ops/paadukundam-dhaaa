@@ -848,18 +848,18 @@ export default function CreateEvent() {
               <h2 className="text-white text-xl font-black mb-6 flex items-center gap-2"><Eye size={20} className="text-primary" /> 17. Live Card Preview</h2>
               <div className="max-w-sm mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden shadow-2xl">
                 <div className="h-48 relative">
-                  <img src="/images/arijit.png" className="w-full h-full object-cover" alt="Preview" />
+                  <img src={heroImage || "/images/arijit.png"} className="w-full h-full object-cover" alt="Preview" />
                   <div className="absolute top-3 left-3 bg-secondary text-black text-[10px] font-black px-2 py-1 rounded uppercase shadow">Live</div>
                 </div>
                 <div className="p-5 text-white text-left">
-                  <h3 className="text-xl font-black mb-2">Arijit Singh Live</h3>
-                  <p className="text-xs text-gray-300 mb-4"><MapPin size={12} className="inline mr-1" /> NSCI Dome, Mumbai</p>
+                  <h3 className="text-xl font-black mb-2">{title || 'Event Title'}</h3>
+                  <p className="text-xs text-gray-300 mb-4"><MapPin size={12} className="inline mr-1" /> {venueName || 'Venue'}, {city || 'City'}</p>
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-[10px] text-gray-400 uppercase">Starting from</p>
-                      <p className="text-lg font-bold text-white">₹999</p>
+                      <p className="text-lg font-bold text-white">₹{ticketTypes && ticketTypes.length > 0 ? Math.min(...ticketTypes.map(t => Number(t.price) || 0)) : '0'}</p>
                     </div>
-                    <button className="bg-primary px-4 py-2 rounded font-bold text-xs shadow-lg shadow-primary/30">Book Now</button>
+                    <button className="bg-primary px-4 py-2 rounded font-bold text-xs shadow-lg shadow-primary/30 cursor-default">Book Now</button>
                   </div>
                 </div>
               </div>

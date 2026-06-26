@@ -114,39 +114,18 @@ export default function Checkout() {
     });
   };
 
-  const handlePayment = async () => {
-    if (totalTickets === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Oops...',
-        text: 'Please select at least one ticket.',
-        confirmButtonColor: '#e11d48'
-      });
-      return;
-    }
-    if (!firstName || !email || !phone) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Incomplete Details',
-        text: 'Please fill in all personal information before paying.',
-        confirmButtonColor: '#e11d48'
-      });
-      return;
-    }
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
+  const processBooking = async (currentUser, paymentId) => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (!currentUser) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Authentication Required',
-          text: 'Please log in to complete checkout.',
-          confirmButtonColor: '#e11d48'
-        });
-        navigate('/login');
-        return;
-      }
-
       // 1. Update Profile with Phone Number
       const fullName = `${firstName} ${lastName}`.trim();
       const { error: profileError } = await supabase
@@ -190,7 +169,8 @@ export default function Checkout() {
             ticket_tier_id: tierId,
             qty: qty,
             total_amount: tierTotalAmount,
-            status: 'Completed'
+            status: 'Completed',
+            payment_id: paymentId // You can add this column to supabase later if needed
           });
           index++;
         }
@@ -248,27 +228,114 @@ export default function Checkout() {
             platformFee: bookingFee,
             termsAndConditions: event.termsAndConditions
           })
-        }).catch(err => console.error("API error:", err));
-      } catch (emailError) {
-        console.error("Failed to trigger email send:", emailError);
+        }).catch(err => console.error("Email send API failed:", err));
+      } catch (e) {
+        console.error("Email notification error", e);
       }
 
-      // Navigate to Success
-      navigate('/success', { 
-        state: { 
-          bookingRef, 
-          event, 
-          totalTickets, 
-          grandTotal 
-        } 
+      // 5. Navigate to Success
+      navigate('/success', {
+        state: {
+          bookingRef: bookingRef,
+          event: event,
+          tickets: totalTickets,
+          amount: grandTotal,
+          email: email
+        }
       });
-
+      
     } catch (error) {
-      console.error("Checkout failed:", error);
+      console.error('Error processing booking:', error);
       Swal.fire({
         icon: 'error',
         title: 'Booking Failed',
-        text: 'Failed to process booking. Please try again.',
+        text: error.message || 'Something went wrong while processing your booking.',
+        confirmButtonColor: '#e11d48'
+      });
+    }
+  };
+
+  const handlePayment = async () => {
+    if (totalTickets === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Oops...',
+        text: 'Please select at least one ticket.',
+        confirmButtonColor: '#e11d48'
+      });
+      return;
+    }
+    if (!firstName || !email || !phone) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Incomplete Details',
+        text: 'Please fill in all personal information before paying.',
+        confirmButtonColor: '#e11d48'
+      });
+      return;
+    }
+
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Authentication Required',
+          text: 'Please log in to complete checkout.',
+          confirmButtonColor: '#e11d48'
+        });
+        navigate('/login');
+        return;
+      }
+      
+      // Load Razorpay Script
+      const res = await loadRazorpayScript();
+      if (!res) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Connection Failed',
+          text: 'Are you online? Failed to load Razorpay SDK.',
+          confirmButtonColor: '#e11d48'
+        });
+        return;
+      }
+
+      // Razorpay Checkout Options
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: grandTotal * 100, // Amount in paisa
+        currency: "INR",
+        name: "PaadukundamDhaa",
+        description: `Payment for ${event.title}`,
+        image: "/images/LOGO __ Option 02.png",
+        handler: async function (response) {
+          // Payment Successful, process the booking
+          await processBooking(currentUser, response.razorpay_payment_id);
+        },
+        prefill: {
+          name: `${firstName} ${lastName}`.trim(),
+          email: email,
+          contact: phone,
+        },
+        theme: {
+          color: "#e11d48", // Primary Brand Color
+        },
+        modal: {
+          ondismiss: function() {
+            console.log("Checkout form closed by the user");
+          }
+        }
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.open();
+
+    } catch (error) {
+      console.error('Error initializing payment:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Initialization Failed',
+        text: error.message || 'Something went wrong while starting your payment.',
         confirmButtonColor: '#e11d48'
       });
     }

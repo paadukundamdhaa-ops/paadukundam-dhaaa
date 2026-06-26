@@ -58,7 +58,7 @@ export default function Checkout() {
   const discountedSubtotal = subtotalBeforeDiscount - promoDiscountAmount;
 
   // Calculate fees
-  const bookingFee = 15; // ₹15 flat fee
+  const bookingFee = 15 * totalTickets; // ₹15 flat fee per ticket
   const grandTotal = discountedSubtotal + bookingFee;
 
   const handleApplyPromo = async () => {
@@ -181,7 +181,7 @@ export default function Checkout() {
           const tierSubtotal = tierPrice * qty;
           const tierDiscount = appliedPromo ? Math.round(tierSubtotal * (appliedPromo.discount_percentage / 100)) : 0;
           // Dashboard math expects platform fee to be 15 for each ticket to calculate discount properly.
-          const tierTotalAmount = tierSubtotal - tierDiscount + 15;
+          const tierTotalAmount = tierSubtotal - tierDiscount + (15 * qty);
           
           bookingsToInsert.push({
             booking_ref: numTiers > 1 ? `${bookingRef}-${index}` : bookingRef,
@@ -473,8 +473,8 @@ export default function Checkout() {
                   <span className="font-bold">-₹{promoDiscountAmount.toLocaleString()}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Platform Booking Fee</span>
+              <div className="flex justify-between text-gray-600 font-bold">
+                <span>Platform Fee (₹15 × {totalTickets})</span>
                 <span className="font-bold text-black">₹{bookingFee.toLocaleString()}</span>
               </div>
             </div>

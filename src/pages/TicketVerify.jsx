@@ -181,14 +181,14 @@ export default function TicketVerify() {
                 </div>
                 
                 <div className="flex justify-between items-center mb-3 text-sm">
-                  <span className="text-gray-600">Platform Fee</span>
-                  <span className="font-bold text-black">₹15</span>
+                  <span className="text-gray-600">Platform Fee (₹15 x {booking.qty})</span>
+                  <span className="font-bold text-black">₹{15 * booking.qty}</span>
                 </div>
 
-                {((booking.ticket_tiers?.price * booking.qty) + 15) > booking.total_amount && (
+                {((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) > booking.total_amount && (
                   <div className="flex justify-between items-center mb-3 text-sm">
                     <span className="text-green-600 font-bold">Discount Applied</span>
-                    <span className="font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + 15) - booking.total_amount}</span>
+                    <span className="font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) - booking.total_amount}</span>
                   </div>
                 )}
                 

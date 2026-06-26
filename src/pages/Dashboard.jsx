@@ -334,13 +334,13 @@ export default function Dashboard() {
                                 <span className="text-[12px] font-bold text-gray-700">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
                               </div>
                               <div className="flex justify-between items-center px-8 mb-2">
-                                <span className="text-[12px] text-gray-500">Platform Fee</span>
-                                <span className="text-[12px] font-bold text-gray-700">₹15</span>
+                                <span className="text-[12px] text-gray-500">Platform Fee (₹15 x {booking.qty})</span>
+                                <span className="text-[12px] font-bold text-gray-700">₹{15 * booking.qty}</span>
                               </div>
-                              {((booking.ticket_tiers?.price * booking.qty) + 15) > booking.total_amount && (
+                              {((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) > booking.total_amount && (
                                 <div className="flex justify-between items-center px-8 mb-3">
                                   <span className="text-[12px] text-green-600 font-bold">Discount</span>
-                                  <span className="text-[12px] font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + 15) - booking.total_amount}</span>
+                                  <span className="text-[12px] font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) - booking.total_amount}</span>
                                 </div>
                               )}
                             </div>
@@ -546,13 +546,13 @@ export default function Dashboard() {
                     <span className="text-sm font-bold text-black">₹{(selectedBooking.ticket_tiers?.price * selectedBooking.qty) || selectedBooking.total_amount}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Platform Fee</span>
-                    <span className="text-sm font-bold text-black">₹15</span>
+                    <span className="text-sm text-gray-600">Platform Fee (₹15 x {selectedBooking.qty})</span>
+                    <span className="text-sm font-bold text-black">₹{15 * selectedBooking.qty}</span>
                   </div>
-                  {((selectedBooking.ticket_tiers?.price * selectedBooking.qty) + 15) > selectedBooking.total_amount && (
+                  {((selectedBooking.ticket_tiers?.price * selectedBooking.qty) + (15 * selectedBooking.qty)) > selectedBooking.total_amount && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-bold text-green-600">Discount Applied</span>
-                      <span className="text-sm font-bold text-green-600">-₹{((selectedBooking.ticket_tiers?.price * selectedBooking.qty) + 15) - selectedBooking.total_amount}</span>
+                      <span className="text-sm font-bold text-green-600">-₹{((selectedBooking.ticket_tiers?.price * selectedBooking.qty) + (15 * selectedBooking.qty)) - selectedBooking.total_amount}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-3 border-t border-gray-100 mt-1">

@@ -13,6 +13,13 @@ export default function AdminHomeCMS() {
     bgImages: ['/images/sunburn.png', '', '', '']
   });
 
+  const [tickerSettings, setTickerSettings] = useState([
+    'Early Bird Tickets for Sunburn 2026 are Live!',
+    'Arijit Singh Live - 50% Sold Out!',
+    "Use code 'PDHAA10' for 10% off your first booking",
+    'The Local Train reunion tour announced'
+  ]);
+
   const [stats, setStats] = useState([
     { label: 'Stat 1', val: '500+', desc: 'Concerts Hosted' },
     { label: 'Stat 2', val: '2M+', desc: 'Tickets Sold' },
@@ -43,10 +50,12 @@ export default function AdminHomeCMS() {
         const hero = data.find(d => d.section_name === 'hero');
         const statsData = data.find(d => d.section_name === 'stats');
         const testData = data.find(d => d.section_name === 'testimonials');
+        const tickerData = data.find(d => d.section_name === 'ticker');
         
         if (hero) setHeroSettings(hero.content_data);
         if (statsData) setStats(statsData.content_data);
         if (testData) setTestimonials(testData.content_data);
+        if (tickerData) setTickerSettings(tickerData.content_data);
       }
     } catch (error) {
       console.error('Error fetching CMS data:', error);
@@ -61,7 +70,8 @@ export default function AdminHomeCMS() {
       const updates = [
         { section_name: 'hero', content_data: heroSettings },
         { section_name: 'stats', content_data: stats },
-        { section_name: 'testimonials', content_data: testimonials }
+        { section_name: 'testimonials', content_data: testimonials },
+        { section_name: 'ticker', content_data: tickerSettings }
       ];
       
       const { error } = await supabase.from('cms_content').upsert(updates, { onConflict: 'section_name' });
@@ -96,6 +106,7 @@ export default function AdminHomeCMS() {
 
   const tabs = [
     { id: 'hero', name: 'Hero Section', icon: <ImageIcon size={18} /> },
+    { id: 'ticker', name: 'News Ticker', icon: <Type size={18} /> },
     { id: 'stats', name: 'Stats Banner', icon: <Type size={18} /> },
     { id: 'artists', name: 'Artist Spotlight', icon: <LayoutTemplate size={18} /> },
     { id: 'testimonials', name: 'Testimonials', icon: <Star size={18} /> },
@@ -173,6 +184,31 @@ export default function AdminHomeCMS() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'ticker' && (
+            <div className="p-6 space-y-6">
+              <h3 className="font-bold text-xl text-black border-b border-gray-200 pb-4">News Ticker Settings</h3>
+              <p className="text-sm text-gray-500">Update the 4 scrolling text items in the red banner below the hero section.</p>
+              
+              <div className="space-y-4">
+                {[0, 1, 2, 3].map(idx => (
+                  <div key={idx}>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Ticker Item {idx + 1}</label>
+                    <input 
+                      type="text" 
+                      value={tickerSettings[idx]} 
+                      onChange={(e) => {
+                        const newTicker = [...tickerSettings];
+                        newTicker[idx] = e.target.value;
+                        setTickerSettings(newTicker);
+                      }} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black" 
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}

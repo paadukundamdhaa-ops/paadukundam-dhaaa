@@ -31,6 +31,13 @@ export default function Home() {
       if (timer) clearInterval(timer);
     };
   }, [validBgImages.length]);
+  const [tickerSettings, setTickerSettings] = useState([
+    'Early Bird Tickets for Sunburn 2026 are Live!',
+    'Arijit Singh Live - 50% Sold Out!',
+    "Use code 'PDHAA10' for 10% off your first booking",
+    'The Local Train reunion tour announced'
+  ]);
+
   const [stats, setStats] = useState([
     { label: 'Stat 1', val: '500+', desc: 'Concerts Hosted' },
     { label: 'Stat 2', val: '2M+', desc: 'Tickets Sold' },
@@ -192,6 +199,7 @@ export default function Home() {
           const hero = data.find(d => d.section_name === 'hero');
           const statsData = data.find(d => d.section_name === 'stats');
           const testData = data.find(d => d.section_name === 'testimonials');
+          const tickerData = data.find(d => d.section_name === 'ticker');
           
           if (hero && hero.content_data) {
             setHeroSettings({
@@ -202,6 +210,7 @@ export default function Home() {
           }
           if (statsData && statsData.content_data) setStats(statsData.content_data);
           if (testData && testData.content_data) setTestimonials(testData.content_data);
+          if (tickerData && tickerData.content_data) setTickerSettings(tickerData.content_data);
         }
       } catch (err) {
         console.error('Error fetching CMS:', err);
@@ -449,17 +458,17 @@ export default function Home() {
         >
           {/* First Group */}
           <div className="flex space-x-12 items-center px-6">
-            <span className="flex items-center"><Star size={14} className="mr-2 text-secondary" /> Early Bird Tickets for Sunburn 2026 are Live!</span>
-            <span className="flex items-center"><Zap size={14} className="mr-2 text-secondary" /> Arijit Singh Live - 50% Sold Out!</span>
-            <span className="flex items-center"><TicketIcon size={14} className="mr-2 text-secondary" /> Use code 'PDHAA10' for 10% off your first booking</span>
-            <span className="flex items-center"><Music size={14} className="mr-2 text-secondary" /> The Local Train reunion tour announced</span>
+            <span className="flex items-center"><Star size={14} className="mr-2 text-secondary" /> {tickerSettings[0]}</span>
+            <span className="flex items-center"><Zap size={14} className="mr-2 text-secondary" /> {tickerSettings[1]}</span>
+            <span className="flex items-center"><TicketIcon size={14} className="mr-2 text-secondary" /> {tickerSettings[2]}</span>
+            <span className="flex items-center"><Music size={14} className="mr-2 text-secondary" /> {tickerSettings[3]}</span>
           </div>
           {/* Duplicate Group for Seamless Looping */}
           <div className="flex space-x-12 items-center px-6">
-            <span className="flex items-center"><Star size={14} className="mr-2 text-secondary" /> Early Bird Tickets for Sunburn 2026 are Live!</span>
-            <span className="flex items-center"><Zap size={14} className="mr-2 text-secondary" /> Arijit Singh Live - 50% Sold Out!</span>
-            <span className="flex items-center"><TicketIcon size={14} className="mr-2 text-secondary" /> Use code 'PDHAA10' for 10% off your first booking</span>
-            <span className="flex items-center"><Music size={14} className="mr-2 text-secondary" /> The Local Train reunion tour announced</span>
+            <span className="flex items-center"><Star size={14} className="mr-2 text-secondary" /> {tickerSettings[0]}</span>
+            <span className="flex items-center"><Zap size={14} className="mr-2 text-secondary" /> {tickerSettings[1]}</span>
+            <span className="flex items-center"><TicketIcon size={14} className="mr-2 text-secondary" /> {tickerSettings[2]}</span>
+            <span className="flex items-center"><Music size={14} className="mr-2 text-secondary" /> {tickerSettings[3]}</span>
           </div>
         </motion.div>
       </div>

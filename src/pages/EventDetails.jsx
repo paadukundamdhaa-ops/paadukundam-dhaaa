@@ -187,8 +187,8 @@ export default function EventDetails() {
       </Helmet>
 
       {/* Hero Section */}
-      <div className="relative h-[400px] md:h-[450px]">
-        <img src={event.heroImage} className="w-full h-full object-cover" alt={event.title} />
+      <div className="relative w-full" style={{ aspectRatio: '1920/900' }}>
+        <img src={event.heroImage} className="w-full h-full object-cover object-top" alt={event.title} />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
         {/* Hero Title Content */}
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 max-w-6xl mx-auto z-10 flex items-end gap-6 md:gap-8">

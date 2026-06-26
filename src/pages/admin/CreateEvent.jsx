@@ -410,8 +410,8 @@ export default function CreateEvent() {
             </div>
             <div className="p-6 space-y-6">
               <div>
-                <label className="block text-[13px] font-bold text-gray-700 mb-2">Hero Banner (1920x900) *</label>
-                <label className="h-48 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-colors relative overflow-hidden block w-full">
+                <label className="block text-[13px] font-bold text-gray-700 mb-2">Hero Banner (1920×900) <span className="text-red-500">*</span></label>
+                <label className="w-full rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-colors relative overflow-hidden block" style={{ aspectRatio: '1920/900' }}>
                   <input type="file" className="hidden" accept="image/*" onChange={handleHeroUpload} />
                   {heroImage ? (
                     <img src={heroImage} alt="Hero Banner Preview" className="absolute inset-0 w-full h-full object-cover" />
@@ -421,7 +421,7 @@ export default function CreateEvent() {
                         <UploadCloud size={24} />
                       </div>
                       <p className="font-bold text-sm text-gray-800">Click to upload or drag and drop</p>
-                      <p className="text-xs text-gray-500 mt-1">SVG, PNG, JPG or GIF (max. 10MB)</p>
+                      <p className="text-xs text-gray-500 mt-1">Recommended: 1920×900px · PNG, JPG (max. 10MB)</p>
                     </>
                   )}
                 </label>

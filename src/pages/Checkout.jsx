@@ -324,7 +324,7 @@ export default function Checkout() {
 
       // Razorpay Checkout Options
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID ? import.meta.env.VITE_RAZORPAY_KEY_ID.replace(/['"]/g, '').trim() : '',
         amount: orderData.amount, 
         currency: orderData.currency,
         order_id: orderData.id, // The order ID from backend

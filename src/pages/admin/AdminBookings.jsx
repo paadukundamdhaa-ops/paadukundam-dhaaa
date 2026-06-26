@@ -109,33 +109,52 @@ export default function AdminBookings() {
 
   const processedBookings = getFilteredAndSortedBookings();
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const doc = new jsPDF();
     
-    // Add Title
-    doc.setFontSize(20);
-    doc.text('Bookings Report', 14, 22);
+    // Add Logo
+    try {
+      const img = new Image();
+      img.src = '/images/LOGO __ Option 02.png';
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      doc.addImage(img, 'PNG', 14, 10, 40, 12);
+    } catch (e) {
+      console.log("Could not load logo for PDF", e);
+    }
+
+    // Add Event Name / Title in Big Letters
+    doc.setFontSize(24);
+    doc.setTextColor(204, 0, 0); // Primary color #cc0000
+    const titleText = eventFilter !== 'all' ? eventFilter.toUpperCase() : 'ALL EVENTS BOOKINGS';
+    doc.text(titleText, 14, 35);
     
     // Add Date Info
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 43);
     
     let filterText = [];
     if (startDate && endDate) filterText.push(`Date: ${startDate} to ${endDate}`);
     else if (startDate) filterText.push(`Date: From ${startDate}`);
     else if (endDate) filterText.push(`Date: Until ${endDate}`);
     
-    if (eventFilter !== 'all') filterText.push(`Event: ${eventFilter}`);
     if (statusFilter !== 'all') filterText.push(`Status: ${statusFilter.toUpperCase()}`);
     
     if (filterText.length > 0) {
-      doc.text(`Filters applied: ${filterText.join(' | ')}`, 14, 36);
+      doc.text(`Filters applied: ${filterText.join(' | ')}`, 14, 49);
     }
 
-    // Prepare Table Data
+    // Prepare Table Data & Calculate Totals
     const tableColumn = ["Booking ID", "Customer", "Contact", "Event", "Ticket Type", "Qty", "Amount", "Status", "Check-In"];
     const tableRows = [];
+
+    let totalQty = 0;
+    let totalAmountWithFee = 0;
+    let totalAmountWithoutFee = 0;
+    const ticketCounts = {};
 
     processedBookings.forEach(booking => {
       const customerName = booking.profiles?.name || 'Unknown';
@@ -148,29 +167,75 @@ export default function AdminBookings() {
       if (isCheckedIn) checkInText = 'Checked In';
       if (isDenied) checkInText = 'Denied';
 
+      const qty = parseInt(booking.qty) || 0;
+      const amount = parseFloat(booking.total_amount) || 0;
+
       const bookingData = [
         booking.booking_ref || 'N/A',
         customerName,
         contact,
         booking.events?.title || 'Unknown',
         ticketType,
-        booking.qty?.toString() || '0',
-        `Rs. ${booking.total_amount}`,
+        qty.toString(),
+        `Rs. ${amount}`,
         booking.status.toUpperCase(),
         checkInText
       ];
       tableRows.push(bookingData);
+
+      // Accumulate totals (only for completed/success if you want valid revenue, but we sum all in current view)
+      // We will sum based on the filtered view to reflect what the admin sees.
+      totalQty += qty;
+      totalAmountWithFee += amount;
+      // Subtract platform fee (15 per ticket) to get amount without fee
+      totalAmountWithoutFee += (amount - (qty * 15));
+
+      if (!ticketCounts[ticketType]) ticketCounts[ticketType] = 0;
+      ticketCounts[ticketType] += qty;
     });
 
     // Add Table
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: filterText.length > 0 ? 42 : 36,
+      startY: filterText.length > 0 ? 55 : 49,
       theme: 'grid',
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [225, 29, 72] } // Primary color #e11d48
+      headStyles: { fillColor: [204, 0, 0] } // #cc0000
     });
+
+    // Add Summary Section at the bottom
+    const finalY = doc.lastAutoTable.finalY || 100;
+    
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Summary', 14, finalY + 15);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(50);
+    
+    let currentY = finalY + 25;
+    
+    // Ticket Type Counts
+    doc.text('Tickets Booked by Type:', 14, currentY);
+    currentY += 6;
+    Object.entries(ticketCounts).forEach(([type, count]) => {
+      doc.text(`- ${type}: ${count}`, 20, currentY);
+      currentY += 6;
+    });
+
+    currentY += 4;
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Tickets Booked: ${totalQty}`, 14, currentY);
+    currentY += 8;
+    
+    doc.text(`Total Amount (Without Platform Fee): Rs. ${totalAmountWithoutFee}`, 14, currentY);
+    currentY += 8;
+    
+    doc.setFontSize(14);
+    doc.setTextColor(204, 0, 0);
+    doc.text(`Total Amount (With Platform Fee): Rs. ${totalAmountWithFee}`, 14, currentY);
 
     // Save PDF
     doc.save(`bookings-report-${new Date().getTime()}.pdf`);

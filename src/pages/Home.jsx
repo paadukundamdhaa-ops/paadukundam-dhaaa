@@ -505,19 +505,27 @@ export default function Home() {
             {/* Red Line */}
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/20 -z-10 hidden md:block"></div>
             
-            {featuredEvents.slice(0, 5).map((event, idx) => (
-              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center min-w-[260px] mx-2 relative group hover:border-primary hover:shadow-xl transition-all cursor-pointer">
-                <div className="text-center pr-4 border-r border-gray-200 mr-4">
-                  <span className="block text-3xl font-black text-primary leading-none">{event.date}</span>
-                  <span className="text-xs font-bold text-gray-500 uppercase">{event.month}</span>
-                </div>
-                <div>
-                  <h4 className="font-bold text-white text-black text-sm mb-1 truncate">{event.title}</h4>
-                  <p className="text-xs text-gray-500 mb-2 truncate">{event.venue}</p>
-                  <p className="text-[10px] text-primary font-bold uppercase flex items-center group-hover:underline">Book Now <ArrowRight size={10} className="ml-1" /></p>
-                </div>
-                {/* Timeline Dot */}
-                <div className="absolute -left-2 top-1/2 -mt-2 w-4 h-4 rounded-full bg-white border-4 border-primary hidden md:block"></div>
+            {featuredEvents.slice(0, 5).map((event, idx, arr) => (
+              <div key={idx} className="flex items-center">
+                <Link to={`/events/${event.id}`} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center min-w-[260px] mx-2 relative group hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+                  <div className="text-center pr-4 border-r border-gray-200 mr-4">
+                    <span className="block text-3xl font-black text-primary leading-none">{event.date}</span>
+                    <span className="text-xs font-bold text-gray-500 uppercase">{event.month}</span>
+                  </div>
+                  <div className="overflow-hidden">
+                    <h4 className="font-bold text-black text-sm mb-1 truncate">{event.title}</h4>
+                    <p className="text-xs text-gray-500 mb-2 truncate">{event.venue}</p>
+                    <div className="text-[10px] text-primary font-bold uppercase flex items-center group-hover:underline">Book Now <ArrowRight size={10} className="ml-1" /></div>
+                  </div>
+                  {/* Timeline Dot */}
+                  <div className="absolute -left-2 top-1/2 -mt-2 w-4 h-4 rounded-full bg-white border-4 border-primary hidden md:block"></div>
+                </Link>
+                {/* Arrow between cards */}
+                {idx < arr.length - 1 && (
+                  <div className="hidden md:flex items-center text-primary/40 px-2 shrink-0">
+                    <ArrowRight size={20} />
+                  </div>
+                )}
               </div>
             ))}
           </div>

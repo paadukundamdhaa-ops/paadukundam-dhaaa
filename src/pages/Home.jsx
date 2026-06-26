@@ -8,6 +8,26 @@ import { supabase } from '../lib/supabase';
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeFaq, setActiveFaq] = useState(null);
+  
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [heroSettings, setHeroSettings] = useState({
+    heading: 'FEEL THE RHYTHM LIVE THE MUSIC',
+    subheading: 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
+    bgMedia: 'hero_bg.mp4'
+  });
+  const [stats, setStats] = useState([
+    { label: 'Stat 1', val: '500+', desc: 'Concerts Hosted' },
+    { label: 'Stat 2', val: '2M+', desc: 'Tickets Sold' },
+    { label: 'Stat 3', val: '1M+', desc: 'Happy Customers' },
+    { label: 'Stat 4', val: '25+', desc: 'Cities Covered' },
+  ]);
+
+  const [testimonials, setTestimonials] = useState([
+    { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
+    { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
+    { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
+  ]);
 
   const faqs = [
     {
@@ -99,25 +119,7 @@ export default function Home() {
     };
   }, []);
 
-  const [featuredEvents, setFeaturedEvents] = useState([]);
-  const [galleryImages, setGalleryImages] = useState([]);
-  const [heroSettings, setHeroSettings] = useState({
-    heading: 'FEEL THE RHYTHM LIVE THE MUSIC',
-    subheading: 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
-    bgMedia: 'hero_bg.mp4'
-  });
-  const [stats, setStats] = useState([
-    { label: 'Stat 1', val: '500+', desc: 'Concerts Hosted' },
-    { label: 'Stat 2', val: '2M+', desc: 'Tickets Sold' },
-    { label: 'Stat 3', val: '1M+', desc: 'Happy Customers' },
-    { label: 'Stat 4', val: '25+', desc: 'Cities Covered' },
-  ]);
 
-  const [testimonials, setTestimonials] = useState([
-    { name: 'Riya Sharma', text: 'Amazing experience! The booking process was smooth and the concert was beyond expectations.', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150' },
-    { name: 'Aman Verma', text: 'Best platform for concert tickets. Quick confirmation and easy entry with QR!', img: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150' },
-    { name: 'Neha Kapoor', text: 'Loved the UI and how easy it is to find events. Highly recommended!', img: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150' },
-  ]);
 
   useEffect(() => {
     const fetchHomeEvents = async () => {

@@ -515,12 +515,12 @@ export default function Checkout() {
                     value={promoInput} 
                     onChange={e => setPromoInput(e.target.value)} 
                     placeholder="Enter discount code" 
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm text-black uppercase focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    className="flex-1 min-w-0 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm text-black uppercase focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                   />
                   <button 
                     onClick={handleApplyPromo}
                     disabled={isApplyingPromo || !promoInput.trim()}
-                    className="bg-black hover:bg-gray-800 text-white font-bold text-sm px-5 py-2 rounded-xl transition-all disabled:opacity-50"
+                    className="whitespace-nowrap flex-shrink-0 bg-black hover:bg-gray-800 text-white font-bold text-sm px-5 py-2 rounded-xl transition-all disabled:opacity-50"
                   >
                     {isApplyingPromo ? 'Applying...' : 'Apply'}
                   </button>

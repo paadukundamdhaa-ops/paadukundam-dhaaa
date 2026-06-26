@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Download, MoreVertical, CheckCircle, Clock, XCircle, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
@@ -163,7 +163,7 @@ export default function AdminBookings() {
     });
 
     // Add Table
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: filterText.length > 0 ? 42 : 36,

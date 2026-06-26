@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { CheckCircle, XCircle, MapPin, Calendar, Clock, User, Mail, Phone, Ticket, Download } from 'lucide-react';
+import { CheckCircle, XCircle, MapPin, Calendar, Clock, User, Mail, Phone, Ticket, Download, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
 import Swal from 'sweetalert2';
@@ -118,130 +118,132 @@ export default function TicketVerify() {
 
   const event = booking.events;
   const profile = booking.profiles;
-  const eventDate = new Date(event.event_date || booking.created_at).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  
+  // Format Date and Time
+  const eventDateObj = new Date(event.event_date || booking.created_at);
+  const formattedDate = eventDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const formattedTime = event.event_time?.substring(0, 5) || '18:00';
+  const tierName = booking.ticket_tiers?.tier_name || 'GENERAL ADMISSION';
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href.split('?')[0])}`;
 
   if (ticketImage) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-        <img src={ticketImage} alt="Your Ticket" className="max-w-md w-full h-auto rounded-3xl shadow-2xl" />
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+        <img src={ticketImage} alt="Your Ticket" className="max-w-md w-full h-auto drop-shadow-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-24 font-sans flex flex-col items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-gray-100 py-12 font-sans flex flex-col items-center justify-center p-4 md:p-6 relative">
       {generatingImage && (
-        <div className="fixed inset-0 bg-gray-50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#cc0000] border-t-transparent mb-4"></div>
             <p className="text-gray-500 font-bold">Preparing your ticket image...</p>
           </div>
         </div>
       )}
-      <div className="max-w-md w-full" ref={ticketRef}>
-        {/* Verification Status */}
-        <div className="bg-green-500 text-white p-6 rounded-t-3xl text-center relative overflow-hidden">
-          <div className="relative z-10">
-            <CheckCircle className="w-16 h-16 mx-auto mb-3" />
-            <h1 className="text-2xl font-black mb-1">Valid Ticket</h1>
-            <p className="text-green-100 font-medium text-sm">Verified and confirmed for entry</p>
-          </div>
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-black/10 rounded-full blur-2xl"></div>
+      
+      {/* --- ACTUAL TICKET TO CAPTURE --- */}
+      <div className="max-w-[400px] w-full bg-white rounded-[2rem] overflow-hidden relative shadow-[0_20px_50px_rgba(0,0,0,0.1)]" ref={ticketRef}>
+        
+        {/* Logo Section */}
+        <div className="pt-8 pb-6 flex justify-center bg-white">
+          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-14 object-contain" crossOrigin="anonymous" />
         </div>
 
-        {/* Details Container */}
-        <div className="bg-white rounded-b-3xl shadow-xl shadow-gray-200/50 p-6 border-b border-l border-r border-gray-100 border-t-2 border-t-dashed">
+        {/* Event Image Section */}
+        <div className="relative h-64 w-full bg-gray-900">
+          {event.image_url && (
+            <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" crossOrigin="anonymous" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
           
-          {/* Logo Header */}
-          <div className="pb-6 border-b border-gray-100 flex justify-center mb-6">
-            <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-12 object-contain opacity-100" crossOrigin="anonymous" />
-          </div>
-
-          <div className="mb-6 border-b border-gray-100 pb-6 text-center">
-            <h2 className="text-xl font-black text-black mb-2">{event.title}</h2>
-            <div className="inline-block bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full mb-4">
-              Booking Ref: {booking.booking_ref}
+          <div className="absolute bottom-5 left-6 right-6 text-left">
+            <div className="inline-block bg-[#cc0000] text-white text-[11px] font-black px-2.5 py-1 rounded-md mb-2 tracking-wider">
+              ACTIVE
+            </div>
+            <h2 className="text-2xl md:text-[26px] font-black text-white mb-2.5 leading-tight">{event.title}</h2>
+            
+            <div className="flex items-center text-gray-200 text-[13px] font-medium mb-1.5 gap-2">
+              <Calendar size={14} className="text-[#cc0000]" />
+              <span>{formattedDate} | {formattedTime}</span>
+            </div>
+            
+            <div className="flex items-start text-gray-200 text-[13px] font-medium gap-2">
+              <MapPin size={14} className="text-[#cc0000] shrink-0 mt-0.5" />
+              <span className="line-clamp-1">{event.venue}, {event.city}</span>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Event Details</h3>
-              <div className="space-y-3 bg-gray-50 p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium text-gray-700">{eventDate}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium text-gray-700">{event.event_time?.substring(0, 5) || 'TBA'}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium text-gray-700">{event.venue}, {event.city}</span>
-                </div>
-              </div>
-            </div>
+        {/* Divider with Cutouts */}
+        <div className="relative flex items-center bg-white h-10">
+          <div className="absolute -left-5 w-10 h-10 bg-gray-100 rounded-full shadow-inner border-r border-gray-100"></div>
+          <div className="w-full border-t-2 border-dashed border-gray-300 mx-8"></div>
+          <div className="absolute -right-5 w-10 h-10 bg-gray-100 rounded-full shadow-inner border-l border-gray-100"></div>
+        </div>
 
-            <div>
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Attendee Details</h3>
-              <div className="space-y-3 bg-gray-50 p-4 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <User className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                  <span className="text-sm font-bold text-black">{profile?.name || 'Unknown'}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Mail className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium text-gray-600">{profile?.email || 'Unknown'}</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Phone className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium text-gray-600">{profile?.phone || 'Not provided'}</span>
-                </div>
-              </div>
-            </div>
+        {/* Bottom Section */}
+        <div className="px-6 pb-8 bg-white flex items-center justify-between gap-5">
+          {/* QR Code */}
+          <div className="w-[120px] h-[120px] shrink-0 border-2 border-gray-100 rounded-2xl p-2.5 shadow-sm bg-white flex items-center justify-center">
+            <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" crossOrigin="anonymous" />
+          </div>
 
-            <div data-html2canvas-ignore="true">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Order Summary</h3>
-              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center gap-2">
-                    <Ticket className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-bold text-black">{booking.ticket_tiers?.tier_name || 'General Admission'} ({booking.qty}x)</span>
-                  </div>
-                  <span className="text-sm font-bold text-black">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
-                </div>
-                
-                <div className="flex justify-between items-center mb-3 text-sm">
-                  <span className="text-gray-600">Platform Fee (₹15 x {booking.qty})</span>
-                  <span className="font-bold text-black">₹{15 * booking.qty}</span>
-                </div>
+          {/* Ticket Info */}
+          <div className="flex-1 flex flex-col items-end text-right">
+            <h3 className="text-[#cc0000] font-black tracking-[0.2em] text-[11px] mb-1.5">ENTRY PASS</h3>
+            <h4 className="text-xl font-black text-black leading-tight mb-1 uppercase text-right" style={{ wordBreak: 'break-word' }}>
+              {tierName}
+            </h4>
+            <p className="text-gray-500 font-medium text-[13px] mb-4">{booking.qty} Ticket(s)</p>
 
-                {((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) > booking.total_amount && (
-                  <div className="flex justify-between items-center mb-3 text-sm">
-                    <span className="text-green-600 font-bold">Discount Applied</span>
-                    <span className="font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) - booking.total_amount}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between items-center pt-3 border-t border-primary/20">
-                  <span className="text-sm font-bold text-black">Total Paid</span>
-                  <span className="text-lg font-black text-primary">₹{booking.total_amount.toLocaleString()}</span>
-                </div>
-              </div>
+            <div className="border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 w-full shadow-sm">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 text-center">Booking ID</p>
+              <p className="text-lg font-black text-black text-center leading-none">{booking.booking_ref}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Manual Download Button (Outside the ticket image) */}
-      <button 
-        onClick={downloadTicket}
-        className="mt-8 flex items-center justify-center gap-2 bg-white border-2 border-primary text-primary px-8 py-3 rounded-full font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
-      >
-        <Download size={20} /> Download Ticket (JPG)
-      </button>
+      {/* Buttons (Outside the ticket image) */}
+      <div className="max-w-[400px] w-full mt-6 flex items-center justify-center gap-4 px-2">
+        <button 
+          onClick={downloadTicket}
+          className="flex-1 flex items-center justify-center gap-2 bg-[#cc0000] text-white px-4 py-3.5 rounded-2xl font-bold hover:bg-red-700 transition-colors shadow-md"
+        >
+          <Download size={18} /> Save
+        </button>
+        <Link 
+          to={`/events/${event.id}`}
+          className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-4 py-3.5 rounded-2xl font-bold hover:bg-gray-800 transition-colors shadow-md"
+        >
+          Details
+        </Link>
+        <button 
+          onClick={async () => {
+            try {
+              if (navigator.share) {
+                await navigator.share({
+                  title: 'My Ticket',
+                  text: `I'm going to ${event.title}!`,
+                  url: window.location.href.split('?')[0],
+                });
+              } else {
+                await navigator.clipboard.writeText(window.location.href.split('?')[0]);
+                alert('Link copied to clipboard!');
+              }
+            } catch (error) {
+              console.log('Error sharing:', error);
+            }
+          }}
+          className="w-[52px] h-[52px] flex items-center justify-center shrink-0 bg-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-300 transition-colors shadow-md"
+        >
+          <Share2 size={20} />
+        </button>
+      </div>
     </div>
   );
 }

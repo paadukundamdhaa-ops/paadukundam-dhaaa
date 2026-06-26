@@ -103,7 +103,7 @@ export default function Home() {
         const { data, error } = await supabase
           .from('events')
           .select('*, ticket_tiers(price)')
-          .in('status', ['Live', 'Upcoming'])
+          .in('status', ['Live', 'Upcoming', 'Active'])
           .order('event_date', { ascending: true })
           .limit(8);
 

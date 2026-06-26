@@ -169,8 +169,7 @@ export default function Checkout() {
             ticket_tier_id: tierId,
             qty: qty,
             total_amount: tierTotalAmount,
-            status: 'Completed',
-            payment_id: paymentId // You can add this column to supabase later if needed
+            status: 'Completed'
           });
           index++;
         }

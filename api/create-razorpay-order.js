@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     });
 
     const options = {
-      amount: amount.toString(), // amount in smallest currency unit (paisa)
+      amount: parseInt(amount, 10), // amount MUST be an integer in paisa
       currency: currency || 'INR',
       receipt: `receipt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     };

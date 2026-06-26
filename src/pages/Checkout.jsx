@@ -312,7 +312,12 @@ export default function Checkout() {
       });
 
       if (!orderResponse.ok) {
-        throw new Error('Failed to create Razorpay order');
+        let errorMsg = 'Failed to create Razorpay order';
+        try {
+          const errData = await orderResponse.json();
+          errorMsg = errData.error || errorMsg;
+        } catch(e) {}
+        throw new Error(errorMsg);
       }
 
       const orderData = await orderResponse.json();

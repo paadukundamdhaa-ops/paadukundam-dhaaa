@@ -39,7 +39,7 @@ app.post('/api/create-razorpay-order', async (req, res) => {
     });
 
     const options = {
-      amount: amount.toString(),
+      amount: parseInt(amount, 10),
       currency: currency || 'INR',
       receipt: `receipt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     };

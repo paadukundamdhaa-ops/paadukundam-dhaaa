@@ -61,9 +61,11 @@ function App() {
               <Route path="gallery" element={<Gallery />} />
               <Route path="contact" element={<Contact />} />
               <Route path="about" element={<About />} />
-              <Route path="ticket/:bookingRef" element={<TicketVerify />} />
               <Route path="*" element={<NotFound />} />
             </Route>
+
+            {/* Standalone Ticket View Route (No Navbar/Footer) */}
+            <Route path="/ticket/:bookingRef" element={<TicketVerify />} />
             {/* Admin Login Route */}
             <Route path="/admin/login" element={<AdminLogin />} />
 

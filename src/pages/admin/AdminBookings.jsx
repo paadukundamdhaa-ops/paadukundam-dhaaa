@@ -228,14 +228,6 @@ export default function AdminBookings() {
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
     doc.text(`Total Tickets Booked: ${totalQty}`, 14, currentY);
-    currentY += 8;
-    
-    doc.text(`Total Amount (Without Platform Fee): Rs. ${totalAmountWithoutFee}`, 14, currentY);
-    currentY += 8;
-    
-    doc.setFontSize(14);
-    doc.setTextColor(204, 0, 0);
-    doc.text(`Total Amount (With Platform Fee): Rs. ${totalAmountWithFee}`, 14, currentY);
 
     // Save PDF
     doc.save(`bookings-report-${new Date().getTime()}.pdf`);

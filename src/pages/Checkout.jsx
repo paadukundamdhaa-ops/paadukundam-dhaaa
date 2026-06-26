@@ -245,7 +245,8 @@ export default function Checkout() {
             amount: grandTotal,
             subtotal: subtotalBeforeDiscount,
             discount: promoDiscountAmount,
-            platformFee: bookingFee
+            platformFee: bookingFee,
+            termsAndConditions: event.termsAndConditions
           })
         }).catch(err => console.error("API error:", err));
       } catch (emailError) {

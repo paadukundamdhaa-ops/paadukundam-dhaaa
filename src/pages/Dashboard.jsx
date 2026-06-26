@@ -561,6 +561,16 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+
+              {selectedBooking.events?.terms_and_conditions && (
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Terms & Conditions</h4>
+                  <div className="text-xs text-gray-500 whitespace-pre-wrap leading-relaxed bg-gray-50 p-4 rounded-xl">
+                    {selectedBooking.events.terms_and_conditions}
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>

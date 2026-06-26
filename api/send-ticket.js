@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { email, name, eventTitle, eventDate, eventVenue, eventCity, bookingRef, qty, amount, subtotal, discount, platformFee } = req.body;
+  const { email, name, eventTitle, eventDate, eventVenue, eventCity, bookingRef, qty, amount, subtotal, discount, platformFee, termsAndConditions } = req.body;
 
   if (!email || !bookingRef) {
     return res.status(400).json({ message: 'Missing required fields: email and bookingRef are required' });
@@ -102,6 +102,13 @@ export default async function handler(req, res) {
           <a href="${ticketUrl}" style="background-color: #ffffff; border: 2px solid #e50914; color: #e50914; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; margin-right: 10px; margin-bottom: 10px;">View Ticket Online</a>
           <a href="${ticketUrl}?download=true" style="background-color: #e50914; border: 2px solid #e50914; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 14px; margin-bottom: 10px;">Download Ticket (JPG)</a>
         </div>
+        
+        ${termsAndConditions ? `
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
+          <h4 style="font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Terms & Conditions</h4>
+          <div style="font-size: 11px; color: #64748b; line-height: 1.6; white-space: pre-wrap; background-color: #f8fafc; padding: 15px; border-radius: 8px;">${termsAndConditions}</div>
+        </div>
+        ` : ''}
         
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
         <p style="font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.6;">

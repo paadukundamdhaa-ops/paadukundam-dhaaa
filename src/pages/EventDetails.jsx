@@ -137,7 +137,8 @@ export default function EventDetails() {
           date: event.date,
           heroImage: event.heroImage,
           venue: event.venue,
-          city: event.city
+          city: event.city,
+          termsAndConditions: eventData?.terms_and_conditions
         },
         selectedTickets,
         totalPrice,

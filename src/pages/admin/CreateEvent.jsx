@@ -42,8 +42,9 @@ export default function CreateEvent() {
   const [artistName, setArtistName] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [fullDescription, setFullDescription] = useState('');
-  const [ageRestriction, setAgeRestriction] = useState('18+ Only');
+  const [ageRestriction, setAgeRestriction] = useState('');
   const [refundPolicy, setRefundPolicy] = useState('');
+  const [termsAndConditions, setTermsAndConditions] = useState('');
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [organizerName, setOrganizerName] = useState('');
@@ -242,6 +243,7 @@ export default function CreateEvent() {
           highlights: highlights,
           age_restriction: ageRestriction,
           refund_policy: refundPolicy,
+          terms_and_conditions: termsAndConditions,
           seo_title: seoTitle,
           seo_description: seoDescription,
           organizer_name: organizerName,
@@ -772,6 +774,10 @@ export default function CreateEvent() {
               <div>
                 <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Refund Policy</label>
                 <textarea rows="3" value={refundPolicy} onChange={e => setRefundPolicy(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="No refunds..."></textarea>
+              </div>
+              <div>
+                <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Terms and Conditions</label>
+                <textarea rows="4" value={termsAndConditions} onChange={e => setTermsAndConditions(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm outline-none" placeholder="Enter terms and conditions for the ticket..."></textarea>
               </div>
             </div>
             ) : (

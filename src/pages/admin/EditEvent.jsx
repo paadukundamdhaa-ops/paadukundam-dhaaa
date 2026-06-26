@@ -166,6 +166,7 @@ export default function EditEvent() {
           setOrganizerEmail(data.organizer_email || '');
           setIsCountdownEnabled(data.is_countdown_enabled ?? true);
           setHeroImage(data.img_url || null);
+          setSquareImage(data.square_image || null);
           setMapUrlInput(data.google_maps_url || '');
           setAmenities(data.amenities || []);
 
@@ -276,7 +277,7 @@ export default function EditEvent() {
           venue: fullVenue,
           total_tickets: totalTickets,
           ...(heroImageFile ? { img_url: uploadedImgUrl } : {}),
-          ...(uploadedSquareImgUrl ? { square_image: uploadedSquareImgUrl } : {}),
+          square_image: uploadedSquareImgUrl || squareImage || null,
           short_description: shortDescription,
           description: fullDescription,
           google_maps_url: mapUrlInput,

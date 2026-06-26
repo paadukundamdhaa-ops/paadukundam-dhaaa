@@ -1,4 +1,4 @@
-import { Ticket, User, Heart, Settings, LogOut, Download, MapPin, Calendar, Clock, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Ticket, User, Heart, Settings, LogOut, Download, MapPin, Calendar, Clock, Loader2, CheckCircle, XCircle, Share2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
@@ -293,13 +293,35 @@ export default function Dashboard() {
                             className="flex-1 bg-primary hover:bg-primary-dark transition-all py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/25"
                           >
                             {isDownloading ? <Loader2 size={16} className="animate-spin text-white" /> : <Download size={16} className="text-white" />}
-                            {isDownloading ? 'Saving...' : 'Save Ticket'}
+                            <span className="hidden sm:inline">{isDownloading ? 'Saving...' : 'Save'}</span>
                           </button>
                           <button 
                             onClick={() => setSelectedBooking(booking)} 
                             className="flex-1 bg-black hover:bg-gray-800 transition-all py-3.5 rounded-xl text-sm font-bold text-white flex items-center justify-center cursor-pointer shadow-lg shadow-black/20"
                           >
-                            View Details
+                            Details
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                if (navigator.share) {
+                                  await navigator.share({
+                                    title: 'My Event Ticket',
+                                    text: `Here is my ticket for ${event.title}!`,
+                                    url: qrValue,
+                                  });
+                                } else {
+                                  await navigator.clipboard.writeText(qrValue);
+                                  alert('Ticket link copied to clipboard!');
+                                }
+                              } catch (error) {
+                                console.log('Error sharing:', error);
+                              }
+                            }}
+                            className="w-[52px] h-[52px] shrink-0 bg-gray-100 hover:bg-gray-200 transition-all rounded-xl flex items-center justify-center cursor-pointer shadow-sm text-gray-700"
+                            title="Share Ticket"
+                          >
+                            <Share2 size={18} />
                           </button>
                         </div>
 

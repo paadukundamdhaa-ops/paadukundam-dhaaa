@@ -52,7 +52,29 @@ export default function Home() {
         return { days, hours, minutes, seconds };
       });
     }, 1000);
-    return () => clearInterval(timer);
+
+    // Prevent right click
+    const handleContextMenu = (e) => e.preventDefault();
+    
+    // Prevent screenshot shortcuts
+    const handleKeyDown = (e) => {
+      if (
+        e.key === 'PrintScreen' || 
+        (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5' || e.key === 's')) ||
+        (e.ctrlKey && e.key === 'p')
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const [featuredEvents, setFeaturedEvents] = useState([]);

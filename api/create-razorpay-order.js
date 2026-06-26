@@ -37,6 +37,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error("Razorpay Order Creation Error:", error);
-    res.status(500).json({ error: error.message || 'Failed to create Razorpay order' });
+    const errorMessage = error.error ? error.error.description : (error.message || JSON.stringify(error));
+    res.status(500).json({ error: errorMessage });
   }
 }

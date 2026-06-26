@@ -16,6 +16,9 @@ import Register from './pages/Register';
 import Gallery from './pages/Gallery';
 import Contact from './pages/Contact';
 import About from './pages/About';
+import TermsConditions from './pages/TermsConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import RefundPolicy from './pages/RefundPolicy';
 import NotFound from './pages/NotFound';
 import TicketVerify from './pages/TicketVerify';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -61,6 +64,9 @@ function App() {
               <Route path="gallery" element={<Gallery />} />
               <Route path="contact" element={<Contact />} />
               <Route path="about" element={<About />} />
+              <Route path="terms-conditions" element={<TermsConditions />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="refund-policy" element={<RefundPolicy />} />
               <Route path="*" element={<NotFound />} />
             </Route>
 

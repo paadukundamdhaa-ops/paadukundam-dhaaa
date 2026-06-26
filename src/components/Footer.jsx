@@ -62,9 +62,9 @@ export default function Footer() {
           <ul className="space-y-3 text-pale text-xs">
             <li><Link to="/" className="hover:text-secondary transition-colors">FAQs</Link></li>
             <li><Link to="/" className="hover:text-secondary transition-colors">How it Works</Link></li>
-            <li><Link to="/" className="hover:text-secondary transition-colors">Terms & Conditions</Link></li>
-            <li><Link to="/" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
-            <li><Link to="/" className="hover:text-secondary transition-colors">Refund Policy</Link></li>
+            <li><Link to="/terms-conditions" className="hover:text-secondary transition-colors">Terms & Conditions</Link></li>
+            <li><Link to="/privacy-policy" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/refund-policy" className="hover:text-secondary transition-colors">Refund Policy</Link></li>
           </ul>
         </div>
 
@@ -72,8 +72,8 @@ export default function Footer() {
         <div>
           <h4 className="font-bold text-sm mb-4 text-white uppercase tracking-wider">Company</h4>
           <ul className="space-y-3 text-pale text-xs">
-            <li><Link to="/" className="hover:text-secondary transition-colors">About Us</Link></li>
-            <li><Link to="/" className="hover:text-secondary transition-colors">Contact Us</Link></li>
+            <li><Link to="/about" className="hover:text-secondary transition-colors">About Us</Link></li>
+            <li><Link to="/contact" className="hover:text-secondary transition-colors">Contact Us</Link></li>
             <li><Link to="/" className="hover:text-secondary transition-colors">Careers</Link></li>
             <li><Link to="/" className="hover:text-secondary transition-colors">Blog</Link></li>
             <li><Link to="/" className="hover:text-secondary transition-colors">Press</Link></li>

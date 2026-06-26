@@ -438,7 +438,7 @@ export default function Home() {
           </div>
 
           <div className="flex space-x-6 overflow-x-auto pb-8 hide-scrollbar">
-            {featuredEvents.map((event) => (
+            {featuredEvents.slice(0, 5).map((event) => (
               <div key={event.id} className="min-w-[280px] bg-white border border-gray-200 shadow-md rounded-xl overflow-hidden relative group">
                 {/* Date Badge */}
                 <div className="absolute top-4 left-4 bg-primary text-white text-center w-12 h-12 flex flex-col justify-center rounded-md z-10 shadow-lg">
@@ -505,7 +505,7 @@ export default function Home() {
             {/* Red Line */}
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-primary/20 -z-10 hidden md:block"></div>
             
-            {featuredEvents.map((event, idx) => (
+            {featuredEvents.slice(0, 5).map((event, idx) => (
               <div key={idx} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center min-w-[260px] mx-2 relative group hover:border-primary hover:shadow-xl transition-all cursor-pointer">
                 <div className="text-center pr-4 border-r border-gray-200 mr-4">
                   <span className="block text-3xl font-black text-primary leading-none">{event.date}</span>
@@ -562,8 +562,8 @@ export default function Home() {
                 </div>
 
                 {/* Other Artists */}
-                <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-8 lg:mt-0">
-                  {featuredEvents.slice(1, 4).map((artist, idx) => (
+                <div className="lg:w-1/2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 mt-8 lg:mt-0">
+                  {featuredEvents.slice(1, 5).map((artist, idx) => (
                     <Link to={`/events/${artist.id}`} key={idx} className="relative rounded-xl overflow-hidden h-64 group cursor-pointer border border-gray-200 shadow-md block">
                       <img src={artist.img} alt={artist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>

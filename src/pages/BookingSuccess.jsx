@@ -50,18 +50,30 @@ export default function BookingSuccess() {
       <motion.div 
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="bg-gray-900/90 backdrop-blur-xl max-w-2xl w-full p-8 md:p-12 rounded-3xl border border-gray-800 shadow-2xl text-center relative overflow-hidden z-10"
+        className="bg-gray-900/90 backdrop-blur-xl max-w-lg w-full p-6 md:p-8 rounded-3xl border border-gray-800 shadow-2xl text-center relative overflow-hidden z-10"
       >
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary-dark via-primary to-primary-light"></div>
         
-        <div className="w-24 h-24 bg-green-500/10 border border-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
-          <CheckCircle size={48} />
+        <div className="w-20 h-20 bg-green-500/10 border border-green-500/20 text-green-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+          <CheckCircle size={40} />
         </div>
         
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-4">Payment Successful!</h1>
-        <p className="text-gray-400 text-lg mb-8 font-medium">Your booking for <strong className="text-white">{event.title}</strong> is confirmed.</p>
+        <h1 className="text-2xl md:text-3xl font-black text-white mb-4">Payment Successful!</h1>
         
-        <div className="bg-black/50 rounded-2xl p-6 mb-8 inline-block text-left w-full max-w-md border border-gray-800 shadow-inner">
+        {event.image_url ? (
+          <div className="flex flex-col items-center justify-center mb-6">
+            <img src={event.image_url} alt={event.title} className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl shadow-lg border border-gray-700 mb-3" />
+            <p className="text-gray-400 text-sm md:text-base font-medium">
+              Your booking for <strong className="text-white block text-lg md:text-xl mt-1">{event.title}</strong> is confirmed.
+            </p>
+          </div>
+        ) : (
+          <p className="text-gray-400 text-sm md:text-base mb-6 font-medium">
+            Your booking for <strong className="text-white">{event.title}</strong> is confirmed.
+          </p>
+        )}
+        
+        <div className="bg-black/50 rounded-2xl p-5 mb-6 inline-block text-left w-full border border-gray-800 shadow-inner">
           <div className="flex justify-between items-center mb-4">
             <span className="text-gray-500 text-sm font-bold uppercase tracking-widest">Booking ID</span>
             <span className="font-mono font-black text-primary bg-primary/10 px-3 py-1 rounded-lg">{bookingRef}</span>
@@ -76,9 +88,9 @@ export default function BookingSuccess() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
-          <Link to="/dashboard" className="w-full sm:w-auto flex items-center justify-center px-6 py-4 bg-primary hover:bg-primary-dark text-white font-black rounded-xl transition-all shadow-[0_0_20px_rgba(229,9,20,0.3)] transform hover:scale-[1.02] active:scale-95">
-            <Download size={18} className="mr-2" /> Download E-Ticket
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3 mb-6">
+          <Link to="/dashboard" className="w-full sm:w-auto flex items-center justify-center px-5 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(229,9,20,0.3)] transform hover:scale-[1.02] active:scale-95 text-sm">
+            <Download size={16} className="mr-2" /> Download Ticket
           </Link>
           <button 
             onClick={async () => {
@@ -98,18 +110,18 @@ export default function BookingSuccess() {
                 console.log('Error sharing:', error);
               }
             }}
-            className="w-full sm:w-auto flex items-center justify-center px-6 py-4 bg-transparent border border-gray-700 hover:border-gray-500 hover:bg-gray-800 text-white font-black rounded-xl transition-all transform hover:scale-[1.02] active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-center px-5 py-3 bg-transparent border border-gray-700 hover:border-gray-500 hover:bg-gray-800 text-white font-bold rounded-xl transition-all transform hover:scale-[1.02] active:scale-95 text-sm"
           >
-            <Share2 size={18} className="mr-2" /> Share with Friends
+            <Share2 size={16} className="mr-2" /> Share
           </button>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-4 border-t border-gray-800/50">
-          <Link to="/events" className="inline-flex items-center text-gray-400 font-bold hover:text-white transition-colors">
-            <ArrowLeft size={18} className="mr-2" /> Back to Events
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-gray-800/50">
+          <Link to="/events" className="inline-flex items-center text-gray-400 font-bold hover:text-white transition-colors text-sm">
+            <ArrowLeft size={16} className="mr-2" /> Back to Events
           </Link>
-          <Link to="/dashboard" className="inline-flex items-center text-primary font-bold hover:text-primary-light transition-colors">
-            View all your tickets <ArrowRight size={18} className="ml-2" />
+          <Link to="/dashboard" className="inline-flex items-center text-primary font-bold hover:text-primary-light transition-colors text-sm">
+            View all your tickets <ArrowRight size={16} className="ml-2" />
           </Link>
         </div>
       </motion.div>

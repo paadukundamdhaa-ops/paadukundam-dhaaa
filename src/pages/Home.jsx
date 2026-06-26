@@ -6,7 +6,7 @@ import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, S
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
-  const [timeLeft, setTimeLeft] = useState({ days: 2, hours: 14, minutes: 36, seconds: 48 });
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeFaq, setActiveFaq] = useState(null);
 
   const faqs = [
@@ -33,26 +33,49 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        let { days, hours, minutes, seconds } = prev;
-        if (seconds > 0) seconds--;
-        else {
-          seconds = 59;
-          if (minutes > 0) minutes--;
-          else {
-            minutes = 59;
-            if (hours > 0) hours--;
-            else {
-              hours = 23;
-              if (days > 0) days--;
-            }
+    let timer;
+    
+    if (featuredEvents && featuredEvents.length > 0) {
+      // Find the next upcoming event
+      const now = new Date();
+      const upcomingEvents = featuredEvents
+        .map(e => ({
+          ...e,
+          fullDate: new Date(`${e.rawDate}T${e.rawTime || '00:00:00'}`)
+        }))
+        .filter(e => e.fullDate > now)
+        .sort((a, b) => a.fullDate - b.fullDate);
+        
+      if (upcomingEvents.length > 0) {
+        const nextEventTime = upcomingEvents[0].fullDate.getTime();
+        
+        timer = setInterval(() => {
+          const currentTime = new Date().getTime();
+          const distance = nextEventTime - currentTime;
+          
+          if (distance <= 0) {
+            clearInterval(timer);
+            setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+          } else {
+            setTimeLeft({
+              days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+              hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+              minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+              seconds: Math.floor((distance % (1000 * 60)) / 1000)
+            });
           }
-        }
-        return { days, hours, minutes, seconds };
-      });
-    }, 1000);
+        }, 1000);
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    }
 
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [featuredEvents]);
+
+  useEffect(() => {
     // Prevent right click
     const handleContextMenu = (e) => e.preventDefault();
     
@@ -71,7 +94,6 @@ export default function Home() {
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      clearInterval(timer);
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -120,6 +142,8 @@ export default function Home() {
               title: event.title,
               date: d.getDate().toString().padStart(2, '0'),
               month: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+              rawDate: event.event_date,
+              rawTime: event.event_time,
               venue: event.venue,
               price: lowestPrice,
               img: event.img_url || '/images/arijit.png'

@@ -194,13 +194,13 @@ export default function EditEvent() {
     }
   };
 
-  const handlePublish = async () => {
-    if (!title || !category || !eventDate || !eventTime || !venueName || !city) {
+  const handlePublish = async (isDraft = false) => {
+    if (!title || !eventDate || !venueName) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please fill in all required fields (Title, Category, Date, Time, Venue, City).',
-        confirmButtonColor: '#e11d48'
+        icon: 'error',
+        title: 'Missing Details',
+        text: 'Please fill in at least the event title, date, and venue.',
+        confirmButtonColor: '#000000'
       });
       return;
     }
@@ -215,8 +215,8 @@ export default function EditEvent() {
       return;
     }
 
-    setIsPublishing(true);
     try {
+      setIsPublishing(true);
       let uploadedImgUrl = '/images/sunburn.png';
       if (heroImageFile) {
         const fileExt = heroImageFile.name.split('.').pop();
@@ -286,19 +286,27 @@ export default function EditEvent() {
         status: 'Active'
       }));
 
+      // In EditEvent, if we save as draft we can update the event status to Draft, else keep Active
+      if (isDraft) {
+        await supabase.from('events').update({ status: 'Draft' }).eq('id', id);
+      } else {
+        await supabase.from('events').update({ status: 'Active' }).eq('id', id);
+      }
+
       const { error: tierError } = await supabase
         .from('ticket_tiers')
         .insert(tiersToInsert);
 
       if (tierError) throw tierError;
 
-      await Swal.fire({
+      Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: 'Event published successfully!',
+        title: isDraft ? 'Draft Saved!' : 'Success!',
+        text: isDraft ? 'Event updated and saved as draft.' : 'Event updated successfully!',
         confirmButtonColor: '#22c55e'
+      }).then(() => {
+        navigate('/admin/events');
       });
-      navigate('/admin/events');
     } catch (error) {
       console.error("Error publishing event:", error);
       Swal.fire({
@@ -869,14 +877,14 @@ export default function EditEvent() {
             <button className="text-red-500 font-bold text-sm hover:underline flex items-center gap-1"><Trash2 size={16} /> Discard Event</button>
           </div>
           <div className="flex items-center gap-3">
-            <button className="px-6 py-2.5 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm border border-transparent">
-              <Save size={18} /> Save Draft
+            <button onClick={() => handlePublish(true)} disabled={isPublishing} className="px-6 py-2.5 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm border border-transparent disabled:opacity-50">
+              <Save size={18} /> {isPublishing ? 'Saving...' : 'Save Draft'}
             </button>
             <button onClick={() => scrollToSection('preview')} className="px-6 py-2.5 rounded-lg font-bold text-white bg-black hover:bg-gray-900 transition-colors flex items-center gap-2 text-sm border border-gray-800">
               <Eye size={18} /> Preview Page
             </button>
-            <button onClick={handlePublish} disabled={isPublishing} className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-50">
-              <Rocket size={18} /> {isPublishing ? 'Publishing...' : 'Publish Event'}
+            <button onClick={() => handlePublish(false)} disabled={isPublishing} className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-50">
+              <Rocket size={18} /> {isPublishing ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>

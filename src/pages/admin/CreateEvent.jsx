@@ -151,14 +151,13 @@ export default function CreateEvent() {
     }
   };
 
-  const handlePublish = async () => {
-    // Artist is only required if the module is enabled
-    if (!title || (enableArtist && !artistName) || !category || !eventDate || !eventTime || !venueName || !city) {
+  const handlePublish = async (isDraft = false) => {
+    if (!title || !eventDate || !venueName) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Missing Fields',
-        text: 'Please fill in all required fields (Title, Category, Date, Time, Venue, City).',
-        confirmButtonColor: '#e11d48'
+        icon: 'error',
+        title: 'Missing Details',
+        text: 'Please fill in at least the event title, date, and venue.',
+        confirmButtonColor: '#000000'
       });
       return;
     }
@@ -173,8 +172,8 @@ export default function CreateEvent() {
       return;
     }
 
-    setIsPublishing(true);
     try {
+      setIsPublishing(true);
       let uploadedImgUrl = '/images/sunburn.png';
       if (heroImageFile) {
         const fileExt = heroImageFile.name.split('.').pop();
@@ -210,7 +209,7 @@ export default function CreateEvent() {
           event_date: eventDate,
           event_time: eventTime,
           venue: fullVenue,
-          status: 'Upcoming',
+          status: isDraft ? 'Draft' : 'Upcoming',
           total_tickets: totalTickets,
           tickets_sold: 0,
           img_url: uploadedImgUrl,
@@ -251,11 +250,12 @@ export default function CreateEvent() {
 
       await Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: 'Event published successfully!',
-        confirmButtonColor: '#22c55e'
+        title: isDraft ? 'Draft Saved!' : 'Event Published!',
+        text: isDraft ? 'Your event has been saved as a draft.' : 'Your event is now live and tickets can be purchased.',
+        confirmButtonColor: '#000000'
+      }).then(() => {
+        navigate('/admin/events');
       });
-      navigate('/admin/events');
     } catch (error) {
       console.error("Error publishing event:", error);
       Swal.fire({
@@ -876,13 +876,13 @@ export default function CreateEvent() {
             <button className="text-red-500 font-bold text-sm hover:underline flex items-center gap-1"><Trash2 size={16} /> Discard Event</button>
           </div>
           <div className="flex items-center gap-3">
-            <button className="px-6 py-2.5 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm border border-transparent">
-              <Save size={18} /> Save Draft
+            <button onClick={() => handlePublish(true)} disabled={isPublishing} className="px-6 py-2.5 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm border border-transparent disabled:opacity-50">
+              <Save size={18} /> {isPublishing ? 'Saving...' : 'Save Draft'}
             </button>
             <button onClick={() => scrollToSection('preview')} className="px-6 py-2.5 rounded-lg font-bold text-white bg-black hover:bg-gray-900 transition-colors flex items-center gap-2 text-sm border border-gray-800">
               <Eye size={18} /> Preview Page
             </button>
-            <button onClick={handlePublish} disabled={isPublishing} className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-50">
+            <button onClick={() => handlePublish(false)} disabled={isPublishing} className="px-8 py-2.5 rounded-lg font-black text-white bg-gradient-to-r from-primary to-red-800 hover:from-red-700 hover:to-red-900 transition-all flex items-center gap-2 text-sm shadow-lg shadow-primary/30 transform hover:-translate-y-0.5 disabled:opacity-50">
               <Rocket size={18} /> {isPublishing ? 'Publishing...' : 'Publish Event'}
             </button>
           </div>

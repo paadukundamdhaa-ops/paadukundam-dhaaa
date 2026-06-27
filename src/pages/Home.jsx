@@ -158,12 +158,31 @@ export default function Home() {
         
         if (data) {
           const now = new Date();
-          const upcomingOnly = data.filter(event => {
-            const eventDateTime = new Date(`${event.event_date}T${event.event_time || '00:00:00'}`);
-            return eventDateTime > now;
+          const validEvents = data.filter(event => {
+            const startTime = new Date(`${event.event_date}T${event.event_time || '00:00:00'}`);
+            const endTime = event.show_ends 
+              ? new Date(`${event.event_date}T${event.show_ends}`)
+              : new Date(startTime.getTime() + 4 * 60 * 60 * 1000); // Default 4 hours later
+            
+            if (endTime < startTime) {
+              endTime.setDate(endTime.getDate() + 1);
+            }
+            
+            const hideTime = new Date(endTime.getTime() + 24 * 60 * 60 * 1000);
+            return now < hideTime; // Keep it if less than 24h past end time
           });
 
-          const formattedEvents = upcomingOnly.map(event => {
+          const formattedEvents = validEvents.map(event => {
+            const startTime = new Date(`${event.event_date}T${event.event_time || '00:00:00'}`);
+            const endTime = event.show_ends 
+              ? new Date(`${event.event_date}T${event.show_ends}`)
+              : new Date(startTime.getTime() + 4 * 60 * 60 * 1000);
+            if (endTime < startTime) endTime.setDate(endTime.getDate() + 1);
+
+            let eventStatus = 'UPCOMING';
+            if (now > endTime) eventStatus = 'COMPLETED';
+            else if (now >= startTime) eventStatus = 'ONGOING';
+
             const d = new Date(event.event_date);
             const lowestPrice = event.ticket_tiers && event.ticket_tiers.length > 0 
               ? Math.min(...event.ticket_tiers.map(t => t.price || 0)) 
@@ -177,7 +196,8 @@ export default function Home() {
               rawTime: event.event_time,
               venue: event.venue,
               price: lowestPrice,
-              img: event.img_url || '/images/arijit.png'
+              img: event.img_url || '/images/arijit.png',
+              displayStatus: eventStatus
             };
           });
           setFeaturedEvents(formattedEvents);
@@ -433,7 +453,7 @@ export default function Home() {
               </div>
 
               <div className="relative h-64 overflow-hidden">
-                <ProtectedImage src={featuredEvents[0]?.img || "/images/script.png"} alt="Featured" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                <ProtectedImage src={featuredEvents[0]?.img || "/images/script.png"} alt="Featured" className={`w-full h-full object-cover transition-transform duration-700 hover:scale-110 ${featuredEvents[0]?.displayStatus === 'COMPLETED' ? 'grayscale opacity-60' : ''}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                 <div className="absolute bottom-4 left-6">
                   <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Featured</span>
@@ -457,14 +477,31 @@ export default function Home() {
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-full">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Available</span>
+                    {featuredEvents[0]?.displayStatus === 'COMPLETED' ? (
+                      <>
+                        <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">
+                          {featuredEvents[0]?.displayStatus === 'ONGOING' ? 'Live Now' : 'Available'}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <Link to={featuredEvents[0] ? `/events/${featuredEvents[0].id}` : '/events'} className="w-full bg-primary hover:bg-red-800 text-white font-black py-4 rounded-xl transition-all flex items-center justify-center shadow-[0_0_15px_rgba(192,0,0,0.5)]">
-                  Book Now <ArrowRight size={18} className="ml-2" />
-                </Link>
+                {featuredEvents[0]?.displayStatus === 'COMPLETED' ? (
+                  <div className="w-full bg-gray-800 border border-gray-600 text-gray-400 font-black py-4 rounded-xl flex items-center justify-center shadow-inner cursor-not-allowed">
+                    Event Completed
+                  </div>
+                ) : (
+                  <Link to={featuredEvents[0] ? `/events/${featuredEvents[0].id}` : '/events'} className="w-full bg-primary hover:bg-red-800 text-white font-black py-4 rounded-xl transition-all flex items-center justify-center shadow-[0_0_15px_rgba(192,0,0,0.5)]">
+                    Book Now <ArrowRight size={18} className="ml-2" />
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
@@ -519,8 +556,13 @@ export default function Home() {
                 {/* Heart */}
                 <button className="absolute top-4 right-4 text-white/50 hover:text-white z-10" onClick={(e) => e.preventDefault()}><Heart size={20} /></button>
                 
-                <div className="h-48 overflow-hidden">
-                  <ProtectedImage src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className="h-48 overflow-hidden relative">
+                  {event.displayStatus === 'COMPLETED' && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20 backdrop-blur-[2px]">
+                      <span className="bg-gray-800 text-white font-bold px-4 py-2 rounded uppercase tracking-widest border border-gray-600 shadow-xl transform -rotate-12">Completed</span>
+                    </div>
+                  )}
+                  <ProtectedImage src={event.img} alt={event.title} className={`w-full h-full object-cover transition-transform duration-500 ${event.displayStatus === 'COMPLETED' ? 'grayscale opacity-70' : 'group-hover:scale-110'}`} />
                 </div>
                 <div className="p-5">
                   <h3 className="font-bold text-lg mb-1 truncate text-black">{event.title}</h3>

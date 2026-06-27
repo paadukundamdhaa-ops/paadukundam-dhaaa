@@ -46,7 +46,32 @@ export default function Events() {
         if (error) throw error;
         
         if (data) {
-          const formatted = data.map(event => {
+          const now = new Date();
+          const validEvents = data.filter(event => {
+            const startTime = new Date(`${event.event_date}T${event.event_time || '00:00:00'}`);
+            const endTime = event.show_ends 
+              ? new Date(`${event.event_date}T${event.show_ends}`)
+              : new Date(startTime.getTime() + 4 * 60 * 60 * 1000);
+            
+            if (endTime < startTime) {
+              endTime.setDate(endTime.getDate() + 1);
+            }
+            
+            const hideTime = new Date(endTime.getTime() + 24 * 60 * 60 * 1000);
+            return now < hideTime;
+          });
+
+          const formatted = validEvents.map(event => {
+            const startTime = new Date(`${event.event_date}T${event.event_time || '00:00:00'}`);
+            const endTime = event.show_ends 
+              ? new Date(`${event.event_date}T${event.show_ends}`)
+              : new Date(startTime.getTime() + 4 * 60 * 60 * 1000);
+            if (endTime < startTime) endTime.setDate(endTime.getDate() + 1);
+
+            let eventStatus = 'UPCOMING';
+            if (now > endTime) eventStatus = 'COMPLETED';
+            else if (now >= startTime) eventStatus = 'ONGOING';
+
             const d = new Date(event.event_date || Date.now());
             
             // Try to extract a city name from the venue (e.g. "Stadium, Mumbai" -> "Mumbai")
@@ -74,7 +99,8 @@ export default function Events() {
               price: isFree ? 0 : lowestPrice,
               img: event.img_url || '/images/arijit.png',
               tag: event.status || 'Draft',
-              slug: event.slug || event.id
+              slug: event.slug || event.id,
+              displayStatus: eventStatus
             };
           });
           setAllEvents(formatted);
@@ -392,7 +418,12 @@ export default function Events() {
                   
                   {/* Image Section */}
                   <div className={`relative overflow-hidden shrink-0 flex ${view === 'grid' ? 'h-40 w-full' : 'w-28 sm:w-36 md:w-48'}`}>
-                    <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    {event.displayStatus === 'COMPLETED' && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20 backdrop-blur-[2px]">
+                        <span className={`bg-gray-800 text-white font-bold rounded uppercase tracking-widest border border-gray-600 shadow-xl transform -rotate-12 ${view === 'grid' ? 'px-4 py-2' : 'px-2 py-1 text-[10px] md:text-sm md:px-4 md:py-2'}`}>Completed</span>
+                      </div>
+                    )}
+                    <img src={event.img} alt={event.title} className={`w-full h-full object-cover transition-transform duration-700 ${event.displayStatus === 'COMPLETED' ? 'grayscale opacity-70' : 'group-hover:scale-110'}`} />
                     
                     {/* Date Badge */}
                     <div className={`absolute top-0 left-0 bg-[#8b0000] text-white text-center flex flex-col justify-center rounded-br-lg shadow-md z-10 ${view === 'grid' ? 'w-11 py-1.5' : 'w-8 md:w-11 py-1 md:py-1.5'}`}>
@@ -446,7 +477,9 @@ export default function Events() {
                               <span>{copiedId === event.id ? 'Copied!' : 'Share'}</span>
                             </button>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="w-full bg-secondary hover:bg-[#e0b51f] text-black font-black rounded py-2.5 text-[12px] transition-colors tracking-wide">Book Now</button>
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} disabled={event.displayStatus === 'COMPLETED'} className={`w-full ${event.displayStatus === 'COMPLETED' ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-secondary hover:bg-[#e0b51f] text-black'} font-black rounded py-2.5 text-[12px] transition-colors tracking-wide`}>
+                            {event.displayStatus === 'COMPLETED' ? 'Completed' : 'Book Now'}
+                          </button>
                         </div>
                       </div>
                     ) : (
@@ -466,7 +499,9 @@ export default function Events() {
                               </button>
                             </div>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="w-full bg-secondary hover:bg-[#e0b51f] text-black font-black rounded py-2 text-[12px] transition-colors">Book Now</button>
+                          <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} disabled={event.displayStatus === 'COMPLETED'} className={`w-full ${event.displayStatus === 'COMPLETED' ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-secondary hover:bg-[#e0b51f] text-black'} font-black rounded py-2 text-[12px] transition-colors`}>
+                            {event.displayStatus === 'COMPLETED' ? 'Completed' : 'Book Now'}
+                          </button>
                         </div>
                         {/* Desktop: all inline */}
                         <div className="hidden sm:flex items-center justify-between gap-3">
@@ -482,7 +517,9 @@ export default function Events() {
                               {copiedId === event.id ? <Check size={13} className="text-green-500" /> : <Share2 size={13} />}
                               <span>{copiedId === event.id ? 'Copied!' : 'Share'}</span>
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} className="bg-secondary hover:bg-[#e0b51f] text-black font-black rounded px-5 py-2 text-[11px] transition-colors whitespace-nowrap">Book Now</button>
+                            <button onClick={(e) => { e.stopPropagation(); navigate(`/events/${event.id}`); }} disabled={event.displayStatus === 'COMPLETED'} className={`${event.displayStatus === 'COMPLETED' ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-secondary hover:bg-[#e0b51f] text-black'} font-black rounded px-5 py-2 text-[11px] transition-colors whitespace-nowrap`}>
+                              {event.displayStatus === 'COMPLETED' ? 'Completed' : 'Book Now'}
+                            </button>
                           </div>
                         </div>
                       </div>

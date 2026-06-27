@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  ChevronLeft, Save, UploadCloud, Eye, Rocket, MapPin, Calendar, Clock,
-  Users, Ticket, Settings, Shield, Link as LinkIcon, AlertCircle, Plus,
-  Trash2, Copy, PlayCircle, Info, Image as ImageIcon, Music, Star, Search
+  ChevronLeft, UploadCloud, MapPin, Calendar,
+  Ticket, Settings, Shield, Link as LinkIcon, AlertCircle, Plus,
+  Trash2, PlayCircle, Info, Image as ImageIcon, Music, Star,
+  Search, Users, Eye, Save, Rocket, Clock, Copy
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate, Link, useParams } from 'react-router-dom';
@@ -12,10 +13,8 @@ export default function EditEvent() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('basic-info');
-  const [ticketTypes, setTicketTypes] = useState([
-    { id: 1, name: 'General Admission', price: '999', qty: '1000', refundable: false }
-  ]);
-  const [highlights, setHighlights] = useState(['Live Performance']);
+  const [ticketTypes, setTicketTypes] = useState([]);
+  const [highlights, setHighlights] = useState([]);
   const [amenities, setAmenities] = useState([]);
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [heroImage, setHeroImage] = useState(null);
@@ -66,7 +65,7 @@ export default function EditEvent() {
         return `https://maps.google.com/maps?q=${encodeURIComponent(parts[0])}&output=embed`;
       }
       return null;
-    } catch (e) {
+    } catch {
       // If not a valid URL, treat the text itself as a search query
       if (url.length > 3) {
         return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
@@ -140,6 +139,10 @@ export default function EditEvent() {
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
 
     // Fetch event if ID exists
     const fetchEvent = async () => {
@@ -183,6 +186,7 @@ export default function EditEvent() {
               price: t.price,
               qty: t.total_capacity,
               tickets_sold: t.tickets_sold || 0,
+              reserved_capacity: t.reserved_capacity || 0,
               refundable: false 
             })));
           }
@@ -192,8 +196,6 @@ export default function EditEvent() {
       }
     };
     fetchEvent();
-
-    return () => window.removeEventListener('scroll', handleScroll);
   }, [id]);
 
   const scrollToSection = (id) => {
@@ -268,10 +270,8 @@ export default function EditEvent() {
       // Format Venue
       const fullVenue = `${venueName}, ${city}`;
 
-      // Update Event
-      const { data: eventData, error: eventError } = await supabase
-        .from('events')
-        .update({
+      // Build JSON Payloads for the Atomic RPC
+      const eventPayload = {
           title,
           slug: slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           artist: artistName,
@@ -283,7 +283,7 @@ export default function EditEvent() {
           venue: fullVenue,
           total_tickets: totalTickets,
           ...(heroImageFile ? { img_url: uploadedImgUrl } : {}),
-          square_image: uploadedSquareImgUrl || squareImage || null,
+          ...(uploadedSquareImgUrl || squareImage ? { square_image: uploadedSquareImgUrl || squareImage } : {}),
           short_description: shortDescription,
           description: fullDescription,
           google_maps_url: mapUrlInput,
@@ -297,38 +297,26 @@ export default function EditEvent() {
           seo_description: seoDescription,
           organizer_name: organizerName,
           organizer_email: organizerEmail,
-          is_countdown_enabled: isCountdownEnabled
-        })
-        .eq('id', id)
-        .select()
-        .single();
+          is_countdown_enabled: isCountdownEnabled,
+          status: isDraft ? 'Draft' : 'Active'
+      };
 
-      if (eventError) throw eventError;
-
-      // Update tickets - for simplicity we just delete old ones and insert new ones
-      await supabase.from('ticket_tiers').delete().eq('event_id', id);
-
-      const tiersToInsert = ticketTypes.map(t => ({
-        event_id: id,
+      const ticketsPayload = ticketTypes.map(t => ({
+        // If ID is a UUID (contains a dash), it's existing. Otherwise, it's a new unsaved row (temp number).
+        id: (t.id && String(t.id).includes('-')) ? String(t.id) : null,
         tier_name: t.name || 'General Admission',
         price: Number(t.price) || 0,
-        total_capacity: Number(t.qty) || 0,
-        tickets_sold: t.tickets_sold || 0,
-        status: 'Active'
+        total_capacity: Number(t.qty) || 0
       }));
 
-      // In EditEvent, if we save as draft we can update the event status to Draft, else keep Active
-      if (isDraft) {
-        await supabase.from('events').update({ status: 'Draft' }).eq('id', id);
-      } else {
-        await supabase.from('events').update({ status: 'Active' }).eq('id', id);
-      }
+      // Fire the Atomic Database Transaction
+      const { error: rpcError } = await supabase.rpc('update_event_and_tickets', {
+        p_event_id: id,
+        p_event_data: eventPayload,
+        p_tickets: ticketsPayload
+      });
 
-      const { error: tierError } = await supabase
-        .from('ticket_tiers')
-        .insert(tiersToInsert);
-
-      if (tierError) throw tierError;
+      if (rpcError) throw rpcError;
 
       Swal.fire({
         icon: 'success',
@@ -343,7 +331,7 @@ export default function EditEvent() {
       Swal.fire({
         icon: 'error',
         title: 'Publishing Failed',
-        text: 'Failed to publish event. See console for details.',
+        text: error.message || 'Failed to publish event. See console for details.',
         confirmButtonColor: '#e11d48'
       });
     } finally {
@@ -657,8 +645,10 @@ export default function EditEvent() {
                   <tr>
                     <th className="px-6 py-4 font-bold">Ticket Name</th>
                     <th className="px-6 py-4 font-bold">Price (₹)</th>
-                    <th className="px-6 py-4 font-bold">Total Qty</th>
-                    <th className="px-6 py-4 font-bold">Refundable</th>
+                    <th className="px-6 py-4 font-bold">Capacity</th>
+                    <th className="px-6 py-4 font-bold text-blue-600">Sold</th>
+                    <th className="px-6 py-4 font-bold text-orange-500">Reserved</th>
+                    <th className="px-6 py-4 font-bold text-green-600">Available</th>
                     <th className="px-6 py-4 text-right font-bold">Actions</th>
                   </tr>
                 </thead>
@@ -668,12 +658,9 @@ export default function EditEvent() {
                       <td className="px-6 py-4"><input type="text" value={t.name} onChange={e => setTicketTypes(ticketTypes.map(tick => tick.id === t.id ? { ...tick, name: e.target.value } : tick))} className="border border-gray-200 rounded px-2 py-1 w-full text-sm font-bold" /></td>
                       <td className="px-6 py-4"><input type="number" value={t.price} onChange={e => setTicketTypes(ticketTypes.map(tick => tick.id === t.id ? { ...tick, price: e.target.value } : tick))} className="border border-gray-200 rounded px-2 py-1 w-24 text-sm font-bold text-green-600" /></td>
                       <td className="px-6 py-4"><input type="number" value={t.qty} onChange={e => setTicketTypes(ticketTypes.map(tick => tick.id === t.id ? { ...tick, qty: e.target.value } : tick))} className="border border-gray-200 rounded px-2 py-1 w-24 text-sm" /></td>
-                      <td className="px-6 py-4">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" defaultChecked={t.refundable} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                      </td>
+                      <td className="px-6 py-4 font-medium text-blue-600">{t.tickets_sold || 0}</td>
+                      <td className="px-6 py-4 font-medium text-orange-500">{t.reserved_capacity || 0}</td>
+                      <td className="px-6 py-4 font-bold text-green-600">{Math.max(0, (Number(t.qty) || 0) - (t.tickets_sold || 0) - (t.reserved_capacity || 0))}</td>
                       <td className="px-6 py-4 text-right">
                         <button onClick={() => handleRemoveTicket(t.id)} className="text-gray-400 hover:text-red-500 transition-colors" title="Remove Ticket"><Trash2 size={16} /></button>
                       </td>

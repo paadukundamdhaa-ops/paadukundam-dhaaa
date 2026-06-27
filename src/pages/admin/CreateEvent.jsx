@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  ChevronLeft, Save, UploadCloud, Eye, Rocket, MapPin, Calendar, Clock,
-  Users, Ticket, Settings, Shield, Link as LinkIcon, AlertCircle, Plus,
-  Trash2, Copy, PlayCircle, Info, Image as ImageIcon, Music, Star, Search
+  ChevronLeft, UploadCloud, MapPin, Calendar,
+  Ticket, Settings, Shield, Link as LinkIcon, AlertCircle, Plus,
+  Trash2, PlayCircle, Info, Image as ImageIcon, Music, Star,
+  Search, Users, Eye, Save, Rocket, Clock, Copy
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useNavigate, Link } from 'react-router-dom';
@@ -14,8 +15,8 @@ export default function CreateEvent() {
   const [ticketTypes, setTicketTypes] = useState([
     { id: 1, name: 'General Admission', price: '999', qty: '1000', refundable: false }
   ]);
-  const [highlights, setHighlights] = useState(['Live Performance']);
-  const [amenities, setAmenities] = useState([]);
+  const [highlights] = useState(['Live Performance']);
+  const [amenities] = useState([]);
   const [heroImageFile, setHeroImageFile] = useState(null);
   const [heroImage, setHeroImage] = useState(null);
   const [squareImageFile, setSquareImageFile] = useState(null);
@@ -28,7 +29,6 @@ export default function CreateEvent() {
   const [enableArtist, setEnableArtist] = useState(false);
   const [enableHighlights, setEnableHighlights] = useState(false);
   const [enableAmenities, setEnableAmenities] = useState(false);
-  const [enablePolicies, setEnablePolicies] = useState(true);
   const [enableAnalytics, setEnableAnalytics] = useState(false);
 
   // Form States
@@ -72,7 +72,7 @@ export default function CreateEvent() {
         return `https://maps.google.com/maps?q=${encodeURIComponent(parts[0])}&output=embed`;
       }
       return null;
-    } catch (e) {
+    } catch {
       // If not a valid URL, treat the text itself as a search query
       if (url.length > 3) {
         return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&output=embed`;
@@ -147,7 +147,7 @@ export default function CreateEvent() {
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);

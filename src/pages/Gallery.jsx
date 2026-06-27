@@ -22,6 +22,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { ProtectedImage } from '../components/ProtectedImage';
 
 export default function Gallery() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -146,7 +147,7 @@ export default function Gallery() {
       {/* Top Banner section */}
       <div className="relative pt-36 pb-16 px-6 border-b border-white/10 bg-[#0a0a0a]">
         <div className="absolute inset-0 z-0 bg-black">
-          <img src="/images/sunburn.png" className="w-full h-full object-cover opacity-60" />
+          <ProtectedImage src="/images/sunburn.png" className="w-full h-full object-cover opacity-60" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0a0a0a]/40 to-[#0a0a0a]" />
         </div>
@@ -243,7 +244,7 @@ export default function Gallery() {
                     className="group cursor-pointer"
                   >
                     <div className="relative rounded-xl overflow-hidden aspect-[4/3] mb-3 shadow-md group-hover:shadow-xl transition-all">
-                      <img src={folder.coverImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={folder.title} />
+                      <ProtectedImage src={folder.coverImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={folder.title} />
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-primary/30 transition-colors duration-300"></div>
                       <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                         <ImageIcon size={14} /> {folder.count}
@@ -281,7 +282,7 @@ export default function Gallery() {
                     key={img.id} 
                     className={`group relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer shadow-sm hover:shadow-md ${gridLayout[idx % gridLayout.length]}`}
                   >
-                    <img 
+                    <ProtectedImage 
                       src={img.url} 
                       alt="Concert Moment" 
                       className="w-full h-[220px] md:h-[260px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100" 
@@ -301,7 +302,7 @@ export default function Gallery() {
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-sm">
           
           <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-10 pointer-events-none hidden md:block">
-            <img src="https://images.unsplash.com/photo-1540039155732-6761b3336765?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover mix-blend-multiply mask-image-linear" alt="Background" />
+            <ProtectedImage src="https://images.unsplash.com/photo-1540039155732-6761b3336765?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover mix-blend-multiply mask-image-linear" alt="Background" />
             <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-transparent"></div>
           </div>
           

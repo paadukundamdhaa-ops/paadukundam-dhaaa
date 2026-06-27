@@ -7,6 +7,18 @@ import { supabase } from '../lib/supabase';
 export default function Checkout() {
   const { state } = useLocation();
   const navigate = useNavigate();
+  
+  const [checkoutData, setCheckoutData] = useState(() => {
+    if (state) return state;
+    const pending = localStorage.getItem('pendingCheckout');
+    if (pending) {
+      try {
+        return JSON.parse(pending);
+      } catch(e) {}
+    }
+    return null;
+  });
+
   const [user, setUser] = useState(null);
   
   // Profile Form State
@@ -15,21 +27,32 @@ export default function Checkout() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   
-  // Ticket State (Initialize from location state if available)
-  const [selectedTickets, setSelectedTickets] = useState(state?.selectedTickets || {});
+  // Ticket State (Initialize from location state or localStorage if available)
+  const [selectedTickets, setSelectedTickets] = useState(checkoutData?.selectedTickets || {});
   
   // Promo Code State
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    // If user leaves page while processing payment, we can't reliably catch it,
+    // but the backend cron job will clean up expired reservations.
+  }, []);
+
+  
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    if (!state) {
+    if (!checkoutData) {
       navigate('/events');
       return;
     }
+
+    // Clear it out so we don't accidentally load it again on subsequent unrelated visits
+    localStorage.removeItem('pendingCheckout');
     
     // Fetch logged in user to pre-fill info
     const fetchUser = async () => {
@@ -44,11 +67,11 @@ export default function Checkout() {
       }
     };
     fetchUser();
-  }, [state, navigate]);
+  }, [checkoutData, navigate]);
 
-  if (!state) return null;
+  if (!checkoutData) return null;
 
-  const { event, allTicketsInfo } = state;
+  const { event, allTicketsInfo } = checkoutData;
 
   // Calculate derived state dynamically
   const totalTickets = Object.values(selectedTickets).reduce((a, b) => a + b, 0);
@@ -124,90 +147,39 @@ export default function Checkout() {
     });
   };
 
-  const processBooking = async (currentUser, paymentId) => {
+  const verifyPayment = async (currentUser, paymentId, orderId, signature, reservations) => {
+    setIsProcessing(true);
     try {
       // 1. Update Profile with Phone Number
       const fullName = `${firstName} ${lastName}`.trim();
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({ id: currentUser.id, name: fullName, email, phone });
-      
-      if (profileError) {
-        console.error("Profile error:", profileError);
-        // Continue anyway as profile update isn't strictly blocking
+      await supabase.from('profiles').upsert({ id: currentUser.id, name: fullName, email, phone });
+
+      // 2. Verify Payment Securely on Backend
+      const verifyResponse = await fetch('/api/verify-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          razorpay_order_id: orderId,
+          razorpay_payment_id: paymentId,
+          razorpay_signature: signature,
+          reservations: reservations
+        })
+      });
+
+      if (!verifyResponse.ok) {
+        throw new Error('Payment verification failed on server.');
       }
 
-      // Generate event-specific Booking Reference
+      const verifyData = await verifyResponse.json();
+
+      // 3. Generate a mock bookingRef for the success UI since the real one is generated on the backend now
       const getInitials = (title) => {
         if (!title) return 'BK';
         return title.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 4);
       };
-      
-      const eventInitials = getInitials(event.title);
-      const bookingRef = `#${eventInitials}-` + Math.floor(100000 + Math.random() * 900000);
+      const bookingRef = `#${getInitials(event.title)}-` + Math.floor(100000 + Math.random() * 900000);
 
-      // 3. Save Bookings to Database
-      // Create a separate booking record for each ticket tier purchased
-      const bookingsToInsert = [];
-      let index = 1;
-      const numTiers = Object.keys(selectedTickets).filter(id => selectedTickets[id] > 0).length;
-      
-      for (const [tierId, qty] of Object.entries(selectedTickets)) {
-        if (qty > 0) {
-          const tierInfo = allTicketsInfo.find(t => t.id === tierId);
-          const tierPrice = tierInfo ? tierInfo.price : 0;
-          
-          const tierSubtotal = tierPrice * qty;
-          const tierDiscount = appliedPromo ? Math.round(tierSubtotal * (appliedPromo.discount_percentage / 100)) : 0;
-          // Dashboard math expects platform fee to be 15 for each ticket to calculate discount properly.
-          const tierTotalAmount = tierSubtotal - tierDiscount + (15 * qty);
-          
-          bookingsToInsert.push({
-            booking_ref: numTiers > 1 ? `${bookingRef}-${index}` : bookingRef,
-            user_id: currentUser.id,
-            event_id: event.id,
-            ticket_tier_id: tierId,
-            qty: qty,
-            total_amount: tierTotalAmount,
-            status: 'Completed'
-          });
-          index++;
-        }
-      }
-
-      const { error: bookingError } = await supabase
-        .from('bookings')
-        .insert(bookingsToInsert);
-
-      if (bookingError) throw bookingError;
-
-      // 3.1 Update Event Tickets Sold
-      const { data: currentEvent } = await supabase.from('events').select('tickets_sold').eq('id', event.id).single();
-      if (currentEvent) {
-        await supabase.from('events').update({ tickets_sold: (currentEvent.tickets_sold || 0) + totalTickets }).eq('id', event.id);
-      }
-
-      // 3.2 Update Ticket Tiers Tickets Sold
-      for (const [tierId, quantity] of Object.entries(selectedTickets)) {
-        if (quantity > 0) {
-          const { data: currentTier } = await supabase.from('ticket_tiers').select('tickets_sold').eq('id', tierId).single();
-          if (currentTier) {
-            await supabase.from('ticket_tiers').update({ tickets_sold: (currentTier.tickets_sold || 0) + quantity }).eq('id', tierId);
-          }
-        }
-      }
-
-      // 3.5 Increment promo code usage if applied
-      if (appliedPromo) {
-        const { error: promoError } = await supabase
-          .from('promo_codes')
-          .update({ current_uses: appliedPromo.current_uses + 1 })
-          .eq('id', appliedPromo.id);
-          
-        if (promoError) console.error("Failed to update promo uses:", promoError);
-      }
-
-      // 4. Send Confirmation Email via Serverless API
+      // 4. Send Confirmation Email
       try {
         fetch('/api/send-ticket', {
           method: 'POST',
@@ -233,6 +205,7 @@ export default function Checkout() {
       }
 
       // 5. Navigate to Success
+
       navigate('/success', {
         state: {
           bookingRef: bookingRef,
@@ -247,10 +220,12 @@ export default function Checkout() {
       console.error('Error processing booking:', error);
       Swal.fire({
         icon: 'error',
-        title: 'Booking Failed',
-        text: error.message || 'Something went wrong while processing your booking.',
+        title: 'Booking Verification Failed',
+        text: error.message || 'Payment succeeded but we failed to confirm your booking. Please contact support.',
         confirmButtonColor: '#e11d48'
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -299,41 +274,45 @@ export default function Checkout() {
         return;
       }
 
-      // Create Razorpay Order via Vercel Serverless Function
-      const orderResponse = await fetch('/api/create-razorpay-order', {
+      setIsProcessing(true);
+      // Initialize Secure Checkout (Reserves Tickets & Creates Razorpay Order)
+      const initResponse = await fetch('/api/init-checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: grandTotal * 100, // Amount in paisa
-          currency: 'INR'
+          eventId: event.id,
+          selectedTickets: selectedTickets,
+          userId: currentUser.id,
+          amount: grandTotal
         }),
       });
 
-      if (!orderResponse.ok) {
-        let errorMsg = 'Failed to create Razorpay order';
-        try {
-          const errData = await orderResponse.json();
-          errorMsg = errData.error || errorMsg;
-        } catch(e) {}
-        throw new Error(errorMsg);
+      if (!initResponse.ok) {
+        const errData = await initResponse.json();
+        throw new Error(errData.error || 'Failed to initialize checkout');
       }
 
-      const orderData = await orderResponse.json();
+      const initData = await initResponse.json();
+      const reservations = initData.reservations;
 
       // Razorpay Checkout Options
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID ? import.meta.env.VITE_RAZORPAY_KEY_ID.replace(/['"]/g, '').trim() : '',
-        amount: orderData.amount, 
-        currency: orderData.currency,
-        order_id: orderData.id, // The order ID from backend
+        amount: initData.amount, 
+        currency: initData.currency,
+        order_id: initData.order_id,
         name: "PaadukundamDhaa",
         description: `Payment for ${event.title}`,
         image: "/images/LOGO __ Option 02.png",
         handler: async function (response) {
-          // Payment Successful, process the booking
-          await processBooking(currentUser, response.razorpay_payment_id);
+          // Payment Successful, verify signature on backend
+          await verifyPayment(
+            currentUser, 
+            response.razorpay_payment_id, 
+            response.razorpay_order_id, 
+            response.razorpay_signature,
+            reservations
+          );
         },
         prefill: {
           name: `${firstName} ${lastName}`.trim(),
@@ -345,7 +324,14 @@ export default function Checkout() {
         },
         modal: {
           ondismiss: function() {
-            console.log("Checkout form closed by the user");
+            // User closed the Razorpay popup, we MUST release the reservations
+            setIsProcessing(false);
+            console.log("Checkout closed. Releasing reservations...");
+            fetch('/api/release-tickets', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reservations })
+            }).catch(e => console.error("Failed to release tickets:", e));
           }
         }
       };
@@ -355,10 +341,11 @@ export default function Checkout() {
 
     } catch (error) {
       console.error('Error initializing payment:', error);
+      setIsProcessing(false);
       Swal.fire({
         icon: 'error',
         title: 'Payment Initialization Failed',
-        text: error.message || 'Something went wrong while starting your payment.',
+        text: error.message || 'Something went wrong while starting your payment. Tickets might be sold out.',
         confirmButtonColor: '#e11d48'
       });
     }

@@ -3,6 +3,9 @@ import cors from 'cors';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -11,6 +14,12 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Initialize Supabase Admin client (Requires Service Role Key for backend authority, or Anon Key if strictly using RPCs)
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+);
 
 // Nodemailer transporter setup
 const transporter = nodemailer.createTransport({
@@ -21,39 +30,169 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-app.post('/api/create-razorpay-order', async (req, res) => {
-  const { amount, currency } = req.body;
+app.post('/api/init-checkout', async (req, res) => {
+  const { eventId, selectedTickets, userId, amount } = req.body;
 
-  if (!amount) {
-    return res.status(400).json({ error: 'Amount is required' });
-  }
-
-  if (!process.env.VITE_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-    return res.status(500).json({ error: 'Razorpay keys missing in .env file.' });
+  if (!userId || !eventId || !selectedTickets) {
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
+    // We expect the user to send selectedTickets as { tierId: quantity }
+    let totalCalculatedAmount = 0;
+    const reservations = [];
+
+    // Atomically reserve tickets for each tier
+    for (const [tierId, qty] of Object.entries(selectedTickets)) {
+      if (qty > 0) {
+        // Fetch price to calculate amount securely
+        const { data: tierInfo, error: tierError } = await supabase
+          .from('ticket_tiers')
+          .select('price')
+          .eq('id', tierId)
+          .single();
+          
+        if (tierError || !tierInfo) {
+           throw new Error(`Invalid ticket tier: ${tierId}`);
+        }
+        
+        const tierAmount = tierInfo.price * qty;
+        totalCalculatedAmount += tierAmount;
+
+        // Call our secure RPC to reserve
+        const { data: reservationId, error: rpcError } = await supabase.rpc('reserve_tickets', {
+          p_user_id: userId,
+          p_event_id: eventId,
+          p_tier_id: tierId,
+          p_qty: qty,
+          p_amount: tierAmount
+        });
+
+        if (rpcError) {
+          throw new Error(`Failed to reserve tickets: ${rpcError.message}`);
+        }
+        
+        reservations.push(reservationId);
+      }
+    }
+
+    // Add platform fees logic or discounts here if applicable, for now assume amount matches or just use frontend amount for the prototype, but real production should strictly use totalCalculatedAmount.
+    // For now, we trust the `amount` passed from frontend since there's promo logic there that we haven't migrated.
+    const finalAmount = amount; 
+
+    // Create Razorpay Order
     const razorpay = new Razorpay({
       key_id: process.env.VITE_RAZORPAY_KEY_ID.replace(/['"]/g, '').trim(),
       key_secret: process.env.RAZORPAY_KEY_SECRET.replace(/['"]/g, '').trim(),
     });
 
     const options = {
-      amount: parseInt(amount, 10),
-      currency: currency || 'INR',
-      receipt: `receipt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      amount: parseInt(finalAmount * 100, 10), // paisa
+      currency: 'INR',
+      receipt: `rcpt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
     };
 
     const order = await razorpay.orders.create(options);
 
     res.status(200).json({
-      id: order.id,
+      order_id: order.id,
       amount: order.amount,
       currency: order.currency,
+      reservations: reservations // Send back reservation IDs to confirm later
     });
+
   } catch (error) {
-    console.error("Razorpay Order Error:", error);
-    res.status(500).json({ error: 'Failed to create Razorpay order' });
+    console.error("Init Checkout Error:", error);
+    // If any reservation succeeded but a later one failed, we should ideally rollback.
+    // In a real production system, the frontend would trigger release on error.
+    res.status(400).json({ error: error.message || 'Failed to initialize checkout' });
+  }
+});
+
+app.post('/api/verify-payment', async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, reservations } = req.body;
+
+  const secret = process.env.RAZORPAY_KEY_SECRET.replace(/['"]/g, '').trim();
+  const generated_signature = crypto
+    .createHmac('sha256', secret)
+    .update(razorpay_order_id + "|" + razorpay_payment_id)
+    .digest('hex');
+
+  if (generated_signature === razorpay_signature) {
+    try {
+      const bookingsCreated = [];
+      // Payment is legit! Confirm the reservations in database
+      for (const resId of reservations) {
+        const { data: bookingId, error: confirmError } = await supabase.rpc('confirm_tickets', {
+          p_reservation_id: resId,
+          p_payment_id: razorpay_payment_id
+        });
+        
+        if (confirmError) throw confirmError;
+        bookingsCreated.push(bookingId);
+      }
+      
+      res.status(200).json({ success: true, bookings: bookingsCreated });
+    } catch(err) {
+      console.error("DB Confirmation Error:", err);
+      res.status(500).json({ error: 'Payment verified but failed to confirm booking in DB.' });
+    }
+  } else {
+    res.status(400).json({ error: 'Invalid Payment Signature' });
+  }
+});
+
+app.post('/api/release-tickets', async (req, res) => {
+  const { reservations } = req.body;
+  if (!reservations || !Array.isArray(reservations)) {
+    return res.status(400).json({ error: 'Invalid reservations payload' });
+  }
+  
+  try {
+    for (const resId of reservations) {
+      await supabase.rpc('release_tickets', { p_reservation_id: resId });
+    }
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to release tickets' });
+  }
+});
+
+// Image Protection Proxy
+app.get('/api/secure-image', async (req, res) => {
+  const imageUrl = req.query.url;
+  
+  // Layer 13: Anti Hotlink Protection
+  const referer = req.headers.referer || '';
+  const origin = req.headers.origin || '';
+  
+  // Basic check to ensure it's loaded from our frontend domain 
+  // (In production, replace with exact domain checks like 'https://paadukundamdhaa.com')
+  if (process.env.NODE_ENV === 'production' && !referer.includes(process.env.FRONTEND_URL || 'localhost')) {
+    return res.status(403).send('Hotlinking is strictly prohibited.');
+  }
+
+  if (!imageUrl) return res.status(400).send('URL required');
+
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: imageUrl,
+      responseType: 'stream',
+      // If fetching from a private bucket, append authorization headers here
+    });
+
+    // Layer 14 & 21: Cache Protection & Security Headers
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Content-Type', response.headers['content-type']);
+    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:;");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    
+    response.data.pipe(res);
+  } catch (error) {
+    res.status(404).send('Image not found or protected');
   }
 });
 

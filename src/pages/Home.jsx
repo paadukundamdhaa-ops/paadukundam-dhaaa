@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { ProtectedImage } from '../components/ProtectedImage';
 
 export default function Home() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -426,7 +427,7 @@ export default function Home() {
               </div>
 
               <div className="relative h-64 overflow-hidden">
-                <img src={featuredEvents[0]?.img || "/images/script.png"} alt="Featured" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
+                <ProtectedImage src={featuredEvents[0]?.img || "/images/script.png"} alt="Featured" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                 <div className="absolute bottom-4 left-6">
                   <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Featured</span>
@@ -513,7 +514,7 @@ export default function Home() {
                 <button className="absolute top-4 right-4 text-white/50 hover:text-white z-10" onClick={(e) => e.preventDefault()}><Heart size={20} /></button>
                 
                 <div className="h-48 overflow-hidden">
-                  <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <ProtectedImage src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 </div>
                 <div className="p-5">
                   <h3 className="font-bold text-lg mb-1 truncate text-black">{event.title}</h3>
@@ -619,7 +620,7 @@ export default function Home() {
             {featuredEvents.length > 0 ? (
               <>
                 <div className="lg:w-1/2 flex flex-col md:flex-row gap-6">
-                  <img src={featuredEvents[0].img} alt={featuredEvents[0].title} className="w-full md:w-64 h-64 object-cover rounded-xl" />
+                  <ProtectedImage src={featuredEvents[0].img} alt={featuredEvents[0].title} className="w-full md:w-64 h-64 object-cover rounded-xl" />
                   <div>
                     <div className="flex items-center mb-2">
                       <h3 className="text-3xl text-white font-black mr-3">{featuredEvents[0].title}</h3>
@@ -640,7 +641,7 @@ export default function Home() {
                 <div className="lg:w-1/2 flex space-x-4 overflow-x-auto hide-scrollbar pb-4 mt-8 lg:mt-0">
                   {featuredEvents.slice(1, 5).map((artist, idx) => (
                     <Link to={`/events/${artist.id}`} key={idx} className="relative rounded-xl overflow-hidden h-64 min-w-[200px] sm:min-w-[240px] group cursor-pointer border border-white/20 shadow-lg block shrink-0">
-                      <img src={artist.img} alt={artist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <ProtectedImage src={artist.img} alt={artist.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                       <div className="absolute bottom-4 left-4 right-4">
                         <h4 className="font-bold text-sm mb-1 text-white truncate">{artist.title}</h4>
@@ -671,7 +672,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {galleryImages.map((folder, idx) => (
               <Link to={`/gallery?event=${folder.id}`} key={idx} className="relative group overflow-hidden rounded-xl aspect-[4/3] block shadow-sm hover:shadow-xl transition-all">
-                <img src={folder.coverImage} alt={folder.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <ProtectedImage src={folder.coverImage} alt={folder.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-primary/40 transition-colors duration-300 flex flex-col items-center justify-center">
                   <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                     <ImageIcon size={14} /> {folder.count}
@@ -774,7 +775,7 @@ export default function Home() {
               <div className="flex space-x-6">
                 {testimonials.map((review, idx) => (
                   <div key={idx} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4 w-[320px] shrink-0">
-                    <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                    <ProtectedImage src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
                     <div>
                       <p className="text-gray-600 text-sm mb-3 italic leading-relaxed">"{review.text}"</p>
                       <h4 className="font-bold text-sm text-black">{review.name}</h4>
@@ -790,7 +791,7 @@ export default function Home() {
               <div className="flex space-x-6">
                 {testimonials.map((review, idx) => (
                   <div key={`dup-${idx}`} className="bg-[#f8f8f8] p-6 rounded-xl border border-gray-200 flex gap-4 w-[320px] shrink-0">
-                    <img src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                    <ProtectedImage src={review.img} alt={review.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
                     <div>
                       <p className="text-gray-600 text-sm mb-3 italic leading-relaxed">"{review.text}"</p>
                       <h4 className="font-bold text-sm text-black">{review.name}</h4>

@@ -133,7 +133,7 @@ export default function BoxOffice() {
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-1">Select Event</label>
                 <select 
-                  className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-primary"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-primary text-black bg-white"
                   value={selectedEventId}
                   onChange={(e) => setSelectedEventId(e.target.value)}
                 >
@@ -204,7 +204,7 @@ export default function BoxOffice() {
                 <input 
                   type="text" 
                   placeholder="Full Name" 
-                  className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                  className="w-full border border-gray-200 rounded-lg p-2 text-sm text-black bg-white"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                 />
@@ -212,14 +212,14 @@ export default function BoxOffice() {
                   <input 
                     type="email" 
                     placeholder="Email Address" 
-                    className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                    className="w-full border border-gray-200 rounded-lg p-2 text-sm text-black bg-white"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                   />
                   <input 
                     type="tel" 
                     placeholder="Phone Number" 
-                    className="w-full border border-gray-200 rounded-lg p-2 text-sm"
+                    className="w-full border border-gray-200 rounded-lg p-2 text-sm text-black bg-white"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                   />

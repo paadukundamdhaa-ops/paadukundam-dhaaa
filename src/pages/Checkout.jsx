@@ -137,98 +137,6 @@ export default function Checkout() {
     });
   };
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const verifyPayment = async (currentUser, paymentId, orderId, signature, reservations) => {
-    setIsProcessing(true);
-    try {
-      // 1. Update Profile with Phone Number
-      const fullName = `${firstName} ${lastName}`.trim();
-      await supabase.from('profiles').upsert({ id: currentUser.id, name: fullName, email, phone });
-
-      // 2. Verify Payment Securely on Backend
-      const verifyResponse = await fetch('/api/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          razorpay_order_id: orderId,
-          razorpay_payment_id: paymentId,
-          razorpay_signature: signature,
-          reservations: reservations
-        })
-      });
-
-      if (!verifyResponse.ok) {
-        throw new Error('Payment verification failed on server.');
-      }
-
-      const verifyData = await verifyResponse.json();
-
-      // 3. Generate a mock bookingRef for the success UI since the real one is generated on the backend now
-      const getInitials = (title) => {
-        if (!title) return 'BK';
-        return title.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 4);
-      };
-      const bookingRef = `#${getInitials(event.title)}-` + Math.floor(100000 + Math.random() * 900000);
-
-      // 4. Send Confirmation Email
-      try {
-        fetch('/api/send-ticket', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            name: firstName,
-            eventTitle: event.title,
-            eventDate: event.date,
-            eventVenue: event.venue,
-            eventCity: event.city,
-            bookingRef: bookingRef,
-            qty: totalTickets,
-            amount: grandTotal,
-            subtotal: subtotalBeforeDiscount,
-            discount: promoDiscountAmount,
-            platformFee: bookingFee,
-            termsAndConditions: event.termsAndConditions
-          })
-        }).catch(err => console.error("Email send API failed:", err));
-      } catch (e) {
-        console.error("Email notification error", e);
-      }
-
-      // 5. Navigate to Success
-
-      navigate('/success', {
-        state: {
-          bookingRef: bookingRef,
-          event: event,
-          tickets: totalTickets,
-          amount: grandTotal,
-          email: email
-        }
-      });
-      
-    } catch (error) {
-      console.error('Error processing booking:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Booking Verification Failed',
-        text: error.message || 'Payment succeeded but we failed to confirm your booking. Please contact support.',
-        confirmButtonColor: '#e11d48'
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handlePayment = async () => {
     if (totalTickets === 0) {
       Swal.fire({
@@ -261,21 +169,13 @@ export default function Checkout() {
         navigate('/login');
         return;
       }
-      
-      // Load Razorpay Script
-      const res = await loadRazorpayScript();
-      if (!res) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Connection Failed',
-          text: 'Are you online? Failed to load Razorpay SDK.',
-          confirmButtonColor: '#e11d48'
-        });
-        return;
-      }
+
+      // Update Profile with Phone Number first
+      const fullName = `${firstName} ${lastName}`.trim();
+      await supabase.from('profiles').upsert({ id: currentUser.id, name: fullName, email, phone });
 
       setIsProcessing(true);
-      // Initialize Secure Checkout (Reserves Tickets & Creates Razorpay Order)
+      // Initialize Secure Checkout (Reserves Tickets & Generates PhonePe Payload)
       const initResponse = await fetch('/api/init-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -293,51 +193,26 @@ export default function Checkout() {
       }
 
       const initData = await initResponse.json();
-      const reservations = initData.reservations;
+      
+      // Save checkout metadata to localStorage so we can use it on the return route
+      localStorage.setItem('phonePeCheckoutData', JSON.stringify({
+        event: event,
+        totalTickets: totalTickets,
+        grandTotal: grandTotal,
+        subtotalBeforeDiscount: subtotalBeforeDiscount,
+        promoDiscountAmount: promoDiscountAmount,
+        bookingFee: bookingFee,
+        email: email,
+        firstName: firstName,
+        reservations: initData.reservations
+      }));
 
-      // Razorpay Checkout Options
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID ? import.meta.env.VITE_RAZORPAY_KEY_ID.replace(/['"]/g, '').trim() : '',
-        amount: initData.amount, 
-        currency: initData.currency,
-        order_id: initData.order_id,
-        name: "PaadukundamDhaa",
-        description: `Payment for ${event.title}`,
-        image: "/images/LOGO __ Option 02.png",
-        handler: async function (response) {
-          // Payment Successful, verify signature on backend
-          await verifyPayment(
-            currentUser, 
-            response.razorpay_payment_id, 
-            response.razorpay_order_id, 
-            response.razorpay_signature,
-            reservations
-          );
-        },
-        prefill: {
-          name: `${firstName} ${lastName}`.trim(),
-          email: email,
-          contact: phone,
-        },
-        theme: {
-          color: "#e11d48", // Primary Brand Color
-        },
-        modal: {
-          ondismiss: function() {
-            // User closed the Razorpay popup, we MUST release the reservations
-            setIsProcessing(false);
-            console.log("Checkout closed. Releasing reservations...");
-            fetch('/api/release-tickets', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ reservations })
-            }).catch(e => console.error("Failed to release tickets:", e));
-          }
-        }
-      };
-
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
+      // Redirect to PhonePe
+      if (initData.redirectInfo && initData.redirectInfo.url) {
+        window.location.href = initData.redirectInfo.url;
+      } else {
+        throw new Error('No redirect URL provided by PhonePe');
+      }
 
     } catch (error) {
       console.error('Error initializing payment:', error);
@@ -345,7 +220,7 @@ export default function Checkout() {
       Swal.fire({
         icon: 'error',
         title: 'Payment Initialization Failed',
-        text: error.message || 'Something went wrong while starting your payment. Tickets might be sold out.',
+        text: error.message || 'Something went wrong while starting your payment.',
         confirmButtonColor: '#e11d48'
       });
     }

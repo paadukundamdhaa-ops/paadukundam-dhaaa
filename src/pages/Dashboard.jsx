@@ -220,7 +220,8 @@ export default function Dashboard() {
                   const eventTime = event.event_time ? event.event_time.substring(0, 5) : 'TBA';
                   const isDownloading = downloading === booking.id;
                   const cleanRef = booking.booking_ref.replace('#', '');
-                  const qrValue = `${window.location.origin}/ticket/${cleanRef}`;
+                  const baseUrl = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
+                  const qrValue = `${baseUrl}/ticket/${cleanRef}`;
                   
                   return (
                     <div className="flex justify-center" key={booking.id}>

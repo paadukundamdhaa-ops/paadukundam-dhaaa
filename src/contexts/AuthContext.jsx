@@ -38,8 +38,30 @@ export const AuthProvider = ({ children }) => {
     if (error) console.error("Error signing out:", error.message);
   };
 
+  const signInWithEmail = async (email, password) => {
+    return await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+  };
+
+  const signUpWithEmail = async (email, password, name, phone) => {
+    return await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+          phone: phone,
+        }
+      }
+    });
+  };
+
   const value = {
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
     user,
     loading

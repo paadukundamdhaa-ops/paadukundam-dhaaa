@@ -124,7 +124,9 @@ export default function TicketVerify() {
   const formattedDate = eventDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const formattedTime = event.event_time?.substring(0, 5) || '18:00';
   const tierName = booking.ticket_tiers?.tier_name || 'GENERAL ADMISSION';
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(window.location.href.split('?')[0])}`;
+  const baseUrl = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
+  const ticketUrl = `${baseUrl}/ticket/${bookingRef.replace('#', '')}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
 
   if (ticketImage) {
     return (
@@ -229,10 +231,10 @@ export default function TicketVerify() {
                 await navigator.share({
                   title: 'My Ticket',
                   text: `I'm going to ${event.title}!`,
-                  url: window.location.href.split('?')[0],
+                  url: ticketUrl,
                 });
               } else {
-                await navigator.clipboard.writeText(window.location.href.split('?')[0]);
+                await navigator.clipboard.writeText(ticketUrl);
                 alert('Link copied to clipboard!');
               }
             } catch (error) {

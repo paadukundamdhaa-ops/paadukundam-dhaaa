@@ -11,6 +11,7 @@ import Events from './pages/Events';
 import EventDetails from './pages/EventDetails';
 import Checkout from './pages/Checkout';
 import BookingSuccess from './pages/BookingSuccess';
+import PaymentStatus from './pages/PaymentStatus';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -61,6 +62,7 @@ function App() {
                 <Route path="events" element={<Events />} />
                 <Route path="events/:id" element={<EventDetails />} />
                 <Route path="checkout" element={<Checkout />} />
+                <Route path="payment-status" element={<PaymentStatus />} />
                 <Route path="success" element={<BookingSuccess />} />
                 <Route path="dashboard" element={<Dashboard />} />
                 <Route path="gallery" element={<Gallery />} />

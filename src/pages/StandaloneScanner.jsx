@@ -220,26 +220,11 @@ export default function StandaloneScanner() {
     if (!scanResult || !scanResult.data) return;
     
     try {
-      const currentCheckedIn = scanResult.data.checked_in_qty || 0;
-      
-      let updatePayload = {};
-      if (status === 'allowed') {
-        const newCheckedInQty = currentCheckedIn + partialQty;
-        updatePayload = {
-          checked_in_qty: newCheckedInQty,
-          check_in_status: newCheckedInQty >= scanResult.data.qty ? 'allowed' : scanResult.data.check_in_status,
-          checked_in_at: new Date().toISOString()
-        };
-      } else {
-        updatePayload = {
-          check_in_status: status
-        };
-      }
-
-      const { error } = await supabase
-        .from('bookings')
-        .update(updatePayload)
-        .eq('id', scanResult.data.id);
+      const { data: rpcData, error } = await supabase.rpc('scan_ticket', {
+        p_booking_id: scanResult.data.id,
+        p_qty: partialQty,
+        p_status: status
+      });
 
       if (error) throw error;
 
@@ -254,10 +239,11 @@ export default function StandaloneScanner() {
       startScanner(); // auto restart scanner
 
     } catch (err) {
+      console.error(err);
       Swal.fire({
         icon: 'error',
-        title: 'Update Failed',
-        text: 'Failed to update status.',
+        title: 'Check-in Failed',
+        text: err.message || 'Failed to securely update status. (Has the RPC been deployed?)',
         confirmButtonColor: '#e11d48'
       });
     }

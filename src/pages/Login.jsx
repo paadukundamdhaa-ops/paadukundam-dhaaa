@@ -1,11 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signInWithGoogle, user } = useAuth();
+  const { signInWithGoogle, signInWithEmail, user } = useAuth();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   
   // If user is already logged in, redirect them to home
   useEffect(() => {
@@ -14,9 +20,19 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate('/');
+    setError('');
+    setLoading(true);
+    
+    const { error: signInError } = await signInWithEmail(email, password);
+    
+    if (signInError) {
+      setError(signInError.message);
+      setLoading(false);
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -177,6 +193,12 @@ export default function Login() {
               <div className="h-[1px] bg-[#2a1618] lg:bg-gray-200 flex-1"></div>
             </div>
 
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold flex items-center gap-2 mb-4 border border-red-100">
+                <Lock size={16} /> {error}
+              </div>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-4 lg:space-y-3">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
@@ -184,6 +206,9 @@ export default function Login() {
                 </div>
                 <input 
                   type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
                   placeholder="Email address" 
                 />
@@ -194,12 +219,18 @@ export default function Login() {
                   <Lock size={18} className="text-gray-500 lg:text-gray-400" />
                 </div>
                 <input 
-                  type="password" 
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                   className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-10 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
                   placeholder="Password" 
                 />
-                <button type="button" className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600">
-                  <EyeOff size={18} />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600">
+                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                 </button>
               </div>
 
@@ -212,8 +243,16 @@ export default function Login() {
               </div>
 
               <div className="pt-3 lg:pt-2">
-                <button type="submit" className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-2.5 text-[15px] lg:text-sm rounded-xl transition-all shadow-md">
-                  Log In <ArrowRight size={18} />
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-2.5 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <><Loader2 size={18} className="animate-spin" /> Logging In...</>
+                  ) : (
+                    <>Log In <ArrowRight size={18} /></>
+                  )}
                 </button>
               </div>
             </form>

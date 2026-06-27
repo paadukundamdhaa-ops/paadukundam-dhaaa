@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   LayoutGrid, 
   Music, 
@@ -15,11 +16,16 @@ import {
   Ticket,
   QrCode,
   MapPin,
-  Headphones
+  Headphones,
+  ArrowLeft,
+  FolderOpen
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Gallery() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const eventIdParam = searchParams.get('event');
+  
   const [activeTab, setActiveTab] = useState('All');
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +61,9 @@ export default function Gallery() {
         if (data) {
           setImages(data.map(img => ({
             id: img.id,
-            url: img.image_url
+            url: img.image_url,
+            event_id: img.event_id || 'other',
+            event_title: img.event_title || 'Other Moments'
           })));
         }
       } catch (err) {
@@ -100,6 +108,36 @@ export default function Gallery() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  // Group images into folders
+  const folders = useMemo(() => {
+    const groups = {};
+    images.forEach(img => {
+      if (!groups[img.event_id]) {
+        groups[img.event_id] = {
+          id: img.event_id,
+          title: img.event_title,
+          coverImage: img.url,
+          count: 0
+        };
+      }
+      groups[img.event_id].count += 1;
+    });
+    return Object.values(groups);
+  }, [images]);
+
+  const selectedFolderImages = useMemo(() => {
+    if (!eventIdParam) return [];
+    return images.filter(img => img.event_id === eventIdParam);
+  }, [images, eventIdParam]);
+
+  const handleFolderClick = (id) => {
+    setSearchParams({ event: id });
+  };
+
+  const handleBackToFolders = () => {
+    setSearchParams({});
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -181,25 +219,80 @@ export default function Gallery() {
 
       {/* Masonry-style Grid */}
       <div className="container mx-auto px-6 mb-16">
-        <div className="grid grid-cols-12 gap-4">
-          {loading ? (
-            <div className="col-span-12 py-12 text-center text-gray-500 font-bold">Loading gallery...</div>
-          ) : images.length === 0 ? (
-            <div className="col-span-12 py-12 text-center text-gray-500 font-bold">No images in the gallery yet.</div>
-          ) : images.map((img, idx) => (
-            <div 
-              key={img.id} 
-              className={`group relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer shadow-sm hover:shadow-md ${gridLayout[idx % gridLayout.length]}`}
-            >
-              <img 
-                src={img.url} 
-                alt="Concert" 
-                className="w-full h-[220px] md:h-[260px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100" 
-              />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
+        
+        {loading ? (
+          <div className="py-12 text-center text-gray-500 font-bold flex flex-col items-center">
+            <Loader2 className="animate-spin mb-2" size={32} />
+            Loading gallery...
+          </div>
+        ) : !eventIdParam ? (
+          /* FOLDER VIEW */
+          <div>
+            <h2 className="text-2xl font-black text-black uppercase tracking-wider mb-8 flex items-center">
+              <FolderOpen className="mr-3 text-primary" size={28} /> Event Albums
+            </h2>
+            {folders.length === 0 ? (
+              <div className="py-12 text-center text-gray-500 font-bold">No images in the gallery yet.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {folders.map(folder => (
+                  <div 
+                    key={folder.id} 
+                    onClick={() => handleFolderClick(folder.id)}
+                    className="group cursor-pointer"
+                  >
+                    <div className="relative rounded-xl overflow-hidden aspect-[4/3] mb-3 shadow-md group-hover:shadow-xl transition-all">
+                      <img src={folder.coverImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={folder.title} />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-primary/30 transition-colors duration-300"></div>
+                      <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <ImageIcon size={14} /> {folder.count}
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-lg text-black group-hover:text-primary transition-colors truncate">{folder.title}</h3>
+                    <p className="text-gray-500 text-sm">View Album</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* IMAGES VIEW (Inside a Folder) */
+          <div>
+            <div className="flex items-center mb-8">
+              <button 
+                onClick={handleBackToFolders}
+                className="flex items-center text-gray-500 hover:text-primary font-bold transition-colors"
+              >
+                <ArrowLeft size={20} className="mr-2" /> Back to Albums
+              </button>
+              <div className="w-px h-6 bg-gray-300 mx-4"></div>
+              <h2 className="text-2xl font-black text-black uppercase tracking-wider">
+                {folders.find(f => f.id === eventIdParam)?.title || 'Album'}
+              </h2>
             </div>
-          ))}
-        </div>
+
+            {selectedFolderImages.length === 0 ? (
+              <div className="py-12 text-center text-gray-500 font-bold">No images in this folder.</div>
+            ) : (
+              <div className="grid grid-cols-12 gap-4">
+                {selectedFolderImages.map((img, idx) => (
+                  <div 
+                    key={img.id} 
+                    className={`group relative rounded-xl overflow-hidden bg-gray-100 cursor-pointer shadow-sm hover:shadow-md ${gridLayout[idx % gridLayout.length]}`}
+                  >
+                    <img 
+                      src={img.url} 
+                      alt="Concert Moment" 
+                      className="w-full h-[220px] md:h-[260px] object-cover transition-transform duration-700 group-hover:scale-105 opacity-90 group-hover:opacity-100" 
+                    />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300"></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        
       </div>
 
       {/* Newsletter Section */}

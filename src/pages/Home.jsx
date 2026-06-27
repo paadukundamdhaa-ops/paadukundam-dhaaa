@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc } from 'lucide-react';
+import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Home() {
@@ -182,9 +182,24 @@ export default function Home() {
 
     const fetchGallery = async () => {
       try {
-        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false }).limit(8);
+        const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false }).limit(50);
         if (error) throw error;
-        if (data) setGalleryImages(data);
+        if (data) {
+          const groups = {};
+          data.forEach(img => {
+            const eId = img.event_id || 'other';
+            if (!groups[eId]) {
+              groups[eId] = {
+                id: eId,
+                title: img.event_title || 'Other Moments',
+                coverImage: img.image_url,
+                count: 0
+              };
+            }
+            groups[eId].count += 1;
+          });
+          setGalleryImages(Object.values(groups).slice(0, 4));
+        }
       } catch (err) {
         console.error('Error fetching gallery:', err);
       }
@@ -648,21 +663,24 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center gap-4 sm:gap-0 mb-12">
             <div className="flex items-center">
               <div className="w-1.5 h-6 bg-primary mr-3 shrink-0"></div>
-              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">PaadukundamDhaa Gallery</h2>
+              <h2 className="text-black text-xl md:text-2xl font-black uppercase tracking-wider leading-tight">Event Gallery</h2>
             </div>
-            <Link to="/gallery" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View Full Gallery</Link>
+            <Link to="/gallery" className="text-primary font-semibold text-sm hover:underline whitespace-nowrap shrink-0">View All Albums</Link>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {galleryImages.map((img, idx) => (
-              <div key={idx} className="relative group overflow-hidden rounded-xl aspect-[4/3]">
-                <img src={img.image_url} alt={`Concert moment ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/50 transition-colors duration-300 flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
-                    <Heart size={32} className="text-white fill-white" />
+            {galleryImages.map((folder, idx) => (
+              <Link to={`/gallery?event=${folder.id}`} key={idx} className="relative group overflow-hidden rounded-xl aspect-[4/3] block shadow-sm hover:shadow-xl transition-all">
+                <img src={folder.coverImage} alt={folder.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-primary/40 transition-colors duration-300 flex flex-col items-center justify-center">
+                  <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    <ImageIcon size={14} /> {folder.count}
+                  </div>
+                  <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 px-4 text-center">
+                    <span className="text-white font-black tracking-wider uppercase text-sm drop-shadow-md line-clamp-2">{folder.title}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

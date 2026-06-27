@@ -10,10 +10,23 @@ export default function AdminGallery() {
   const [isUploading, setIsUploading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [imageToDelete, setImageToDelete] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState('');
 
   useEffect(() => {
     fetchGallery();
+    fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase.from('events').select('id, title').order('created_at', { ascending: false });
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+    }
+  };
 
   const fetchGallery = async () => {
     setLoading(true);
@@ -34,9 +47,19 @@ export default function AdminGallery() {
 
   const handleAddImage = async () => {
     if (!newImageUrl) return;
+    if (!selectedEvent) {
+      Swal.fire({ icon: 'warning', title: 'Select Event', text: 'Please select an event for this image.' });
+      return;
+    }
     setIsUploading(true);
     try {
-      const { error } = await supabase.from('gallery').insert([{ image_url: newImageUrl, is_featured: false }]);
+      const eventObj = events.find(e => e.id === selectedEvent);
+      const { error } = await supabase.from('gallery').insert([{ 
+        image_url: newImageUrl, 
+        is_featured: false,
+        event_id: selectedEvent,
+        event_title: eventObj?.title 
+      }]);
       if (error) throw error;
       setNewImageUrl('');
       fetchGallery();
@@ -61,8 +84,19 @@ export default function AdminGallery() {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result;
+      if (!selectedEvent) {
+        setIsUploading(false);
+        Swal.fire({ icon: 'warning', title: 'Select Event', text: 'Please select an event before uploading.' });
+        return;
+      }
       try {
-        const { error } = await supabase.from('gallery').insert([{ image_url: base64String, is_featured: false }]);
+        const eventObj = events.find(e => e.id === selectedEvent);
+        const { error } = await supabase.from('gallery').insert([{ 
+          image_url: base64String, 
+          is_featured: false,
+          event_id: selectedEvent,
+          event_title: eventObj?.title
+        }]);
         if (error) throw error;
         fetchGallery();
       } catch (err) {
@@ -148,9 +182,20 @@ export default function AdminGallery() {
           <ImageIcon size={32} />
         </div>
         <h3 className="font-bold text-black text-lg mb-1">Add Image to Gallery</h3>
-        <p className="text-gray-500 text-sm mb-6">Upload a local file or paste an image URL.</p>
+        <p className="text-gray-500 text-sm mb-6">Upload a local file or paste an image URL to a specific event folder.</p>
         
         <div className="flex flex-col w-full max-w-md gap-4">
+          <select
+            value={selectedEvent}
+            onChange={(e) => setSelectedEvent(e.target.value)}
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg outline-none focus:border-primary text-sm text-black"
+          >
+            <option value="">-- Select Event Folder --</option>
+            {events.map((ev) => (
+              <option key={ev.id} value={ev.id}>{ev.title}</option>
+            ))}
+          </select>
+
           <div className="flex items-center gap-2">
             <label className={`flex-1 cursor-pointer bg-white border border-gray-300 rounded-lg px-4 py-3 text-sm font-semibold hover:bg-gray-50 text-gray-700 transition-colors shadow-sm text-center ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
               {isUploading ? 'Uploading...' : 'Select Local Image'}
@@ -187,7 +232,9 @@ export default function AdminGallery() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-lg text-black">All Uploaded Photos</h3>
-          <p className="text-sm text-gray-500">Showing {images.length} photos</p>
+          <div className="flex gap-4 items-center">
+            <span className="text-sm text-gray-500">Showing {images.length} photos</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -199,6 +246,12 @@ export default function AdminGallery() {
             <div key={img.id} onClick={() => toggleSelection(img.id)} className="relative group rounded-xl overflow-hidden aspect-square border border-gray-200 cursor-pointer">
               <img src={img.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt="Gallery item" />
               
+              {img.event_title && (
+                <div className="absolute top-0 right-0 bg-black/60 text-white text-[10px] px-2 py-1 m-2 rounded backdrop-blur-sm z-10">
+                  {img.event_title}
+                </div>
+              )}
+
               {/* Overlay */}
               <div className={`absolute inset-0 transition-colors ${img.selected ? 'bg-primary/20' : 'bg-black/0 group-hover:bg-black/40'}`}>
                 {/* Checkbox for selection */}

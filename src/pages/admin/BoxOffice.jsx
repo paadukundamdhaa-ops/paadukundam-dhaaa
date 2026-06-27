@@ -192,15 +192,15 @@ export default function BoxOffice() {
                     <button 
                       type="button"
                       onClick={() => setQty(Math.max(1, qty - 1))}
-                      className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center font-bold hover:bg-gray-200"
+                      className="w-10 h-10 rounded-lg bg-gray-100 text-black flex items-center justify-center font-bold hover:bg-gray-200"
                     >-</button>
-                    <div className="w-16 h-10 flex items-center justify-center font-black text-xl border border-gray-200 rounded-lg">
+                    <div className="w-16 h-10 flex items-center justify-center text-black font-black text-xl border border-gray-200 rounded-lg">
                       {qty}
                     </div>
                     <button 
                       type="button"
                       onClick={() => setQty(Math.min(availableTickets, qty + 1))}
-                      className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center font-bold hover:bg-gray-200"
+                      className="w-10 h-10 rounded-lg bg-gray-100 text-black flex items-center justify-center font-bold hover:bg-gray-200"
                     >+</button>
                   </div>
                 </div>

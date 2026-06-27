@@ -157,7 +157,13 @@ export default function Home() {
         if (error) throw error;
         
         if (data) {
-          const formattedEvents = data.map(event => {
+          const now = new Date();
+          const upcomingOnly = data.filter(event => {
+            const eventDateTime = new Date(`${event.event_date}T${event.event_time || '00:00:00'}`);
+            return eventDateTime > now;
+          });
+
+          const formattedEvents = upcomingOnly.map(event => {
             const d = new Date(event.event_date);
             const lowestPrice = event.ticket_tiers && event.ticket_tiers.length > 0 
               ? Math.min(...event.ticket_tiers.map(t => t.price || 0)) 

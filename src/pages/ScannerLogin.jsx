@@ -152,7 +152,7 @@ export default function ScannerLogin() {
             {/* Desktop Header (Hidden on Mobile) */}
             <div className="hidden lg:block text-center mb-5">
               <div className="inline-flex justify-center mb-4">
-                 <img src="/images/LOGO __ Option 01.png" alt="Paadukundam Dhaa Logo" className="h-12" />
+                 <img src="/images/LOGO __ Option 02.png" alt="Paadukundam Dhaa Logo" className="h-12" />
               </div>
 
               <h2 className="text-2xl font-black text-gray-900 mb-1">

@@ -36,6 +36,7 @@ import CreateEvent from './pages/admin/CreateEvent';
 import EditEvent from './pages/admin/EditEvent';
 import AdminScanner from './pages/admin/AdminScanner';
 import AdminPromoCodes from './pages/admin/AdminPromoCodes';
+import BoxOffice from './pages/admin/BoxOffice';
 import ScannerLogin from './pages/ScannerLogin';
 import StandaloneScanner from './pages/StandaloneScanner';
 
@@ -92,6 +93,7 @@ function App() {
                 <Route path="home-cms" element={<AdminHomeCMS />} />
                 <Route path="promocodes" element={<AdminPromoCodes />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="box-office" element={<BoxOffice />} />
               </Route>
               
               {/* Standalone Admin Scanner (Full Screen for Mobile) */}

@@ -206,6 +206,40 @@ app.post('/api/release-tickets', async (req, res) => {
   }
 });
 
+// Admin: Issue Box Office Ticket (Bypasses PhonePe)
+app.post('/api/admin/issue-ticket', async (req, res) => {
+  const { 
+    event_id, tier_id, qty, amount_paid, payment_method, 
+    customer_name, customer_email, customer_phone, auto_checkin 
+  } = req.body;
+
+  if (!event_id || !tier_id || !qty || amount_paid === undefined) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const { data: bookingId, error } = await supabase.rpc('issue_box_office_ticket', {
+      p_event_id: event_id,
+      p_tier_id: tier_id,
+      p_qty: qty,
+      p_amount: amount_paid,
+      p_payment_method: payment_method || 'cash',
+      p_customer_name: customer_name || '',
+      p_customer_email: customer_email || '',
+      p_customer_phone: customer_phone || '',
+      p_auto_checkin: auto_checkin || false
+    });
+
+    if (error) throw error;
+
+    res.status(200).json({ success: true, bookingId });
+  } catch (err) {
+    console.error("Box Office Issue Ticket Error:", err.message);
+    res.status(500).json({ error: 'Failed to issue ticket', details: err.message });
+  }
+});
+
+
 // Image Protection Proxy
 app.get('/api/secure-image', async (req, res) => {
   const imageUrl = req.query.url;

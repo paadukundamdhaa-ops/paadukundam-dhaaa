@@ -16,11 +16,13 @@ import {
   Bell,
   Search,
   X,
-  Tag
+  Tag,
+  Store
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
+  { name: 'Box Office', path: '/admin/box-office', icon: <Store size={20} /> },
   { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
   { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
   { name: 'Events', path: '/admin/events', icon: <Music size={20} /> },

@@ -18,7 +18,8 @@ import {
   MapPin,
   Headphones,
   ArrowLeft,
-  FolderOpen
+  FolderOpen,
+  Loader2
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 

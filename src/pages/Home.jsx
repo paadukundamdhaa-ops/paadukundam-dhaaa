@@ -197,7 +197,8 @@ export default function Home() {
               venue: event.venue,
               price: lowestPrice,
               img: event.img_url || '/images/arijit.png',
-              displayStatus: eventStatus
+              displayStatus: eventStatus,
+              tag: event.status || 'Live'
             };
           });
           setFeaturedEvents(formattedEvents);
@@ -456,7 +457,9 @@ export default function Home() {
                 <ProtectedImage src={featuredEvents[0]?.img || "/images/script.png"} alt="Featured" className={`w-full h-full object-cover transition-transform duration-700 hover:scale-110 ${featuredEvents[0]?.displayStatus === 'COMPLETED' ? 'grayscale opacity-60' : ''}`} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                 <div className="absolute bottom-4 left-6">
-                  <span className="bg-primary/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">Featured</span>
+                  <span className={`backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${featuredEvents[0]?.displayStatus === 'COMPLETED' ? 'bg-gray-800/90' : 'bg-primary/90'}`}>
+                    {featuredEvents[0]?.displayStatus === 'COMPLETED' ? 'Completed' : (featuredEvents[0]?.tag || 'Featured')}
+                  </span>
                 </div>
               </div>
               

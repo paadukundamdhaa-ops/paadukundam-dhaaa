@@ -623,18 +623,26 @@ export default function Home() {
             
             {featuredEvents.slice(0, 5).map((event, idx, arr) => (
               <div key={idx} className="flex items-center">
-                <Link to={`/events/${event.id}`} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center min-w-[260px] mx-2 relative group hover:border-primary hover:shadow-xl transition-all cursor-pointer">
+                <Link 
+                  to={event.displayStatus === 'COMPLETED' ? '#' : `/events/${event.id}`} 
+                  onClick={(e) => event.displayStatus === 'COMPLETED' && e.preventDefault()}
+                  className={`bg-white border border-gray-200 rounded-lg p-4 flex items-center min-w-[260px] mx-2 relative group transition-all ${event.displayStatus === 'COMPLETED' ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary hover:shadow-xl cursor-pointer'}`}
+                >
                   <div className="text-center pr-4 border-r border-gray-200 mr-4">
-                    <span className="block text-3xl font-black text-primary leading-none">{event.date}</span>
+                    <span className={`block text-3xl font-black leading-none ${event.displayStatus === 'COMPLETED' ? 'text-gray-500' : 'text-primary'}`}>{event.date}</span>
                     <span className="text-xs font-bold text-gray-500 uppercase">{event.month}</span>
                   </div>
                   <div className="overflow-hidden">
-                    <h4 className="font-bold text-black text-sm mb-1 truncate">{event.title}</h4>
+                    <h4 className={`font-bold text-sm mb-1 truncate ${event.displayStatus === 'COMPLETED' ? 'text-gray-600' : 'text-black'}`}>{event.title}</h4>
                     <p className="text-xs text-gray-500 mb-2 truncate">{event.venue}</p>
-                    <div className="text-[10px] text-primary font-bold uppercase flex items-center group-hover:underline">Book Now <ArrowRight size={10} className="ml-1" /></div>
+                    <div className={`text-[10px] font-bold uppercase flex items-center ${event.displayStatus === 'COMPLETED' ? 'text-gray-500' : 'text-primary group-hover:underline'}`}>
+                      {event.displayStatus === 'COMPLETED' ? 'Completed' : (
+                        <>Book Now <ArrowRight size={10} className="ml-1" /></>
+                      )}
+                    </div>
                   </div>
                   {/* Timeline Dot */}
-                  <div className="absolute -left-2 top-1/2 -mt-2 w-4 h-4 rounded-full bg-white border-4 border-primary hidden md:block"></div>
+                  <div className={`absolute -left-2 top-1/2 -mt-2 w-4 h-4 rounded-full bg-white border-4 hidden md:block ${event.displayStatus === 'COMPLETED' ? 'border-gray-400' : 'border-primary'}`}></div>
                 </Link>
                 {/* Arrow between cards */}
                 {idx < arr.length - 1 && (

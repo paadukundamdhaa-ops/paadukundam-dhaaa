@@ -232,7 +232,18 @@ app.post('/api/admin/issue-ticket', async (req, res) => {
 
     if (error) throw error;
 
-    res.status(200).json({ success: true, bookingId });
+    // Fetch the generated booking ref
+    const { data: bookingData } = await supabase
+      .from('bookings')
+      .select('booking_ref')
+      .eq('id', bookingId)
+      .single();
+
+    res.status(200).json({ 
+      success: true, 
+      bookingId, 
+      bookingRef: bookingData?.booking_ref 
+    });
   } catch (err) {
     console.error("Box Office Issue Ticket Error:", err.message);
     res.status(500).json({ error: 'Failed to issue ticket', details: err.message });

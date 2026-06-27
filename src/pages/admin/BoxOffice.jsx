@@ -99,10 +99,36 @@ export default function BoxOffice() {
       const result = await response.json();
 
       if (result.success) {
+        if (customerEmail && result.bookingRef) {
+          try {
+            await fetch('/api/send-ticket', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: customerEmail,
+                name: customerName || 'Guest',
+                eventTitle: selectedEvent.title,
+                eventDate: selectedEvent.event_date,
+                eventVenue: selectedEvent.venue,
+                eventCity: '',
+                bookingRef: result.bookingRef,
+                qty: qty,
+                amount: totalAmount,
+                subtotal: totalAmount,
+                discount: 0,
+                platformFee: 0,
+                termsAndConditions: selectedEvent.terms_and_conditions
+              })
+            });
+          } catch (e) {
+            console.error('Failed to send email:', e);
+          }
+        }
+
         Swal.fire({
           icon: 'success',
           title: 'Ticket Issued!',
-          text: `Booking successfully created.`,
+          text: `Booking successfully created.${customerEmail ? ' Email sent to customer.' : ''}`,
           confirmButtonColor: '#10b981'
         });
         

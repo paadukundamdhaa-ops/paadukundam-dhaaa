@@ -165,12 +165,13 @@ export default function StandaloneScanner() {
       if (ticketUrl.includes('/ticket/')) {
         bookingRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
       }
-      const searchRef = bookingRef.startsWith('#') ? bookingRef : `#${bookingRef}`;
+      const cleanRef = bookingRef.startsWith('#') ? bookingRef.substring(1) : bookingRef;
+      const searchRefWithHash = `#${cleanRef}`;
 
       const { data, error } = await supabase
         .from('bookings')
         .select('*, events(*), profiles(*)')
-        .eq('booking_ref', searchRef)
+        .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`)
         .single();
 
       if (error || !data) {
@@ -178,7 +179,7 @@ export default function StandaloneScanner() {
         setScanResult({
           status: 'invalid',
           message: 'FAKE TICKET! Not found in our system.',
-          ref: searchRef
+          ref: cleanRef
         });
         return;
       }
@@ -188,7 +189,7 @@ export default function StandaloneScanner() {
         setScanResult({
           status: 'wrong_event',
           message: `WRONG EVENT! This ticket is for "${data.events?.title || 'Another Event'}". It is not valid here.`,
-          ref: searchRef
+          ref: cleanRef
         });
         return;
       }

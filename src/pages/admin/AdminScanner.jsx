@@ -99,13 +99,14 @@ export default function AdminScanner() {
         bookingRef = decodedText.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
       }
       
-      const searchRef = bookingRef.startsWith('#') ? bookingRef : `#${bookingRef}`;
+      const cleanRef = bookingRef.startsWith('#') ? bookingRef.substring(1) : bookingRef;
+      const searchRefWithHash = `#${cleanRef}`;
 
-      // 2. Query Supabase
+      // 2. Query Supabase for both formats (Online tickets have #, Box Office do not)
       const { data: booking, error } = await supabase
         .from('bookings')
         .select('*, events(*), profiles(*)')
-        .eq('booking_ref', searchRef)
+        .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`)
         .single();
 
       // CHECK 1: FAKE TICKET (Not found)
@@ -114,7 +115,7 @@ export default function AdminScanner() {
           status: 'error', 
           type: 'fake', 
           message: 'FAKE TICKET! Not found in database.',
-          bookingRef: searchRef
+          bookingRef: cleanRef
         });
         return;
       }

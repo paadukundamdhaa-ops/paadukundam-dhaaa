@@ -67,7 +67,7 @@ export const ProtectedImage = ({ src, alt, className = '', crossOrigin, style = 
         <>
           {/* Layer 7: Actual Image, disabled pointer events */}
           <img
-            src={`/api/secure-image?url=${encodeURIComponent(src.startsWith('http') ? src : window.location.origin + src)}`}
+            src={src || ''}
             alt={alt}
             className="w-full h-full object-cover"
             style={{

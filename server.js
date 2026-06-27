@@ -257,22 +257,21 @@ app.get('/api/secure-image', async (req, res) => {
   if (!imageUrl) return res.status(400).send('URL required');
 
   try {
-    const response = await axios({
-      method: 'GET',
-      url: imageUrl,
-      responseType: 'stream',
-      // If fetching from a private bucket, append authorization headers here
-    });
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error('Failed to fetch image');
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
     // Layer 14 & 21: Cache Protection & Security Headers
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    res.setHeader('Content-Type', response.headers['content-type']);
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'image/jpeg');
     res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self' data:;");
     res.setHeader('X-Content-Type-Options', 'nosniff');
     
-    response.data.pipe(res);
+    res.send(buffer);
   } catch (error) {
     res.status(404).send('Image not found or protected');
   }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Ticket, CreditCard, Banknote, CheckCircle, QrCode, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
-import axios from 'axios';
+
 
 export default function BoxOffice() {
   const [events, setEvents] = useState([]);
@@ -76,19 +76,29 @@ export default function BoxOffice() {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/admin/issue-ticket', {
-        event_id: selectedEventId,
-        tier_id: selectedTierId,
-        qty: qty,
-        amount_paid: totalAmount,
-        payment_method: paymentMethod,
-        customer_name: customerName,
-        customer_email: customerEmail,
-        customer_phone: customerPhone,
-        auto_checkin: autoCheckin
+      const response = await fetch('/api/admin/issue-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_id: selectedEventId,
+          tier_id: selectedTierId,
+          qty: qty,
+          amount_paid: totalAmount,
+          payment_method: paymentMethod,
+          customer_name: customerName,
+          customer_email: customerEmail,
+          customer_phone: customerPhone,
+          auto_checkin: autoCheckin
+        })
       });
 
-      if (response.data.success) {
+      if (!response.ok) {
+        throw new Error('Failed to issue ticket');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
         Swal.fire({
           icon: 'success',
           title: 'Ticket Issued!',

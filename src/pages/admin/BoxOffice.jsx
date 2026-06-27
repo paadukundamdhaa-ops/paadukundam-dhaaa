@@ -27,7 +27,8 @@ export default function BoxOffice() {
       const { data } = await supabase
         .from('events')
         .select('*')
-        .in('status', ['Live', 'Upcoming'])
+        .neq('status', 'Draft')
+        .neq('status', 'Completed')
         .order('event_date', { ascending: true });
       if (data) setEvents(data);
     };

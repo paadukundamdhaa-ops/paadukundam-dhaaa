@@ -22,27 +22,26 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
-  { name: 'Box Office', path: '/admin/box-office', icon: <Store size={20} /> },
-  { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
-  { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
-  { name: 'Events', path: '/admin/events', icon: <Music size={20} /> },
-  { name: 'Ticket Designer', path: '/admin/designer', icon: <Palette size={20} /> },
-  { name: 'Tickets', path: '/admin/tickets', icon: <Ticket size={20} /> },
-  { name: 'Bookings', path: '/admin/bookings', icon: <ShoppingBag size={20} /> },
-  { name: 'Scanner', path: '/admin/scanner', icon: <Search size={20} /> },
-  { name: 'Gallery', path: '/admin/gallery', icon: <ImageIcon size={20} /> },
-  { name: 'Promo Codes', path: '/admin/promocodes', icon: <Tag size={20} /> },
-  { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
+  { name: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Box Office', path: '/admin/box-office', icon: <Store size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} />, roles: ['superadmin'] },
+  { name: 'Users', path: '/admin/users', icon: <Users size={20} />, roles: ['superadmin'] },
+  { name: 'Events', path: '/admin/events', icon: <Music size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Ticket Designer', path: '/admin/designer', icon: <Palette size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Tickets', path: '/admin/tickets', icon: <Ticket size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Bookings', path: '/admin/bookings', icon: <ShoppingBag size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Scanner', path: '/admin/scanner', icon: <Search size={20} />, roles: ['superadmin', 'scanner'] },
+  { name: 'Gallery', path: '/admin/gallery', icon: <ImageIcon size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Promo Codes', path: '/admin/promocodes', icon: <Tag size={20} />, roles: ['superadmin', 'event_manager'] },
+  { name: 'Settings', path: '/admin/settings', icon: <Settings size={20} />, roles: ['superadmin'] },
 ];
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, loading: authLoading, signOut } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [roleLoading, setRoleLoading] = useState(true);
-
 
   useEffect(() => {
     const checkRole = async () => {
@@ -53,7 +52,7 @@ export default function AdminLayout() {
         return;
       }
 
-      // Hardcoded Admin Emails Check
+      // Hardcoded Admin Emails Check (always superadmin)
       const ADMIN_EMAILS = [
         'sirisairavitejateeda@gmail.com',
         'jnaneshwarmoturi123@gmail.com',
@@ -62,7 +61,7 @@ export default function AdminLayout() {
         'balajiprojects049@gmail.com'
       ];
       if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
-        setIsAdmin(true);
+        setUserRole('superadmin');
         setRoleLoading(false);
         return;
       }
@@ -75,10 +74,15 @@ export default function AdminLayout() {
           .single();
 
         if (error) throw error;
-        setIsAdmin(data?.role === 'admin');
+        
+        // Map old 'admin' string to 'superadmin', otherwise use assigned role
+        let assignedRole = data?.role;
+        if (assignedRole === 'admin') assignedRole = 'superadmin';
+        
+        setUserRole(assignedRole);
       } catch (error) {
         console.error('Error checking admin role:', error);
-        setIsAdmin(false);
+        setUserRole(null);
       } finally {
         setRoleLoading(false);
       }
@@ -100,8 +104,16 @@ export default function AdminLayout() {
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !userRole || !['superadmin', 'event_manager', 'scanner'].includes(userRole)) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  // Filter nav items based on role
+  const visibleNavItems = navItems.filter(item => item.roles.includes(userRole));
+
+  // If scanner role and not on scanner page, redirect to scanner page
+  if (userRole === 'scanner' && window.location.pathname !== '/admin/scanner') {
+    return <Navigate to="/admin/scanner" replace />;
   }
 
   return (
@@ -113,7 +125,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 hide-scrollbar">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
@@ -160,7 +172,7 @@ export default function AdminLayout() {
             </div>
             
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <NavLink
                   key={item.name}
                   to={item.path}
@@ -225,7 +237,7 @@ export default function AdminLayout() {
                 <p className="font-bold text-black leading-tight">
                   {user?.email?.split('@')[0] || 'Admin User'}
                 </p>
-                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">Superadmin</p>
+                <p className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{userRole?.replace('_', ' ')}</p>
               </div>
             </div>
           </div>

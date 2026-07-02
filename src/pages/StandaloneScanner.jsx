@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Swal from 'sweetalert2';
 import { Html5Qrcode } from 'html5-qrcode';
-import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode, Flashlight } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode, Flashlight, Wifi, WifiOff, RefreshCw, Database } from 'lucide-react';
 
 const playSound = (type) => {
   try {
@@ -43,9 +43,18 @@ export default function StandaloneScanner() {
   const [recentScans, setRecentScans] = useState([]);
   const [stats, setStats] = useState({ total: 0, checkedIn: 0 });
   const [partialQty, setPartialQty] = useState(1);
+  const [offlineMode, setOfflineMode] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [queuedScansCount, setQueuedScansCount] = useState(0);
   const scannerRef = useRef(null);
   const isProcessingRef = useRef(false);
   const navigate = useNavigate();
+
+  // Load queued scans count on mount
+  useEffect(() => {
+    const queued = JSON.parse(localStorage.getItem('scanner_queued_scans') || '[]');
+    setQueuedScansCount(queued.length);
+  }, []);
 
   useEffect(() => {
     // Check authentication
@@ -71,28 +80,85 @@ export default function StandaloneScanner() {
     if (!selectedEventId) return;
 
     const fetchStats = async () => {
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('qty, check_in_status')
-        .eq('event_id', selectedEventId);
+      let data = [];
+      if (offlineMode) {
+        data = JSON.parse(localStorage.getItem(`scanner_offline_data_${selectedEventId}`) || '[]');
+      } else {
+        const { data: remoteData, error } = await supabase
+          .from('bookings')
+          .select('qty, checked_in_qty')
+          .eq('event_id', selectedEventId);
+        if (!error && remoteData) {
+          data = remoteData;
+        }
+      }
       
-      if (!error && data) {
+      if (data) {
         let total = 0;
         let checkedIn = 0;
         data.forEach(b => {
           total += b.qty;
-          if (b.check_in_status === 'allowed') checkedIn += b.qty;
+          checkedIn += (b.checked_in_qty || 0); // use checked_in_qty to be consistent
         });
         setStats({ total, checkedIn });
       }
     };
     
     fetchStats();
-  }, [selectedEventId, scanResult]);
+  }, [selectedEventId, scanResult, offlineMode]);
 
   const handleLogout = () => {
     localStorage.removeItem('scanner_auth');
     navigate('/scanner');
+  };
+
+  const handleSyncData = async () => {
+    if (!selectedEventId) {
+      Swal.fire('Error', 'Please select an event first to sync its data.', 'error');
+      return;
+    }
+    setSyncing(true);
+    try {
+      // 1. Push any queued offline scans to server first
+      const queued = JSON.parse(localStorage.getItem('scanner_queued_scans') || '[]');
+      if (queued.length > 0) {
+        for (const scan of queued) {
+          // Push to server using RPC
+          await supabase.rpc('scan_ticket', {
+            p_booking_id: scan.booking_id,
+            p_qty: scan.qty,
+            p_status: scan.status
+          });
+        }
+        localStorage.setItem('scanner_queued_scans', JSON.stringify([]));
+        setQueuedScansCount(0);
+      }
+
+      // 2. Download all bookings for the selected event
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*, events(*), profiles(*), ticket_tiers(*)')
+        .eq('event_id', selectedEventId);
+
+      if (error) throw error;
+
+      // Cache locally
+      localStorage.setItem(`scanner_offline_data_${selectedEventId}`, JSON.stringify(data || []));
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Sync Complete',
+        text: `Successfully downloaded ${data.length} bookings for offline scanning. Queued scans pushed.`,
+        timer: 3000,
+        showConfirmButton: false
+      });
+      setOfflineMode(true); // Auto enable offline mode after sync
+    } catch (error) {
+      console.error(error);
+      Swal.fire('Sync Failed', error.message || 'Could not sync data. Check internet connection.', 'error');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   const startScanner = () => {
@@ -174,19 +240,32 @@ export default function StandaloneScanner() {
       }
 
       let bookings = [];
-      if (searchTx) {
-        const { data } = await supabase
-          .from('bookings')
-          .select('*, events(*), profiles(*), ticket_tiers(*)')
-          .eq('payment_intent_id', searchTx);
-        bookings = data || [];
+      
+      if (offlineMode) {
+        // --- OFFLINE MODE LOOKUP ---
+        const localData = JSON.parse(localStorage.getItem(`scanner_offline_data_${selectedEventId}`) || '[]');
+        if (searchTx) {
+          bookings = localData.filter(b => b.payment_intent_id === searchTx);
+        } else {
+          const searchRefWithHash = `#${cleanRef}`;
+          bookings = localData.filter(b => b.booking_ref === cleanRef || b.booking_ref === searchRefWithHash);
+        }
       } else {
-        const searchRefWithHash = `#${cleanRef}`;
-        const { data } = await supabase
-          .from('bookings')
-          .select('*, events(*), profiles(*), ticket_tiers(*)')
-          .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`);
-        bookings = data || [];
+        // --- ONLINE MODE LOOKUP ---
+        if (searchTx) {
+          const { data } = await supabase
+            .from('bookings')
+            .select('*, events(*), profiles(*), ticket_tiers(*)')
+            .eq('payment_intent_id', searchTx);
+          bookings = data || [];
+        } else {
+          const searchRefWithHash = `#${cleanRef}`;
+          const { data } = await supabase
+            .from('bookings')
+            .select('*, events(*), profiles(*), ticket_tiers(*)')
+            .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`);
+          bookings = data || [];
+        }
       }
 
       if (bookings.length === 0) {
@@ -253,7 +332,14 @@ export default function StandaloneScanner() {
         if (remainingQtyToScan <= 0) break;
         
         // Fetch the current booking to know its individual qty and checked_in_qty
-        const { data: bData } = await supabase.from('bookings').select('qty, checked_in_qty').eq('id', bId).single();
+        let bData;
+        if (offlineMode) {
+          const localData = JSON.parse(localStorage.getItem(`scanner_offline_data_${selectedEventId}`) || '[]');
+          bData = localData.find(b => b.id === bId);
+        } else {
+          const { data } = await supabase.from('bookings').select('qty, checked_in_qty').eq('id', bId).single();
+          bData = data;
+        }
         if (!bData) continue;
         
         const availableInBooking = (bData.qty || 1) - (bData.checked_in_qty || 0);
@@ -261,13 +347,43 @@ export default function StandaloneScanner() {
         
         const qtyToApply = Math.min(availableInBooking, remainingQtyToScan);
         
-        const { error } = await supabase.rpc('scan_ticket', {
-          p_booking_id: bId,
-          p_qty: qtyToApply,
-          p_status: status
-        });
-        
-        if (error) throw error;
+        if (offlineMode) {
+          // --- SAVE TO LOCAL QUEUE ---
+          const queued = JSON.parse(localStorage.getItem('scanner_queued_scans') || '[]');
+          queued.push({
+            booking_id: bId,
+            qty: qtyToApply,
+            status: status,
+            timestamp: new Date().toISOString()
+          });
+          localStorage.setItem('scanner_queued_scans', JSON.stringify(queued));
+          setQueuedScansCount(queued.length);
+
+          // Update local cache so next scan reflects check-in
+          const localData = JSON.parse(localStorage.getItem(`scanner_offline_data_${selectedEventId}`) || '[]');
+          const updatedLocalData = localData.map(b => {
+            if (b.id === bId) {
+              return { ...b, checked_in_qty: (b.checked_in_qty || 0) + qtyToApply };
+            }
+            return b;
+          });
+          localStorage.setItem(`scanner_offline_data_${selectedEventId}`, JSON.stringify(updatedLocalData));
+
+          // Also update stats locally
+          if (status === 'allowed') {
+            setStats(prev => ({ ...prev, checkedIn: prev.checkedIn + qtyToApply }));
+          }
+
+        } else {
+          // --- SAVE DIRECT TO SERVER ---
+          const { error } = await supabase.rpc('scan_ticket', {
+            p_booking_id: bId,
+            p_qty: qtyToApply,
+            p_status: status
+          });
+          
+          if (error) throw error;
+        }
         remainingQtyToScan -= qtyToApply;
       }
 
@@ -310,17 +426,54 @@ export default function StandaloneScanner() {
         {/* Event Selector */}
         <div className="bg-zinc-900 p-4 rounded-2xl mb-6 border border-zinc-800 shadow-xl">
           <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Active Event</label>
-          <select 
-            className="w-full bg-black border border-zinc-700 text-white rounded-xl p-3 outline-none focus:border-primary font-bold transition-colors"
-            value={selectedEventId}
-            onChange={(e) => setSelectedEventId(e.target.value)}
-            disabled={scanning || scanResult}
+            <select 
+              value={selectedEventId} 
+              onChange={(e) => setSelectedEventId(e.target.value)}
+              className="bg-zinc-800 text-white text-xs py-1.5 px-3 rounded-lg border border-zinc-700 outline-none w-32 truncate"
+            >
+              {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
+            </select>
+
+          {/* Sync Button */}
+          <button 
+            onClick={handleSyncData}
+            disabled={syncing}
+            className={`p-1.5 rounded-lg border transition-colors relative ${queuedScansCount > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}
+            title="Sync Data"
           >
-            <option value="">Select Event to Scan</option>
-            {events.map(e => (
-              <option key={e.id} value={e.id}>{e.title} ({e.city})</option>
-            ))}
-          </select>
+            {syncing ? <RefreshCw className="animate-spin w-4 h-4" /> : <Database className="w-4 h-4" />}
+            {queuedScansCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                {queuedScansCount}
+              </span>
+            )}
+          </button>
+
+          {/* Offline Toggle */}
+          <button 
+            onClick={() => {
+              if (!offlineMode && !localStorage.getItem(`scanner_offline_data_${selectedEventId}`)) {
+                Swal.fire('No Data', 'Please click the Sync button first to download offline data for this event.', 'warning');
+                return;
+              }
+              setOfflineMode(!offlineMode);
+            }}
+            className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 ${offlineMode ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-green-500/20 text-green-400 border-green-500/50'}`}
+          >
+            {offlineMode ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
+            <span className="text-[10px] font-bold hidden sm:block">{offlineMode ? 'Offline Mode' : 'Online Mode'}</span>
+          </button>
+
+          <button onClick={handleLogout} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700">
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+
+      {offlineMode && (
+        <div className="bg-red-900/40 border-b border-red-900/50 text-red-200 text-xs py-2 text-center font-semibold">
+          You are scanning in OFFLINE MODE. Remember to sync when online!
+        </div>
+      )}
           
           {selectedEventId && (
             <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4">

@@ -3,6 +3,7 @@ import { Search, Filter, Download, MoreVertical, CheckCircle, Clock, XCircle, Sh
 import { supabase } from '../../lib/supabase';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { downloadCSV } from '../../utils/csvExport';
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([]);
@@ -233,6 +234,23 @@ export default function AdminBookings() {
     doc.save(`bookings-report-${new Date().getTime()}.pdf`);
   };
 
+  const handleExportCSV = () => {
+    const exportData = processedBookings.map(b => ({
+      'Booking ID': b.booking_ref,
+      'Customer Name': b.profiles?.name || '',
+      'Customer Email': b.profiles?.email || '',
+      'Customer Phone': b.profiles?.phone || '',
+      'Event': b.events?.title || '',
+      'Ticket Type': b.ticket_tiers?.tier_name || 'General Admission',
+      'Quantity': b.qty,
+      'Total Amount': b.total_amount,
+      'Status': b.status,
+      'Booking Date': new Date(b.created_at).toLocaleString(),
+      'Check-In Status': b.check_in_status || 'pending'
+    }));
+    downloadCSV(exportData, 'bookings_export');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -240,9 +258,14 @@ export default function AdminBookings() {
           <h2 className="text-2xl font-black text-black">Bookings & Orders</h2>
           <p className="text-sm text-gray-500">Track all ticket sales, manage refunds, and view transaction statuses.</p>
         </div>
-        <button onClick={handleExportPDF} className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0">
-          <Download size={16} /> Export PDF
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button onClick={handleExportCSV} className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+            <Download size={16} /> Export CSV
+          </button>
+          <button onClick={handleExportPDF} className="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
+            <Download size={16} /> Export PDF
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">

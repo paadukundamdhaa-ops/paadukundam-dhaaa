@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Edit, Trash2, UserPlus, Mail, Eye, X } from 'lucide-react';
+import { Search, Filter, MoreVertical, Edit, Trash2, UserPlus, Mail, Eye, X, Download } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
+import { downloadCSV } from '../../utils/csvExport';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -88,6 +89,19 @@ export default function AdminUsers() {
     }
   };
 
+  const handleExport = () => {
+    const exportData = users.map(u => ({
+      ID: u.id,
+      Name: u.name || '',
+      Email: u.email || '',
+      Phone: u.phone || '',
+      Status: u.status || 'Active',
+      'Joined Date': new Date(u.joined_date || u.created_at).toLocaleString(),
+      'Tickets Bought': u.bookings?.reduce((acc, b) => acc + (b.qty || 0), 0) || 0
+    }));
+    downloadCSV(exportData, 'users_export');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -95,9 +109,14 @@ export default function AdminUsers() {
           <h2 className="text-2xl font-black text-black">User Management</h2>
           <p className="text-sm text-gray-500">Manage your platform's registered users and their status.</p>
         </div>
-        <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0">
-          <UserPlus size={16} /> Add New User
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button onClick={handleExport} className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+            <Download size={16} /> Export CSV
+          </button>
+          <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
+            <UserPlus size={16} /> Add New User
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">

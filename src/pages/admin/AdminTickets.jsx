@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Plus, Tag, Settings, MoreVertical } from 'lucide-react';
+import { Search, Plus, Tag, Settings, MoreVertical, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { downloadCSV } from '../../utils/csvExport';
 
 export default function AdminTickets() {
   const [ticketTiers, setTicketTiers] = useState([]);
@@ -55,6 +56,21 @@ export default function AdminTickets() {
     };
   }, []);
 
+  const handleExportCSV = () => {
+    const exportData = ticketTiers.map(t => ({
+      'ID': t.id,
+      'Event': t.event,
+      'Ticket Type': t.type,
+      'Price': t.price,
+      'Total Capacity': t.total,
+      'Sold': t.sold,
+      'Remaining': t.total - t.sold,
+      'Revenue Generated': t.sold * parseFloat(t.price.replace('₹', '')),
+      'Status': t.status
+    }));
+    downloadCSV(exportData, 'ticket_inventory_export');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -62,9 +78,14 @@ export default function AdminTickets() {
           <h2 className="text-2xl font-black text-black">Ticket Inventory</h2>
           <p className="text-sm text-gray-500">Manage ticket pricing tiers and capacities for all events.</p>
         </div>
-        <Link to="/admin/events" className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0">
-          <Plus size={16} /> Manage in Events
-        </Link>
+        <div className="flex items-center gap-3 shrink-0">
+          <button onClick={handleExportCSV} className="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+            <Download size={16} /> Export CSV
+          </button>
+          <Link to="/admin/events" className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
+            <Plus size={16} /> Manage in Events
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">

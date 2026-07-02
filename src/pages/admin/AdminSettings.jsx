@@ -11,8 +11,6 @@ export default function AdminSettings() {
     instagram_url: '',
     twitter_url: '',
     facebook_url: '',
-    razorpay_key_id: '',
-    razorpay_key_secret: '',
     enable_email_notifications: true,
     enable_sms_notifications: false
   });
@@ -108,11 +106,6 @@ export default function AdminSettings() {
             <Globe size={18} /> Global Details
           </button>
           <button 
-            onClick={() => setActiveTab('payments')}
-            className={`w-full flex items-center gap-3 px-4 py-3 font-bold text-sm rounded-lg transition-colors ${activeTab === 'payments' ? 'bg-white text-primary border-l-4 border-l-primary shadow-sm rounded-l-none' : 'text-gray-600 hover:bg-white hover:shadow-sm border-l-4 border-l-transparent'}`}>
-            <CreditCard size={18} /> Payment Gateways
-          </button>
-          <button 
             onClick={() => setActiveTab('notifications')}
             className={`w-full flex items-center gap-3 px-4 py-3 font-bold text-sm rounded-lg transition-colors ${activeTab === 'notifications' ? 'bg-white text-primary border-l-4 border-l-primary shadow-sm rounded-l-none' : 'text-gray-600 hover:bg-white hover:shadow-sm border-l-4 border-l-transparent'}`}>
             <Bell size={18} /> Notifications
@@ -162,27 +155,6 @@ export default function AdminSettings() {
                 </div>
               </div>
             </>
-          )}
-
-          {activeTab === 'payments' && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-6">
-              <div className="flex items-center gap-3 border-b border-gray-200 pb-4">
-                <CreditCard className="text-primary" size={24} />
-                <h3 className="font-bold text-lg text-black">Payment Gateways</h3>
-              </div>
-              <p className="text-sm text-gray-500">Configure your Razorpay integration to accept ticket payments.</p>
-              
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Razorpay Key ID</label>
-                  <input type="text" name="razorpay_key_id" value={settings.razorpay_key_id || ''} onChange={handleChange} placeholder="rzp_live_..." className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-mono text-sm" />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Razorpay Key Secret</label>
-                  <input type="password" name="razorpay_key_secret" value={settings.razorpay_key_secret || ''} onChange={handleChange} placeholder="••••••••••••" className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-black font-mono text-sm" />
-                </div>
-              </div>
-            </div>
           )}
 
           {activeTab === 'notifications' && (

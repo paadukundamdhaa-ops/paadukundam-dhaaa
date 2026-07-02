@@ -15,9 +15,27 @@ export const AuthProvider = ({ children }) => {
     });
 
     // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setLoading(false);
+
+      if (currentUser && (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION')) {
+        try {
+          const { data: profile } = await supabase.from('profiles').select('id').eq('id', currentUser.id).single();
+          if (!profile) {
+            await supabase.from('profiles').upsert({
+              id: currentUser.id,
+              full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+              email: currentUser.email,
+              phone: currentUser.user_metadata?.phone || null,
+              role: 'user'
+            }, { onConflict: 'id' });
+          }
+        } catch (err) {
+          console.error("Error auto-creating profile:", err);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();

@@ -53,12 +53,8 @@ export default function PaymentStatus() {
         if (verifyData.success) {
           setStatus('success');
           
-          // Generate a bookingRef for the success UI
-          const getInitials = (title) => {
-            if (!title) return 'BK';
-            return title.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 4);
-          };
-          const bookingRef = `#${getInitials(checkoutData.event.title)}-` + Math.floor(100000 + Math.random() * 900000);
+          // Use the real booking_ref from the database (returned by server after confirm_tickets)
+          const bookingRef = verifyData.bookings?.[0]?.booking_ref || '#BK-' + Math.floor(100000 + Math.random() * 900000);
 
           // 4. Send Confirmation Email
           try {
@@ -83,6 +79,15 @@ export default function PaymentStatus() {
             }).catch(err => console.error("Email send API failed:", err));
           } catch (e) {
             console.error("Email notification error", e);
+          }
+
+          // Increment promo usage if a promo was applied
+          if (checkoutData.appliedPromo?.id) {
+            fetch('/api/increment-promo-usage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ promoCodeId: checkoutData.appliedPromo.id })
+            }).catch(e => console.error('Promo usage increment failed:', e));
           }
 
           // Navigate to Success

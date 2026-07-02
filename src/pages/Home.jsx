@@ -244,16 +244,16 @@ export default function Home() {
           const testData = data.find(d => d.section_name === 'testimonials');
           const tickerData = data.find(d => d.section_name === 'ticker');
           
-          if (hero && hero.content_data) {
+          if (hero && hero.content) {
             setHeroSettings({
-              heading: hero.content_data.heading || 'FEEL THE RHYTHM LIVE THE MUSIC',
-              subheading: hero.content_data.subheading || 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
-              bgImages: hero.content_data.bgImages || ['/images/sunburn.png', '', '', '']
+              heading: hero.content.heading || 'FEEL THE RHYTHM LIVE THE MUSIC',
+              subheading: hero.content.subheading || 'Discover and instantly book tickets for the most exciting live concerts happening around you. Secure your spot in seconds.',
+              bgImages: hero.content.bgImages || ['/images/sunburn.png', '', '', '']
             });
           }
-          if (statsData && statsData.content_data) setStats(statsData.content_data);
-          if (testData && testData.content_data) setTestimonials(testData.content_data);
-          if (tickerData && tickerData.content_data) setTickerSettings(tickerData.content_data);
+          if (statsData && statsData.content) setStats(statsData.content);
+          if (testData && testData.content) setTestimonials(testData.content);
+          if (tickerData && tickerData.content) setTickerSettings(tickerData.content);
         }
       } catch (err) {
         console.error('Error fetching CMS:', err);

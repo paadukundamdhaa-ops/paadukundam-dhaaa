@@ -52,10 +52,10 @@ export default function AdminHomeCMS() {
         const testData = data.find(d => d.section_name === 'testimonials');
         const tickerData = data.find(d => d.section_name === 'ticker');
         
-        if (hero) setHeroSettings(hero.content_data);
-        if (statsData) setStats(statsData.content_data);
-        if (testData) setTestimonials(testData.content_data);
-        if (tickerData) setTickerSettings(tickerData.content_data);
+        if (hero) setHeroSettings(hero.content);
+        if (statsData) setStats(statsData.content);
+        if (testData) setTestimonials(testData.content);
+        if (tickerData) setTickerSettings(tickerData.content);
       }
     } catch (error) {
       console.error('Error fetching CMS data:', error);
@@ -68,10 +68,10 @@ export default function AdminHomeCMS() {
     setSaving(true);
     try {
       const updates = [
-        { section_name: 'hero', content_data: heroSettings },
-        { section_name: 'stats', content_data: stats },
-        { section_name: 'testimonials', content_data: testimonials },
-        { section_name: 'ticker', content_data: tickerSettings }
+        { section_name: 'hero', content: heroSettings },
+        { section_name: 'stats', content: stats },
+        { section_name: 'testimonials', content: testimonials },
+        { section_name: 'ticker', content: tickerSettings }
       ];
       
       const { error } = await supabase.from('cms_content').upsert(updates, { onConflict: 'section_name' });

@@ -11,21 +11,32 @@ export default function ScannerLogin() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Dummy credentials as requested
-    setTimeout(() => {
-      if (username === 'scanner' && password === '123456') {
+    try {
+      const response = await fetch('/api/scanner-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
         localStorage.setItem('scanner_auth', 'true');
+        localStorage.setItem('scanner_token', data.token);
         navigate('/scanner/app');
       } else {
-        setError('Invalid username or password');
+        setError(data.error || 'Invalid username or password');
         setLoading(false);
       }
-    }, 500);
+    } catch (err) {
+      setError('Connection error. Please check your network and try again.');
+      setLoading(false);
+    }
   };
 
   return (

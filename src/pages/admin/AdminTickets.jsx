@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Plus, Tag, Settings, MoreVertical } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
 export default function AdminTickets() {
@@ -61,9 +62,9 @@ export default function AdminTickets() {
           <h2 className="text-2xl font-black text-black">Ticket Inventory</h2>
           <p className="text-sm text-gray-500">Manage ticket pricing tiers and capacities for all events.</p>
         </div>
-        <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0">
-          <Plus size={16} /> Add Ticket Tier
-        </button>
+        <Link to="/admin/events" className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20 shrink-0">
+          <Plus size={16} /> Manage in Events
+        </Link>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
@@ -145,12 +146,9 @@ export default function AdminTickets() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="p-2 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors" title="Settings">
+                      <Link to="/admin/events" className="p-2 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors inline-block" title="Edit in Events">
                         <Settings size={16} />
-                      </button>
-                      <button className="p-2 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors" title="More">
-                        <MoreVertical size={16} />
-                      </button>
+                      </Link>
                     </div>
                   </td>
                 </tr>

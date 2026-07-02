@@ -50,8 +50,8 @@ export default function AdminDashboard() {
       ? allBookings 
       : allBookings.filter(b => b.event_id === selectedEventId);
 
-    const revenue = filteredBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
-    const sold = filteredBookings.reduce((sum, b) => sum + (b.qty || 1), 0);
+    const revenue = filteredBookings.reduce((sum, b) => b.status === 'Completed' ? sum + (b.total_amount || 0) : sum, 0);
+    const sold = filteredBookings.reduce((sum, b) => b.status === 'Completed' ? sum + (b.qty || 1) : sum, 0);
     const checkedIn = filteredBookings.reduce((sum, b) => {
       if (b.checked_in_qty > 0) return sum + b.checked_in_qty;
       if (b.check_in_status === 'allowed' || b.check_in_status === 'checked_in') return sum + (b.qty || 1);
@@ -94,7 +94,7 @@ export default function AdminDashboard() {
               <option key={e.id} value={e.id}>{e.title}</option>
             ))}
           </select>
-          <button className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
+          <button onClick={() => window.print()} className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-red-700 transition-colors flex items-center gap-2 shadow-lg shadow-primary/20">
             <TrendingUp size={16} /> Generate Report
           </button>
         </div>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h3 className="font-bold text-lg text-black">Recent Bookings</h3>
-            <button className="text-primary text-sm font-semibold hover:underline">View All</button>
+            <Link to="/admin/bookings" className="text-primary text-sm font-semibold hover:underline">View All</Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -174,7 +174,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </Link>
-            <button className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-left transition-all group">
+            <Link to="/admin/tickets" className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-left transition-all group">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
                   <Ticket size={18} />
@@ -184,8 +184,8 @@ export default function AdminDashboard() {
                   <p className="text-xs text-gray-500">Update inventory</p>
                 </div>
               </div>
-            </button>
-            <button className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-green-500 hover:bg-green-50 text-left transition-all group">
+            </Link>
+            <Link to="/admin/bookings" className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-green-500 hover:bg-green-50 text-left transition-all group">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-500 group-hover:bg-green-500 group-hover:text-white transition-colors">
                   <ShoppingBag size={18} />
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
                   <p className="text-xs text-gray-500">Check recent revenue</p>
                 </div>
               </div>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

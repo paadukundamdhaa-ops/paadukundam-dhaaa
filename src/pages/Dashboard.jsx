@@ -9,7 +9,7 @@ import QRCode from 'react-qr-code';
 import Swal from 'sweetalert2';
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,10 +33,13 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       navigate('/login');
-      return;
     }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
 
     const fetchBookingsAndProfile = async () => {
       try {
@@ -149,6 +152,16 @@ export default function Dashboard() {
     { name: 'Wishlist', icon: <Heart size={20} /> },
     { name: 'Settings', icon: <Settings size={20} /> },
   ];
+
+  if (authLoading || (!user && loading)) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return (
     <div className="pt-24 pb-24 min-h-screen bg-gray-50 container mx-auto px-6 flex flex-col md:flex-row gap-8 lg:gap-12 font-sans">

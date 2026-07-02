@@ -41,15 +41,8 @@ export default function AdminLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [roleLoading, setRoleLoading] = useState(true);
 
-  const isDummyAuth = localStorage.getItem('admin_auth_dummy') === 'true';
 
   useEffect(() => {
-    if (isDummyAuth) {
-      setIsAdmin(true);
-      setRoleLoading(false);
-      return;
-    }
-
     const checkRole = async () => {
       if (authLoading) return;
       
@@ -63,8 +56,8 @@ export default function AdminLayout() {
         'sirisairavitejateeda@gmail.com',
         'jnaneshwarmoturi123@gmail.com',
         'iamdesign81@gmail.com',
-        'balajirockzz9030@gmail.com', // For testing
-        'balajiprojects049@gmail.com' // For testing
+        'balajirockzz9030@gmail.com',
+        'balajiprojects049@gmail.com'
       ];
       if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
         setIsAdmin(true);
@@ -89,18 +82,15 @@ export default function AdminLayout() {
       }
     };
 
-    if (!isDummyAuth) {
-      checkRole();
-    }
-  }, [user, authLoading, isDummyAuth]);
+    checkRole();
+  }, [user, authLoading]);
 
   const handleLogout = async () => {
-    localStorage.removeItem('admin_auth_dummy');
     await signOut();
     navigate('/admin/login');
   };
 
-  if (!isDummyAuth && (authLoading || roleLoading)) {
+  if (authLoading || roleLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -108,7 +98,7 @@ export default function AdminLayout() {
     );
   }
 
-  if (!isDummyAuth && (!user || !isAdmin)) {
+  if (!user || !isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 

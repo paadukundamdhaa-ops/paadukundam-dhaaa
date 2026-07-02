@@ -183,7 +183,7 @@ export default function Checkout() {
           eventId: event.id,
           selectedTickets: selectedTickets,
           userId: currentUser.id,
-          amount: grandTotal
+          promoCode: appliedPromo?.code || null   // backend validates this
         }),
       });
 
@@ -204,7 +204,8 @@ export default function Checkout() {
         bookingFee: bookingFee,
         email: email,
         firstName: firstName,
-        reservations: initData.reservations
+        reservations: initData.reservations,
+        appliedPromo: appliedPromo ? { id: appliedPromo.id, code: appliedPromo.code } : null
       }));
 
       // Redirect to PhonePe
@@ -302,7 +303,7 @@ export default function Checkout() {
               </div>
               <h3 className="font-bold text-lg text-black mb-2">Secure Payment Gateway</h3>
               <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                Clicking "Pay Now" will securely open the Razorpay checkout portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
+                Clicking "Pay Now" will securely redirect you to the PhonePe payment portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
               </p>
               <div className="flex items-center justify-center gap-3">
                 <CreditCard className="text-gray-400" size={24} />

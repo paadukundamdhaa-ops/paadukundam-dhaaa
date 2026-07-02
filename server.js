@@ -11,7 +11,24 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Restrict CORS to known frontend origins only
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://paadukundam-dhaaa.vercel.app',
+      'https://paadukundamdhaa.vercel.app',
+    ].filter(Boolean);
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Initialize Supabase Admin client (Requires Service Role Key for backend authority, or Anon Key if strictly using RPCs)
@@ -30,7 +47,8 @@ const transporter = nodemailer.createTransport({
 });
 
 app.post('/api/init-checkout', async (req, res) => {
-  const { eventId, selectedTickets, userId, amount } = req.body;
+  // 'amount' is intentionally NOT trusted from frontend — calculated securely on backend
+  const { eventId, selectedTickets, userId, promoCode } = req.body;
 
   if (!userId || !eventId || !selectedTickets) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -39,12 +57,13 @@ app.post('/api/init-checkout', async (req, res) => {
   try {
     // We expect the user to send selectedTickets as { tierId: quantity }
     let totalCalculatedAmount = 0;
+    let totalTicketCount = 0;
     const reservations = [];
 
-    // Atomically reserve tickets for each tier
+    // Atomically reserve tickets for each tier and calculate amount from DB (never trust frontend price)
     for (const [tierId, qty] of Object.entries(selectedTickets)) {
       if (qty > 0) {
-        // Fetch price to calculate amount securely
+        // Fetch real price from DB — frontend price is IGNORED
         const { data: tierInfo, error: tierError } = await supabase
           .from('ticket_tiers')
           .select('price')
@@ -57,6 +76,7 @@ app.post('/api/init-checkout', async (req, res) => {
         
         const tierAmount = tierInfo.price * qty;
         totalCalculatedAmount += tierAmount;
+        totalTicketCount += qty;
 
         // Call our secure RPC to reserve
         const { data: reservationId, error: rpcError } = await supabase.rpc('reserve_tickets', {
@@ -75,9 +95,30 @@ app.post('/api/init-checkout', async (req, res) => {
       }
     }
 
-    // Add platform fees logic or discounts here if applicable, for now assume amount matches or just use frontend amount for the prototype, but real production should strictly use totalCalculatedAmount.
-    // For now, we trust the `amount` passed from frontend since there's promo logic there that we haven't migrated.
-    const finalAmount = amount; 
+    // Server-side promo code validation (client-side promo is only for display)
+    let promoDiscount = 0;
+    if (promoCode) {
+      const { data: promo } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode.toUpperCase())
+        .eq('status', 'Active')
+        .single();
+
+      if (promo) {
+        const appliesToEvent = !promo.event_id || promo.event_id === eventId;
+        const underLimit = !promo.max_uses || (promo.current_uses || 0) < promo.max_uses;
+        if (appliesToEvent && underLimit) {
+          promoDiscount = Math.floor((totalCalculatedAmount * promo.discount_percentage) / 100);
+        }
+      }
+    }
+
+    // Add platform fee (₹15 per ticket) — calculated server-side
+    const platformFee = totalTicketCount * 15;
+
+    // Final amount is fully calculated on the backend — never from frontend
+    const finalAmount = totalCalculatedAmount - promoDiscount + platformFee;
     const transactionId = `txn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
     const merchantId = process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT';
@@ -176,7 +217,18 @@ app.post('/api/verify-payment', async (req, res) => {
           });
           
           if (confirmError) throw confirmError;
-          bookingsCreated.push(bookingId);
+
+          // Fetch the real booking_ref from DB so the frontend can use it
+          const { data: bookingData } = await supabase
+            .from('bookings')
+            .select('booking_ref')
+            .eq('id', bookingId)
+            .single();
+
+          bookingsCreated.push({
+            id: bookingId,
+            booking_ref: bookingData?.booking_ref
+          });
         }
       }
       
@@ -356,6 +408,62 @@ app.post('/api/send-ticket', async (req, res) => {
   } catch (error) {
     console.error('Error sending email:', error);
     res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
+
+// ─── Scanner Login ───────────────────────────────────────────────────────────
+// Credentials live in .env (SCANNER_USERNAME, SCANNER_PASSWORD) — NOT in source code
+app.post('/api/scanner-login', (req, res) => {
+  const { username, password } = req.body;
+  const validUsername = process.env.SCANNER_USERNAME || 'scanner';
+  const validPassword = process.env.SCANNER_PASSWORD;
+
+  if (!validPassword) {
+    console.error('SCANNER_PASSWORD not set in .env');
+    return res.status(503).json({ error: 'Scanner login is not configured. Set SCANNER_PASSWORD in your .env file.' });
+  }
+
+  if (username === validUsername && password === validPassword) {
+    // Return a server-generated token so nothing sensitive lives in client JS
+    const token = crypto
+      .createHmac('sha256', validPassword)
+      .update(`scanner_${Date.now()}`)
+      .digest('hex');
+    return res.json({ success: true, token });
+  }
+
+  return res.status(401).json({ error: 'Invalid username or password' });
+});
+
+// ─── Increment Promo Code Usage ───────────────────────────────────────────────
+// Called by PaymentStatus after successful booking if a promo code was applied
+app.post('/api/increment-promo-usage', async (req, res) => {
+  const { promoCodeId } = req.body;
+  if (!promoCodeId) return res.status(400).json({ error: 'Missing promoCodeId' });
+
+  try {
+    const { data: promo, error: fetchErr } = await supabase
+      .from('promo_codes')
+      .select('current_uses')
+      .eq('id', promoCodeId)
+      .single();
+
+    if (fetchErr || !promo) {
+      return res.status(404).json({ error: 'Promo code not found' });
+    }
+
+    const { error: updateErr } = await supabase
+      .from('promo_codes')
+      .update({ current_uses: (promo.current_uses || 0) + 1 })
+      .eq('id', promoCodeId);
+
+    if (updateErr) throw updateErr;
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Promo usage increment error:', err);
+    res.status(500).json({ error: 'Failed to update promo usage' });
   }
 });
 

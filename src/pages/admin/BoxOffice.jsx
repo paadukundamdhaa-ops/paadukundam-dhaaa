@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Ticket, CreditCard, Banknote, CheckCircle, QrCode, AlertCircle, RefreshCw } from 'lucide-react';
+import { Search, MapPin, Calendar, Clock, Ticket, CheckCircle, RefreshCw, Banknote, QrCode, CreditCard, Printer } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
@@ -13,8 +13,9 @@ export default function BoxOffice() {
   const [selectedTierId, setSelectedTierId] = useState('');
   
   const [qty, setQty] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
-  const [autoCheckin, setAutoCheckin] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState('cash'); // cash, upi, pos
+  const [autoCheckin, setAutoCheckin] = useState(false);
+  const [lastBooking, setLastBooking] = useState(null);
   
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -129,7 +130,26 @@ export default function BoxOffice() {
           icon: 'success',
           title: 'Ticket Issued!',
           text: `Booking successfully created.${customerEmail ? ' Email sent to customer.' : ''}`,
-          confirmButtonColor: '#10b981'
+          confirmButtonColor: '#10b981',
+          showCancelButton: true,
+          confirmButtonText: 'Print Receipt',
+          cancelButtonText: 'Close'
+        }).then((res) => {
+          if (res.isConfirmed) {
+            handlePrintReceipt();
+          }
+        });
+        
+        // Save last booking for print receipt
+        setLastBooking({
+          bookingRef: result.bookingRef,
+          customerName: customerName || 'Walk-in Guest',
+          eventName: selectedEvent.title,
+          tierName: selectedTier.tier_name,
+          qty,
+          totalAmount,
+          paymentMethod,
+          date: new Date().toLocaleString()
         });
         
         // Reset form
@@ -153,8 +173,56 @@ export default function BoxOffice() {
     }
   };
 
+  const handlePrintReceipt = () => {
+    window.print();
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <>
+    {/* PRINT ONLY STYLES FOR THERMAL PRINTER (80mm) */}
+    <style dangerouslySetInnerHTML={{__html: `
+      @media print {
+        body * { visibility: hidden; }
+        .thermal-receipt, .thermal-receipt * { visibility: visible; }
+        .thermal-receipt {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 80mm;
+          padding: 5mm;
+          margin: 0;
+          font-family: monospace;
+          color: black;
+          background: white;
+        }
+        @page { margin: 0; size: 80mm auto; }
+      }
+    `}} />
+
+    {/* THERMAL RECEIPT (Hidden on screen) */}
+    {lastBooking && (
+      <div className="hidden thermal-receipt flex-col text-center" style={{ display: 'none' }}>
+        <h2 className="font-bold text-lg mb-1">{lastBooking.eventName}</h2>
+        <p className="text-xs border-b border-black border-dashed pb-2 mb-2">Box Office Booking</p>
+        
+        <div className="text-left text-xs space-y-1 mb-2 border-b border-black border-dashed pb-2">
+          <p><strong>Ref:</strong> {lastBooking.bookingRef}</p>
+          <p><strong>Date:</strong> {lastBooking.date}</p>
+          <p><strong>Name:</strong> {lastBooking.customerName}</p>
+          <p><strong>Pay:</strong> {lastBooking.paymentMethod.toUpperCase()}</p>
+        </div>
+        
+        <div className="flex justify-between text-xs font-bold mb-2">
+          <span>{lastBooking.qty}x {lastBooking.tierName}</span>
+          <span>Rs. {lastBooking.totalAmount}</span>
+        </div>
+        
+        <p className="text-[10px] mt-4 italic">Thank you for your purchase!</p>
+        <p className="text-[10px] italic">Powered by Paadukundam Dhaa</p>
+      </div>
+    )}
+
+    <div className="space-y-6 max-w-4xl mx-auto print:hidden">
       <div>
         <h2 className="text-2xl font-black text-black flex items-center gap-2">
           <Ticket className="text-primary" /> Box Office
@@ -327,5 +395,6 @@ export default function BoxOffice() {
         </div>
       </div>
     </div>
+    </>
   );
 }

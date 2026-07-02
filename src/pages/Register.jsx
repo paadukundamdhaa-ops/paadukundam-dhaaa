@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { signUpWithGoogle, signUpWithEmail, user } = useAuth();
+  const { signUpWithGoogle, signInWithApple, signUpWithEmail, user } = useAuth();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -145,15 +145,24 @@ export default function Register() {
               <p className="text-gray-500 text-xs font-medium">Register for free and start your musical journey.</p>
             </div>
 
-            <button type="button" onClick={handleRegister} className="w-full flex items-center justify-center gap-3 bg-white lg:bg-transparent border-none lg:border lg:border-gray-200 hover:bg-gray-100 lg:hover:bg-gray-50 rounded-xl py-3.5 lg:py-2.5 mb-5 lg:mb-4 transition-colors font-bold text-gray-900 lg:text-gray-700 text-[14px] lg:text-sm shadow-sm lg:shadow-none">
-              <svg className="w-5 h-5 lg:w-4 lg:h-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Sign up with Google
-            </button>
+            <div className="space-y-3">
+              <button type="button" onClick={signUpWithGoogle} className="w-full flex items-center justify-center gap-3 bg-white lg:bg-transparent border-none lg:border lg:border-gray-200 hover:bg-gray-100 lg:hover:bg-gray-50 rounded-xl py-3.5 lg:py-2.5 transition-colors font-bold text-gray-900 lg:text-gray-700 text-[14px] lg:text-sm shadow-sm lg:shadow-none">
+                <svg className="w-5 h-5 lg:w-4 lg:h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+                Sign up with Google
+              </button>
+
+              <button type="button" onClick={signInWithApple} className="w-full flex items-center justify-center gap-3 bg-black text-white border-none rounded-xl py-3.5 lg:py-2.5 transition-colors font-bold text-[14px] lg:text-sm shadow-sm hover:bg-gray-900 lg:shadow-none">
+                <svg className="w-5 h-5 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16.365 21.442c-1.35.955-2.67 1.43-3.957 1.43-1.353 0-2.825-.494-4.423-1.482-1.89-1.168-3.606-3.14-5.143-5.918-1.543-2.772-2.314-5.59-2.314-8.455 0-2.695.845-4.996 2.535-6.902 1.548-1.748 3.452-2.622 5.71-2.622 1.464 0 2.946.545 4.453 1.637.28.2.51.354.685.465.176-.11.406-.265.688-.465 1.57-1.127 3.093-1.693 4.568-1.693 2.046 0 3.75.765 5.112 2.296C24 4.5 24 4.5 24 4.5c-1.928 1.155-2.892 2.766-2.892 4.832 0 1.954.767 3.52 2.302 4.694l.43.328c-.808 2.28-1.97 4.564-3.486 6.853-.943 1.41-1.93 2.71-2.96 3.9M15.484.004c.05.002.1.007.15.012.782.072 1.554.436 2.193.993.638.556 1.054 1.258 1.204 1.996.15.74.024 1.46-.358 2.046-.38.585-1.026 1.054-1.748 1.252-.05.014-.1.027-.15.038-.727-.03-1.444-.337-2.072-.828-.626-.49-1.077-1.134-1.28-1.848-.204-.712-.114-1.428.214-2.036.326-.607.893-1.115 1.583-1.414.086-.038.174-.073.264-.105v-.106z" />
+                </svg>
+                Sign up with Apple
+              </button>
+            </div>
 
             <div className="flex items-center gap-4 mb-5 lg:mb-4">
               <div className="h-[1px] bg-[#2a1618] lg:bg-gray-200 flex-1"></div>

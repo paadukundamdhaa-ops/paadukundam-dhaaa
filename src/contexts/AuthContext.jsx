@@ -51,6 +51,16 @@ export const AuthProvider = ({ children }) => {
     if (error) console.error("Error logging in with Google:", error.message);
   };
 
+  const signInWithApple = async (redirectTo = '/') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: window.location.origin + redirectTo
+      }
+    });
+    if (error) console.error("Error logging in with Apple:", error.message);
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) console.error("Error signing out:", error.message);
@@ -78,6 +88,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     signInWithGoogle,
+    signInWithApple,
     signInWithEmail,
     signUpWithEmail,
     signOut,

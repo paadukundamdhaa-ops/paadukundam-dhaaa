@@ -12,7 +12,7 @@ export default function AdminDesignerList() {
     const fetchEvents = async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('id, title, event_date, venue, city, image_url, status')
+        .select('*')
         .order('event_date', { ascending: false });
       
       if (error) {
@@ -48,7 +48,7 @@ export default function AdminDesignerList() {
             >
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 rounded-lg bg-gray-100 shrink-0 overflow-hidden">
-                  <img src={event.image_url || '/images/arijit.png'} alt="" className="w-full h-full object-cover" />
+                  <img src={event.image_url || event.img_url || '/images/arijit.png'} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-gray-900 truncate group-hover:text-purple-700 transition-colors">{event.title}</h3>

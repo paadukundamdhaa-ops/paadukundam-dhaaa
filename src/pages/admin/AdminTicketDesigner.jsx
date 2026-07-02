@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { ChevronLeft, Save, RotateCcw, Check, Plus, Trash2, Calendar, MapPin } from 'lucide-react';
+import { ChevronLeft, Save, RotateCcw, Check, Plus, Trash2, Calendar, MapPin, UploadCloud, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const DEFAULT_DESIGN = {
@@ -171,6 +171,8 @@ export default function AdminTicketDesigner() {
   const [event, setEvent] = useState(null);
   const [saving, setSaving] = useState(false);
   const [activePreset, setActivePreset] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const logoInputRef = useRef(null);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -203,13 +205,45 @@ export default function AdminTicketDesigner() {
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase.from('events').update({ ticket_design: design }).eq('id', id);
+    let finalLogoUrl = design.logoUrl;
+
+    // Upload logo if one was selected
+    if (logoFile) {
+      const fileExt = logoFile.name.split('.').pop();
+      const fileName = `ticket_logo_${id}_${Math.random()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('event-images').upload(fileName, logoFile);
+      if (uploadError) {
+        Swal.fire({ icon: 'error', title: 'Upload Failed', text: uploadError.message });
+        setSaving(false);
+        return;
+      }
+      const { data: { publicUrl } } = supabase.storage.from('event-images').getPublicUrl(fileName);
+      finalLogoUrl = publicUrl;
+    }
+
+    const designToSave = { ...design, logoUrl: finalLogoUrl };
+    const { error } = await supabase.from('events').update({ ticket_design: designToSave }).eq('id', id);
     setSaving(false);
     if (error) {
       Swal.fire({ icon: 'error', title: 'Save Failed', text: error.message, confirmButtonColor: '#e11d48' });
     } else {
+      setLogoFile(null);
+      setDesign(designToSave);
       Swal.fire({ icon: 'success', title: 'Design Saved!', text: 'All tickets for this event will now use this design.', confirmButtonColor: '#22c55e', timer: 2000, showConfirmButton: false });
     }
+  };
+
+  const handleLogoUpload = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setLogoFile(file);
+      set('logoUrl', URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setLogoFile(null);
+    set('logoUrl', '');
   };
 
   const labelClass = 'block text-[12px] font-bold text-gray-600 mb-1.5 uppercase tracking-wide';
@@ -266,8 +300,27 @@ export default function AdminTicketDesigner() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-4">
             <h3 className="text-sm font-black text-gray-800 border-b border-gray-100 pb-2">🏷️ Header Block</h3>
             <div>
-              <label className={labelClass}>Logo URL</label>
-              <input type="text" className={inputClass} value={design.logoUrl || ''} onChange={e => set('logoUrl', e.target.value)} placeholder="https://..." />
+              <label className={labelClass}>Header Logo</label>
+              <div className="flex items-center gap-3">
+                {design.logoUrl ? (
+                  <div className="relative group w-20 h-20 rounded-xl bg-gray-100 border-2 border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                    <img src={design.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                    <button onClick={handleRemoveLogo} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <X className="text-white" size={24} />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => logoInputRef.current?.click()} className="w-20 h-20 rounded-xl bg-gray-50 border-2 border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50 flex flex-col items-center justify-center text-gray-500 hover:text-purple-600 transition-colors shrink-0">
+                    <UploadCloud size={24} className="mb-1" />
+                    <span className="text-[10px] font-bold">UPLOAD</span>
+                  </button>
+                )}
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 mb-2">Upload a transparent PNG for best results on the ticket.</p>
+                  <button onClick={() => logoInputRef.current?.click()} className="text-xs font-bold text-primary hover:underline">Change Logo</button>
+                </div>
+                <input type="file" accept="image/*" className="hidden" ref={logoInputRef} onChange={handleLogoUpload} />
+              </div>
             </div>
             <div>
               <label className={labelClass}>Logo Position</label>

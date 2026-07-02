@@ -268,7 +268,7 @@ export default function AdminTicketDesigner() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => { setDesign(DEFAULT_DESIGN); setActivePreset(null); }} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-100">
+            <button onClick={() => { setDesign(DEFAULT_DESIGN); setActivePreset(null); setLogoFile(null); }} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-100">
               <RotateCcw size={15} /> Reset
             </button>
             <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-black text-white bg-primary hover:bg-red-700 shadow-md disabled:opacity-60">

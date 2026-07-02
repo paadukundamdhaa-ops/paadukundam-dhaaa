@@ -467,7 +467,6 @@ export default function StandaloneScanner() {
           <button onClick={handleLogout} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700">
             <LogOut className="w-4 h-4" />
           </button>
-        </div>
 
       {offlineMode && (
         <div className="bg-red-900/40 border-b border-red-900/50 text-red-200 text-xs py-2 text-center font-semibold">

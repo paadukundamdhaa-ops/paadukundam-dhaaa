@@ -38,6 +38,7 @@ import AdminScanner from './pages/admin/AdminScanner';
 import AdminPromoCodes from './pages/admin/AdminPromoCodes';
 import BoxOffice from './pages/admin/BoxOffice';
 import AdminTicketDesigner from './pages/admin/AdminTicketDesigner';
+import AdminDesignerList from './pages/admin/AdminDesignerList';
 import ScannerLogin from './pages/ScannerLogin';
 import StandaloneScanner from './pages/StandaloneScanner';
 
@@ -89,6 +90,7 @@ function App() {
                 <Route path="events/create" element={<CreateEvent />} />
                 <Route path="events/edit/:id" element={<EditEvent />} />
                 <Route path="events/design/:id" element={<AdminTicketDesigner />} />
+                <Route path="designer" element={<AdminDesignerList />} />
                 <Route path="tickets" element={<AdminTickets />} />
                 <Route path="bookings" element={<AdminBookings />} />
                 <Route path="gallery" element={<AdminGallery />} />

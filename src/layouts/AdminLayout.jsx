@@ -17,7 +17,8 @@ import {
   Search,
   X,
   Tag,
-  Store
+  Store,
+  Palette
 } from 'lucide-react';
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
   { name: 'Home Page CMS', path: '/admin/home-cms', icon: <Home size={20} /> },
   { name: 'Users', path: '/admin/users', icon: <Users size={20} /> },
   { name: 'Events', path: '/admin/events', icon: <Music size={20} /> },
+  { name: 'Ticket Designer', path: '/admin/designer', icon: <Palette size={20} /> },
   { name: 'Tickets', path: '/admin/tickets', icon: <Ticket size={20} /> },
   { name: 'Bookings', path: '/admin/bookings', icon: <ShoppingBag size={20} /> },
   { name: 'Scanner', path: '/admin/scanner', icon: <Search size={20} /> },

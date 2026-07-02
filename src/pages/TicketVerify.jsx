@@ -18,16 +18,43 @@ export default function TicketVerify() {
   useEffect(() => {
     const fetchBooking = async () => {
       try {
-        const searchRef = bookingRef.startsWith('#') ? bookingRef : `#${bookingRef}`;
+        let bookings = [];
         
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*, events(*), profiles(*), ticket_tiers(*)')
-          .eq('booking_ref', searchRef)
-          .single();
+        if (bookingRef.startsWith('tx_')) {
+          const intentId = bookingRef.substring(3);
+          const { data, error } = await supabase
+            .from('bookings')
+            .select('*, events(*), profiles(*), ticket_tiers(*)')
+            .eq('payment_intent_id', intentId);
+          if (error) throw error;
+          bookings = data || [];
+        } else {
+          const searchRef = bookingRef.startsWith('#') ? bookingRef : `#${bookingRef}`;
+          const { data, error } = await supabase
+            .from('bookings')
+            .select('*, events(*), profiles(*), ticket_tiers(*)')
+            .eq('booking_ref', searchRef);
+          if (error) throw error;
+          bookings = data || [];
+        }
 
-        if (error) throw error;
-        setBooking(data);
+        if (bookings.length === 0) {
+          throw new Error("No tickets found");
+        }
+
+        const firstBooking = bookings[0];
+        
+        const combinedBooking = {
+          ...firstBooking,
+          qty: bookings.reduce((sum, b) => sum + (b.qty || 1), 0),
+          booking_ref: bookingRef, // Keep original url param
+          tiers: bookings.map(b => ({
+            name: b.ticket_tiers?.tier_name || 'General Admission',
+            qty: b.qty || 1
+          }))
+        };
+        
+        setBooking(combinedBooking);
       } catch (err) {
         console.error("Error fetching ticket:", err);
         setError("Invalid or Not Found. This ticket does not exist.");
@@ -198,7 +225,9 @@ export default function TicketVerify() {
           <div className="flex-1 flex flex-col items-end text-right">
             <h3 className="text-[#cc0000] font-black tracking-[0.2em] text-[11px] mb-1.5">ENTRY PASS</h3>
             <h4 className="text-xl font-black text-black leading-tight mb-1 uppercase text-right" style={{ wordBreak: 'break-word' }}>
-              {tierName}
+              {booking.tiers?.map((t, idx) => (
+                <div key={idx}>{t.qty}x {t.name}</div>
+              ))}
             </h4>
             <p className="text-gray-500 font-medium text-[13px] mb-4">{booking.qty} Ticket(s)</p>
 

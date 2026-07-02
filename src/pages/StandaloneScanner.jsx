@@ -161,20 +161,35 @@ export default function StandaloneScanner() {
 
   const verifyTicket = async (ticketUrl) => {
     try {
-      let bookingRef = ticketUrl;
+      let cleanRef = ticketUrl;
       if (ticketUrl.includes('/ticket/')) {
-        bookingRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
+        cleanRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
       }
-      const cleanRef = bookingRef.startsWith('#') ? bookingRef.substring(1) : bookingRef;
-      const searchRefWithHash = `#${cleanRef}`;
+      
+      let searchTx = null;
+      if (cleanRef.startsWith('tx_')) {
+        searchTx = cleanRef.substring(3);
+      } else {
+        cleanRef = cleanRef.startsWith('#') ? cleanRef.substring(1) : cleanRef;
+      }
 
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*, events(*), profiles(*)')
-        .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`)
-        .single();
+      let bookings = [];
+      if (searchTx) {
+        const { data } = await supabase
+          .from('bookings')
+          .select('*, events(*), profiles(*), ticket_tiers(*)')
+          .eq('payment_intent_id', searchTx);
+        bookings = data || [];
+      } else {
+        const searchRefWithHash = `#${cleanRef}`;
+        const { data } = await supabase
+          .from('bookings')
+          .select('*, events(*), profiles(*), ticket_tiers(*)')
+          .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`);
+        bookings = data || [];
+      }
 
-      if (error || !data) {
+      if (bookings.length === 0) {
         playSound('error');
         setScanResult({
           status: 'invalid',
@@ -183,6 +198,17 @@ export default function StandaloneScanner() {
         });
         return;
       }
+
+      const firstBooking = bookings[0];
+      const data = {
+        ids: searchTx ? bookings.map(b => b.id) : [firstBooking.id],
+        event_id: firstBooking.event_id,
+        events: firstBooking.events,
+        profiles: firstBooking.profiles,
+        booking_ref: searchTx ? `tx_${searchTx}` : firstBooking.booking_ref,
+        qty: bookings.reduce((sum, b) => sum + (b.qty || 1), 0),
+        checked_in_qty: bookings.reduce((sum, b) => sum + (b.checked_in_qty || 0), 0)
+      };
 
       if (data.event_id !== selectedEventId) {
         playSound('error');
@@ -194,8 +220,7 @@ export default function StandaloneScanner() {
         return;
       }
 
-      const checkedInQty = data.checked_in_qty || 0;
-      if (checkedInQty >= data.qty) {
+      if (data.checked_in_qty >= data.qty) {
         playSound('error');
         setScanResult({
           status: 'already_scanned',
@@ -221,13 +246,30 @@ export default function StandaloneScanner() {
     if (!scanResult || !scanResult.data) return;
     
     try {
-      const { data: rpcData, error } = await supabase.rpc('scan_ticket', {
-        p_booking_id: scanResult.data.id,
-        p_qty: partialQty,
-        p_status: status
-      });
-
-      if (error) throw error;
+      // Loop through all bookings in the group and check them in
+      let remainingQtyToScan = partialQty;
+      
+      for (const bId of scanResult.data.ids) {
+        if (remainingQtyToScan <= 0) break;
+        
+        // Fetch the current booking to know its individual qty and checked_in_qty
+        const { data: bData } = await supabase.from('bookings').select('qty, checked_in_qty').eq('id', bId).single();
+        if (!bData) continue;
+        
+        const availableInBooking = (bData.qty || 1) - (bData.checked_in_qty || 0);
+        if (availableInBooking <= 0) continue;
+        
+        const qtyToApply = Math.min(availableInBooking, remainingQtyToScan);
+        
+        const { error } = await supabase.rpc('scan_ticket', {
+          p_booking_id: bId,
+          p_qty: qtyToApply,
+          p_status: status
+        });
+        
+        if (error) throw error;
+        remainingQtyToScan -= qtyToApply;
+      }
 
       // Add to recent scans
       setRecentScans(prev => [

@@ -94,23 +94,37 @@ export default function AdminScanner() {
 
     try {
       // 1. Extract the booking ID from the URL
-      let bookingRef = decodedText;
+      let cleanRef = decodedText;
       if (decodedText.includes('/ticket/')) {
-        bookingRef = decodedText.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
+        cleanRef = decodedText.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
       }
       
-      const cleanRef = bookingRef.startsWith('#') ? bookingRef.substring(1) : bookingRef;
-      const searchRefWithHash = `#${cleanRef}`;
+      let searchTx = null;
+      if (cleanRef.startsWith('tx_')) {
+        searchTx = cleanRef.substring(3);
+      } else {
+        cleanRef = cleanRef.startsWith('#') ? cleanRef.substring(1) : cleanRef;
+      }
 
-      // 2. Query Supabase for both formats (Online tickets have #, Box Office do not)
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .select('*, events(*), profiles(*)')
-        .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`)
-        .single();
+      // 2. Query Supabase
+      let bookings = [];
+      if (searchTx) {
+        const { data } = await supabase
+          .from('bookings')
+          .select('*, events(*), profiles(*), ticket_tiers(*)')
+          .eq('payment_intent_id', searchTx);
+        bookings = data || [];
+      } else {
+        const searchRefWithHash = `#${cleanRef}`;
+        const { data } = await supabase
+          .from('bookings')
+          .select('*, events(*), profiles(*), ticket_tiers(*)')
+          .or(`booking_ref.eq.${cleanRef},booking_ref.eq.${searchRefWithHash}`);
+        bookings = data || [];
+      }
 
       // CHECK 1: FAKE TICKET (Not found)
-      if (error || !booking) {
+      if (bookings.length === 0) {
         setScanResult({ 
           status: 'error', 
           type: 'fake', 
@@ -120,24 +134,43 @@ export default function AdminScanner() {
         return;
       }
 
+      const firstBooking = bookings[0];
+      const allCheckedIn = bookings.every(b => b.check_in_status === 'checked_in');
+      
+      const combinedBooking = {
+         id: searchTx ? bookings.map(b => b.id) : firstBooking.id,
+         event_id: firstBooking.event_id,
+         events: firstBooking.events,
+         profiles: firstBooking.profiles,
+         check_in_status: allCheckedIn ? 'checked_in' : 'allowed',
+         checked_in_at: firstBooking.checked_in_at,
+         booking_ref: searchTx ? `tx_${searchTx}` : firstBooking.booking_ref,
+         qty: bookings.reduce((sum, b) => sum + (b.qty || 1), 0),
+         ticket_tiers: { 
+           tier_name: searchTx 
+             ? bookings.map(b => `${b.qty || 1}x ${b.ticket_tiers?.tier_name || 'General'}`).join(', ') 
+             : (firstBooking.ticket_tiers?.tier_name || 'General')
+         }
+      };
+
       // CHECK 2: WRONG EVENT
-      if (booking.event_id !== selectedEventId) {
+      if (combinedBooking.event_id !== selectedEventId) {
         setScanResult({ 
           status: 'error', 
           type: 'wrong_event', 
-          message: `INVALID EVENT! This ticket is for ${booking.events?.title}.`,
-          booking: booking
+          message: `INVALID EVENT! This ticket is for ${combinedBooking.events?.title}.`,
+          booking: combinedBooking
         });
         return;
       }
 
       // CHECK 3: ALREADY USED
-      if (booking.check_in_status === 'checked_in') {
+      if (combinedBooking.check_in_status === 'checked_in') {
         setScanResult({ 
           status: 'error', 
           type: 'used', 
-          message: `ALREADY USED! Scanned at ${new Date(booking.checked_in_at).toLocaleTimeString()}`,
-          booking: booking
+          message: `ALREADY USED! Scanned at ${combinedBooking.checked_in_at ? new Date(combinedBooking.checked_in_at).toLocaleTimeString() : 'unknown time'}`,
+          booking: combinedBooking
         });
         return;
       }
@@ -145,7 +178,7 @@ export default function AdminScanner() {
       // CHECK 4: VALID!
       setScanResult({ 
         status: 'success', 
-        booking: booking 
+        booking: combinedBooking 
       });
 
     } catch (err) {
@@ -154,14 +187,16 @@ export default function AdminScanner() {
     }
   };
 
-  const handleAllow = async (bookingId) => {
+  const handleAllow = async (bookingIdOrIds) => {
+    const ids = Array.isArray(bookingIdOrIds) ? bookingIdOrIds : [bookingIdOrIds];
+    
     const { error } = await supabase
       .from('bookings')
       .update({ 
         check_in_status: 'checked_in', 
         checked_in_at: new Date().toISOString() 
       })
-      .eq('id', bookingId);
+      .in('id', ids);
 
     if (error) {
       Swal.fire({
@@ -178,11 +213,13 @@ export default function AdminScanner() {
     }
   };
 
-  const handleDeny = async (bookingId) => {
+  const handleDeny = async (bookingIdOrIds) => {
+    const ids = Array.isArray(bookingIdOrIds) ? bookingIdOrIds : [bookingIdOrIds];
+    
     const { error } = await supabase
       .from('bookings')
       .update({ check_in_status: 'denied' })
-      .eq('id', bookingId);
+      .in('id', ids);
       
     if (error) {
       Swal.fire({

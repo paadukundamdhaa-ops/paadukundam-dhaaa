@@ -1,4 +1,4 @@
-import { Ticket, User, Heart, Settings, LogOut, Download, MapPin, Calendar, Clock, Loader2, CheckCircle, XCircle, Share2 } from 'lucide-react';
+import { Ticket, User, Heart, Settings, LogOut, Download, MapPin, Calendar, Clock, Loader2, CheckCircle, XCircle, Share2, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useState } from 'react';
@@ -51,7 +51,37 @@ export default function Dashboard() {
           .order('created_at', { ascending: false });
 
         if (bookingsError) throw bookingsError;
-        setBookings(bookingsData || []);
+        
+        // Group bookings by transaction
+        const grouped = {};
+        (bookingsData || []).forEach(b => {
+           const key = b.payment_intent_id || b.id;
+           if (!grouped[key]) {
+               grouped[key] = {
+                   id: key,
+                   payment_intent_id: b.payment_intent_id,
+                   events: b.events,
+                   created_at: b.created_at,
+                   status: b.status,
+                   total_amount: 0,
+                   total_qty: 0,
+                   booking_ref: b.booking_ref, // fallback for single-ticket
+                   tiers: []
+               };
+           }
+           grouped[key].total_amount += b.total_amount || 0;
+           grouped[key].total_qty += b.qty || 1;
+           grouped[key].total_base_price = (grouped[key].total_base_price || 0) + ((b.ticket_tiers?.price || 0) * (b.qty || 1));
+           grouped[key].total_platform_fee = (grouped[key].total_platform_fee || 0) + (15 * (b.qty || 1));
+           
+           grouped[key].tiers.push({
+               name: b.ticket_tiers?.tier_name || 'Ticket',
+               qty: b.qty || 1,
+               status: b.status
+           });
+        });
+        const groupedBookings = Object.values(grouped).sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        setBookings(groupedBookings);
 
         // Fetch Profile
         const { data: profileData, error: profileError } = await supabase
@@ -232,7 +262,7 @@ export default function Dashboard() {
                   const eventDate = new Date(event.event_date || booking.created_at).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
                   const eventTime = event.event_time ? event.event_time.substring(0, 5) : 'TBA';
                   const isDownloading = downloading === booking.id;
-                  const cleanRef = booking.booking_ref.replace('#', '');
+                  const cleanRef = booking.payment_intent_id ? `tx_${booking.payment_intent_id}` : booking.booking_ref.replace('#', '');
                   const baseUrl = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
                   const qrValue = `${baseUrl}/ticket/${cleanRef}`;
                   
@@ -290,11 +320,19 @@ export default function Dashboard() {
                           {/* Ticket Details */}
                           <div className="text-right flex flex-col justify-center w-full pl-4 overflow-hidden">
                             <p className="text-primary font-black text-xs uppercase tracking-[0.2em] mb-1">Entry Pass</p>
-                            <h4 className="text-base md:text-lg font-black text-black leading-tight mb-1 tracking-tight uppercase break-words" title={booking.ticket_tiers?.tier_name || 'GENERAL'}>{booking.ticket_tiers?.tier_name || 'GENERAL'}</h4>
-                            <p className="text-gray-500 text-sm font-medium mb-4">{booking.qty} Ticket(s)</p>
+                            <div className="mb-2">
+                              {booking.tiers.map((t, idx) => (
+                                <h4 key={idx} className="text-sm md:text-base font-black text-black leading-tight tracking-tight uppercase break-words" title={t.name}>
+                                  {t.qty}x {t.name}
+                                </h4>
+                              ))}
+                            </div>
+                            <p className="text-gray-500 text-sm font-medium mb-4">{booking.total_qty} Ticket(s) Total</p>
                             <div className="inline-block bg-gray-50 py-2 px-3 rounded-xl border border-gray-200 ml-auto text-center">
-                              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">Booking ID</p>
-                              <p className="text-sm font-black text-black tracking-wider">{booking.booking_ref}</p>
+                              <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">Ref ID</p>
+                              <p className="text-sm font-black text-black tracking-wider truncate w-24" title={booking.payment_intent_id || booking.booking_ref}>
+                                {booking.payment_intent_id ? booking.payment_intent_id.substring(0, 8) + '...' : booking.booking_ref}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -344,17 +382,17 @@ export default function Dashboard() {
                           {expandedBookings[booking.id] && (
                             <div className="mb-4 animate-in slide-in-from-top-2 fade-in duration-200">
                               <div className="flex justify-between items-center px-8 mb-2">
-                                <span className="text-[12px] text-gray-500">Ticket Cost ({booking.qty}x)</span>
-                                <span className="text-[12px] font-bold text-gray-700">₹{(booking.ticket_tiers?.price * booking.qty) || booking.total_amount}</span>
+                                <span className="text-[12px] text-gray-500">Tickets ({booking.total_qty}x)</span>
+                                <span className="text-[12px] font-bold text-gray-700">₹{booking.total_base_price}</span>
                               </div>
                               <div className="flex justify-between items-center px-8 mb-2">
-                                <span className="text-[12px] text-gray-500">Platform Fee (₹15 x {booking.qty})</span>
-                                <span className="text-[12px] font-bold text-gray-700">₹{15 * booking.qty}</span>
+                                <span className="text-[12px] text-gray-500">Platform Fee (₹15 x {booking.total_qty})</span>
+                                <span className="text-[12px] font-bold text-gray-700">₹{booking.total_platform_fee}</span>
                               </div>
-                              {((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) > booking.total_amount && (
+                              {(booking.total_base_price + booking.total_platform_fee) > booking.total_amount && (
                                 <div className="flex justify-between items-center px-8 mb-3">
-                                  <span className="text-[12px] text-green-600 font-bold">Discount</span>
-                                  <span className="text-[12px] font-bold text-green-600">-₹{((booking.ticket_tiers?.price * booking.qty) + (15 * booking.qty)) - booking.total_amount}</span>
+                                  <span className="text-[12px] text-green-600 font-bold flex items-center"><Tag size={12} className="mr-1"/> Promo Discount</span>
+                                  <span className="text-[12px] font-bold text-green-600">- ₹{(booking.total_base_price + booking.total_platform_fee) - booking.total_amount}</span>
                                 </div>
                               )}
                             </div>
@@ -362,7 +400,7 @@ export default function Dashboard() {
                           <div className={`flex justify-between items-center px-8 ${expandedBookings[booking.id] ? 'pt-3 border-t border-gray-200 mt-1' : ''}`}>
                             <span className="font-bold text-[14px] text-black">Total Paid</span>
                             <div className="flex items-center gap-3">
-                              <span className="font-black text-lg text-black">₹{booking.total_amount.toLocaleString()}</span>
+                              <div className="text-black font-black text-xl">₹{booking.total_amount.toLocaleString()}</div>
                               <button 
                                 onClick={() => toggleBreakdown(booking.id)}
                                 className="text-[10px] bg-gray-200 hover:bg-gray-300 text-gray-600 font-bold px-2 py-1 rounded transition-colors uppercase tracking-wider"

@@ -901,6 +901,9 @@ export default function EditEvent() {
             <button className="text-red-500 font-bold text-sm hover:underline flex items-center gap-1"><Trash2 size={16} /> Discard Event</button>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={() => navigate(`/admin/events/design/${id}`)} className="px-6 py-2.5 rounded-lg font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors flex items-center gap-2 text-sm border border-purple-200">
+              🎨 Ticket Design
+            </button>
             <button onClick={() => handlePublish(true)} disabled={isPublishing} className="px-6 py-2.5 rounded-lg font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm border border-transparent disabled:opacity-50">
               <Save size={18} /> {isPublishing ? 'Saving...' : 'Save Draft'}
             </button>

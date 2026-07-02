@@ -145,12 +145,48 @@ export default function TicketVerify() {
 
   const event = booking.events;
   const profile = booking.profiles;
+
+  // Read ticket design config (falls back to defaults)
+  const d = {
+    accentColor: '#cc0000',
+    bgColor: '#ffffff',
+    entryPassLabel: 'ENTRY PASS',
+    badgeText: 'ACTIVE',
+    badgeColor: '#cc0000',
+    headerTagline: '',
+    showVenue: true,
+    showDate: true,
+    showTime: true,
+    showBadge: true,
+    showBookingId: true,
+    showTiers: true,
+    qrPosition: 'left',
+    dividerStyle: 'dashed',
+    footerEnabled: false,
+    footerText: '',
+    customFields: [],
+    borderRadius: '2rem',
+    logoUrl: '',
+    logoPosition: 'center',
+    ...(event?.ticket_design || {})
+  };
+
+  const isLightColor = (hex) => {
+    try {
+      const rgb = parseInt((hex || '#ffffff').replace('#', ''), 16);
+      const r = (rgb >> 16) & 0xff, g = (rgb >> 8) & 0xff, b = rgb & 0xff;
+      return 0.299 * r + 0.587 * g + 0.114 * b > 128;
+    } catch { return true; }
+  };
+  const textOnBg = isLightColor(d.bgColor) ? '#000000' : '#ffffff';
+  const textOnBgMuted = isLightColor(d.bgColor) ? '#6b7280' : '#9ca3af';
+
+  const dividerClass = { dashed: 'border-dashed', solid: 'border-solid', dotted: 'border-dotted', none: 'border-none' }[d.dividerStyle] || 'border-dashed';
   
   // Format Date and Time
   const eventDateObj = new Date(event.event_date || booking.created_at);
   const formattedDate = eventDateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const formattedTime = event.event_time?.substring(0, 5) || '18:00';
-  const tierName = booking.ticket_tiers?.tier_name || 'GENERAL ADMISSION';
   const baseUrl = import.meta.env.VITE_PUBLIC_BASE_URL || window.location.origin;
   const ticketUrl = `${baseUrl}/ticket/${bookingRef.replace('#', '')}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
@@ -175,11 +211,19 @@ export default function TicketVerify() {
       )}
       
       {/* --- ACTUAL TICKET TO CAPTURE --- */}
-      <div className="max-w-[400px] w-full bg-white rounded-[2rem] overflow-hidden relative shadow-[0_20px_50px_rgba(0,0,0,0.1)]" ref={ticketRef}>
-        
+      <div
+        className="max-w-[400px] w-full overflow-hidden relative shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
+        ref={ticketRef}
+        style={{ backgroundColor: d.bgColor, borderRadius: d.borderRadius }}
+      >
         {/* Logo Section */}
-        <div className="pt-8 pb-6 flex justify-center bg-white">
-          <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-14 object-contain" crossOrigin="anonymous" />
+        <div className="pt-8 pb-6 px-6 flex flex-col" style={{ alignItems: d.logoPosition === 'left' ? 'flex-start' : d.logoPosition === 'right' ? 'flex-end' : 'center', backgroundColor: d.bgColor }}>
+          {d.logoUrl ? (
+            <img src={d.logoUrl} alt="Logo" className="h-14 object-contain" crossOrigin="anonymous" onError={e => e.target.style.display = 'none'} />
+          ) : (
+            <img src="/images/LOGO __ Option 02.png" alt="PaadukundamDhaa Logo" className="h-14 object-contain" crossOrigin="anonymous" />
+          )}
+          {d.headerTagline && <p className="text-[11px] mt-1 font-medium" style={{ color: textOnBgMuted }}>{d.headerTagline}</p>}
         </div>
 
         {/* Event Image Section */}
@@ -187,35 +231,43 @@ export default function TicketVerify() {
           {event.image_url && (
             <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" crossOrigin="anonymous" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           <div className="absolute bottom-5 left-6 right-6 text-left">
-            <div className="inline-block bg-[#cc0000] text-white text-[11px] font-black px-2.5 py-1 rounded-md mb-2 tracking-wider">
-              ACTIVE
-            </div>
-            <h2 className="text-2xl md:text-[26px] font-black text-white mb-2.5 leading-tight">{event.title}</h2>
-            
-            <div className="flex items-center text-gray-200 text-[13px] font-medium mb-1.5 gap-2">
-              <Calendar size={14} className="text-[#cc0000]" />
-              <span>{formattedDate} | {formattedTime}</span>
-            </div>
-            
-            <div className="flex items-start text-gray-200 text-[13px] font-medium gap-2">
-              <MapPin size={14} className="text-[#cc0000] shrink-0 mt-0.5" />
-              <span className="line-clamp-1">{event.venue}, {event.city}</span>
-            </div>
+            {d.showBadge && d.badgeText && (
+              <div className="inline-block text-white text-[11px] font-black px-2.5 py-1 rounded-md mb-2 tracking-wider" style={{ backgroundColor: d.badgeColor }}>
+                {d.badgeText}
+              </div>
+            )}
+            <h2 className="text-2xl font-black text-white mb-2.5 leading-tight">{event.title}</h2>
+            {d.showDate && (
+              <div className="flex items-center text-gray-200 text-[13px] font-medium mb-1.5 gap-2">
+                <Calendar size={14} style={{ color: d.accentColor }} />
+                <span>{formattedDate}{d.showTime ? ` | ${formattedTime}` : ''}</span>
+              </div>
+            )}
+            {d.showVenue && (
+              <div className="flex items-start text-gray-200 text-[13px] font-medium gap-2">
+                <MapPin size={14} style={{ color: d.accentColor }} className="shrink-0 mt-0.5" />
+                <span className="line-clamp-1">{event.venue}, {event.city}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Divider with Cutouts */}
-        <div className="relative flex items-center bg-white h-10">
-          <div className="absolute -left-5 w-10 h-10 bg-gray-100 rounded-full shadow-inner border-r border-gray-100"></div>
-          <div className="w-full border-t-2 border-dashed border-gray-300 mx-8"></div>
-          <div className="absolute -right-5 w-10 h-10 bg-gray-100 rounded-full shadow-inner border-l border-gray-100"></div>
-        </div>
+        {/* Divider */}
+        {d.dividerStyle !== 'none' && (
+          <div className="relative flex items-center h-10" style={{ backgroundColor: d.bgColor }}>
+            <div className="absolute -left-5 w-10 h-10 bg-gray-100 rounded-full shadow-inner border-r border-gray-100" />
+            <div className={`w-full border-t-2 ${dividerClass} border-gray-300 mx-8`} />
+            <div className="absolute -right-5 w-10 h-10 bg-gray-100 rounded-full shadow-inner border-l border-gray-100" />
+          </div>
+        )}
 
-        {/* Bottom Section */}
-        <div className="px-6 pb-8 bg-white flex items-center justify-between gap-5">
+        {/* Bottom Stub */}
+        <div
+          className="px-6 pb-8 flex items-center gap-5"
+          style={{ backgroundColor: d.bgColor, flexDirection: d.qrPosition === 'right' ? 'row-reverse' : 'row' }}
+        >
           {/* QR Code */}
           <div className="w-[120px] h-[120px] shrink-0 border-2 border-gray-100 rounded-2xl p-2.5 shadow-sm bg-white flex items-center justify-center">
             <img src={qrCodeUrl} alt="QR Code" className="w-full h-full" crossOrigin="anonymous" />
@@ -223,20 +275,35 @@ export default function TicketVerify() {
 
           {/* Ticket Info */}
           <div className="flex-1 flex flex-col items-end text-right">
-            <h3 className="text-[#cc0000] font-black tracking-[0.2em] text-[11px] mb-1.5">ENTRY PASS</h3>
-            <h4 className="text-xl font-black text-black leading-tight mb-1 uppercase text-right" style={{ wordBreak: 'break-word' }}>
-              {booking.tiers?.map((t, idx) => (
-                <div key={idx}>{t.qty}x {t.name}</div>
-              ))}
-            </h4>
-            <p className="text-gray-500 font-medium text-[13px] mb-4">{booking.qty} Ticket(s)</p>
+            <h3 className="font-black tracking-[0.2em] text-[11px] mb-1.5" style={{ color: d.accentColor }}>{d.entryPassLabel}</h3>
+            {d.showTiers && booking.tiers?.map((t, idx) => (
+              <div key={idx} className="text-xl font-black uppercase leading-tight" style={{ color: textOnBg, wordBreak: 'break-word' }}>{t.qty}x {t.name}</div>
+            ))}
+            <p className="font-medium text-[13px] mb-3" style={{ color: textOnBgMuted }}>{booking.qty} Ticket(s)</p>
 
-            <div className="border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 w-full shadow-sm">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 text-center">Booking ID</p>
-              <p className="text-lg font-black text-black text-center leading-none">{booking.booking_ref}</p>
-            </div>
+            {/* Custom Fields */}
+            {(d.customFields || []).map((f, i) => f.label && f.value ? (
+              <p key={i} className="text-[11px] mb-1" style={{ color: textOnBgMuted }}>
+                <span className="font-bold">{f.label}:</span> {f.value}
+              </p>
+            ) : null)}
+
+            {/* Booking ID */}
+            {d.showBookingId && (
+              <div className="border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 w-full shadow-sm mt-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 text-center">Booking ID</p>
+                <p className="text-lg font-black text-black text-center leading-none">{booking.booking_ref}</p>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Footer */}
+        {d.footerEnabled && d.footerText && (
+          <div className="px-6 py-4 border-t border-gray-200 text-center" style={{ backgroundColor: d.bgColor }}>
+            <p className="text-[11px] whitespace-pre-line" style={{ color: textOnBgMuted }}>{d.footerText}</p>
+          </div>
+        )}
       </div>
 
       {/* Buttons (Outside the ticket image) */}

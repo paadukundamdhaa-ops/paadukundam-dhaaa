@@ -278,6 +278,7 @@ export default function AdminEvents() {
                       <p className="text-xs text-primary font-bold uppercase">{event.category}</p>
                     </div>
                     <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => navigate('/admin/events/design/' + event.id)} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded" title="Design Ticket"><Tag size={16}/></button>
                       <button onClick={() => navigate('/admin/events/edit/' + event.id)} className="p-1.5 text-gray-400 hover:text-primary hover:bg-red-50 rounded" title="Edit"><Edit size={16}/></button>
                       <button onClick={() => handleDelete(event.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded" title="Delete"><Trash2 size={16}/></button>
                     </div>

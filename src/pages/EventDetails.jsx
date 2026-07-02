@@ -441,6 +441,38 @@ export default function EventDetails() {
         {/* Right Column - Ticket Selection */}
         <div className="lg:col-span-5 relative mb-8 lg:mb-0">
           <div className="lg:sticky lg:top-24 border border-gray-100 rounded-3xl p-6 shadow-xl shadow-gray-200/50 bg-white">
+            
+            {/* Visual Seat Map */}
+            <h3 className="font-black text-xl text-black mb-4 border-b border-gray-100 pb-4">Seat Map</h3>
+            <div className="bg-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center mb-6 relative">
+              <div className="w-48 h-8 bg-black rounded-b-xl flex items-center justify-center text-white text-xs font-black tracking-widest uppercase mb-6 shadow-lg shadow-black/20">
+                Stage
+              </div>
+              <div className="flex flex-col gap-2 w-full max-w-[300px]">
+                {/* Dynamically render blocks for each ticket tier as a "section" */}
+                {event.tickets.map((ticket, index) => {
+                  const isAvailable = ticket.available && ticket.availableCount > 0;
+                  const colors = ['bg-primary/20 border-primary text-primary', 'bg-blue-500/20 border-blue-500 text-blue-600', 'bg-emerald-500/20 border-emerald-500 text-emerald-600', 'bg-purple-500/20 border-purple-500 text-purple-600'];
+                  const colorClass = isAvailable ? colors[index % colors.length] : 'bg-gray-200 border-gray-300 text-gray-500';
+                  
+                  return (
+                    <div 
+                      key={ticket.id} 
+                      className={`w-full py-4 rounded-xl border-2 flex flex-col items-center justify-center ${colorClass} transition-all cursor-pointer`}
+                      onClick={() => {
+                        if (isAvailable) handleTicketChange(ticket.id, 1);
+                      }}
+                    >
+                      <span className="font-bold text-sm">{ticket.name}</span>
+                      <span className="text-[10px] uppercase tracking-widest font-black mt-1">
+                        {isAvailable ? `${ticket.availableCount} Left` : 'Sold Out'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <h3 className="font-black text-xl text-black mb-4 border-b border-gray-100 pb-4">Select Tickets</h3>
 
             <div className="space-y-4 mb-6 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">

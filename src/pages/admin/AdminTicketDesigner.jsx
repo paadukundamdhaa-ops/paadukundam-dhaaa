@@ -21,6 +21,9 @@ const DEFAULT_DESIGN = {
   dividerStyle: 'dashed',
   footerEnabled: false,
   footerText: '',
+  footerSponsors: [],
+  footerSponsorsBg: 'transparent',
+  footerSponsorsTitle: 'POWERED BY',
   customFields: [],
   borderRadius: '2rem',
   logoUrl: '',
@@ -155,9 +158,46 @@ function LiveTicketPreview({ design, event }) {
       </div>
 
       {/* Footer */}
-      {design.footerEnabled && design.footerText && (
-        <div className="px-5 py-4 border-t border-gray-200 text-center" style={{ backgroundColor: design.bgColor }}>
-          <p className="text-[11px] whitespace-pre-line" style={{ color: textOnBgMuted }}>{design.footerText}</p>
+      {design.footerEnabled && (
+        <div className="border-t border-gray-200" style={{ backgroundColor: design.bgColor }}>
+          {design.footerText && (
+            <div className="px-5 pt-4 pb-3 text-center">
+              <p className="text-[11px] whitespace-pre-line" style={{ color: textOnBgMuted }}>{design.footerText}</p>
+            </div>
+          )}
+          {design.footerSponsors && design.footerSponsors.length > 0 && (
+            <div 
+              className="px-5 py-4 flex flex-col items-center gap-3 transition-all"
+              style={{ 
+                backgroundColor: design.footerSponsorsBg || 'transparent',
+                borderTop: design.footerText ? '1px solid rgba(0,0,0,0.05)' : 'none'
+              }}
+            >
+              {design.footerSponsorsTitle && (
+                <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1 text-center" style={{ color: textOnBgMuted }}>
+                  {design.footerSponsorsTitle}
+                </p>
+              )}
+              <div className="flex flex-wrap justify-center items-center gap-5 w-full">
+                {design.footerSponsors.map((s, idx) => (
+                  <div key={s.id || idx} className="flex flex-col items-center justify-center text-center max-w-[100px]">
+                    {s.logoUrl ? (
+                      <img src={s.logoUrl} alt={s.name || ''} className="h-10 object-contain" onError={e => e.target.style.display = 'none'} />
+                    ) : (
+                      <div className="h-10 w-20 bg-gray-100 border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-[9px] text-gray-400">
+                        LOGO
+                      </div>
+                    )}
+                    {s.name && (
+                      <span className="text-[9px] mt-1.5 font-bold truncate w-full" style={{ color: textOnBgMuted }}>
+                        {s.name}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -201,6 +241,69 @@ export default function AdminTicketDesigner() {
   const removeCustomField = (i) => {
     const fields = [...(design.customFields || [])]; fields.splice(i, 1);
     setDesign(prev => ({ ...prev, customFields: fields }));
+  };
+
+  const addSponsor = () => {
+    setDesign(prev => ({
+      ...prev,
+      footerSponsors: [...(prev.footerSponsors || []), { id: Date.now(), name: '', logoUrl: '' }]
+    }));
+  };
+
+  const updateSponsor = (sponsorId, key, val) => {
+    setDesign(prev => {
+      const sponsors = (prev.footerSponsors || []).map(s => {
+        if (s.id === sponsorId) return { ...s, [key]: val };
+        return s;
+      });
+      return { ...prev, footerSponsors: sponsors };
+    });
+  };
+
+  const removeSponsor = (sponsorId) => {
+    setDesign(prev => {
+      const sponsors = (prev.footerSponsors || []).filter(s => s.id !== sponsorId);
+      return { ...prev, footerSponsors: sponsors };
+    });
+  };
+
+  const handleSponsorLogoUpload = async (e, sponsorId) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `sponsor_${id}_${sponsorId}_${Math.random().toString(36).substr(2, 5)}.${fileExt}`;
+      
+      Swal.fire({
+        title: 'Uploading...',
+        html: 'Uploading sponsor logo, please wait...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      try {
+        const { error: uploadError } = await supabase.storage.from('event-images').upload(fileName, file);
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage.from('event-images').getPublicUrl(fileName);
+        
+        updateSponsor(sponsorId, 'logoUrl', publicUrl);
+        Swal.fire({
+          icon: 'success',
+          title: 'Uploaded!',
+          timer: 1000,
+          showConfirmButton: false
+        });
+      } catch (err) {
+        console.error('Sponsor logo upload error:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Upload Failed',
+          text: err.message
+        });
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -453,10 +556,113 @@ export default function AdminTicketDesigner() {
               </button>
             </div>
             {design.footerEnabled && (
-              <div>
-                <label className={labelClass}>Footer Text (each line = one rule)</label>
-                <textarea rows={4} className={inputClass + ' resize-none'} value={design.footerText || ''} onChange={e => set('footerText', e.target.value)}
-                  placeholder={'• No re-entry after exit\n• Valid ID required\n• Gates open at 5:30 PM'} />
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Footer Text (each line = one rule)</label>
+                  <textarea rows={3} className={inputClass + ' resize-none'} value={design.footerText || ''} onChange={e => set('footerText', e.target.value)}
+                    placeholder={'• No re-entry after exit\n• Valid ID required\n• Gates open at 5:30 PM'} />
+                </div>
+
+                {/* Sponsors / Powered By Logos */}
+                <div className="border-t border-gray-100 pt-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className={labelClass + ' mb-0'}>Powered By / Sponsors Logos</label>
+                    <button onClick={addSponsor} className="flex items-center gap-1 text-xs font-bold text-primary hover:underline">
+                      <Plus size={13} /> Add Logo/Name
+                    </button>
+                  </div>
+
+                  {/* Sponsors Section Background Color Picker */}
+                  <div className="mb-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100 flex items-center justify-between gap-4">
+                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wide">Block Background</label>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => set('footerSponsorsBg', 'transparent')} 
+                        className={`px-2 py-1 rounded text-xs font-bold border transition-colors ${design.footerSponsorsBg === 'transparent' ? 'bg-primary text-white border-primary' : 'bg-white border-gray-200 hover:border-gray-400 text-gray-700'}`}
+                      >
+                        Transparent
+                      </button>
+                      <input 
+                        type="color" 
+                        value={design.footerSponsorsBg && design.footerSponsorsBg !== 'transparent' ? design.footerSponsorsBg : '#ffffff'} 
+                        onChange={e => set('footerSponsorsBg', e.target.value)} 
+                        className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5" 
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="#ffffff" 
+                        value={design.footerSponsorsBg === 'transparent' ? '' : design.footerSponsorsBg} 
+                        onChange={e => set('footerSponsorsBg', e.target.value || 'transparent')} 
+                        className="w-20 border border-gray-200 rounded px-2 py-1 text-xs outline-none bg-white font-mono" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sponsors Section Title Input */}
+                  <div className="mb-4 bg-gray-50/50 p-3 rounded-xl border border-gray-100 flex items-center justify-between gap-4">
+                    <label className="text-[11px] font-bold text-gray-600 uppercase tracking-wide">Logos Block Heading</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. POWERED BY, OUR PARTNERS" 
+                      value={design.footerSponsorsTitle || ''} 
+                      onChange={e => set('footerSponsorsTitle', e.target.value)} 
+                      className="w-48 border border-gray-200 rounded px-3 py-1 text-xs outline-none bg-white" 
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    {(design.footerSponsors || []).map((s, i) => (
+                      <div key={s.id || i} className="border border-gray-100 p-3 rounded-xl bg-gray-50/50 space-y-2 relative">
+                        <button onClick={() => removeSponsor(s.id)} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                          <Trash2 size={14} />
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                          {/* Local file upload for sponsor logo */}
+                          {s.logoUrl ? (
+                            <div className="relative group w-12 h-12 rounded-lg bg-white border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                              <img src={s.logoUrl} alt="" className="max-w-full max-h-full object-contain" />
+                              <button onClick={() => updateSponsor(s.id, 'logoUrl', '')} className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <X className="text-white" size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                id={`sponsor-logo-input-${s.id}`} 
+                                onChange={(e) => handleSponsorLogoUpload(e, s.id)} 
+                              />
+                              <button 
+                                onClick={() => document.getElementById(`sponsor-logo-input-${s.id}`).click()} 
+                                className="w-12 h-12 rounded-lg bg-white border border-dashed border-gray-300 hover:border-primary hover:text-primary flex flex-col items-center justify-center text-gray-400 transition-colors shrink-0"
+                              >
+                                <UploadCloud size={16} />
+                                <span className="text-[8px] font-bold">UP</span>
+                              </button>
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0">
+                            <input 
+                              type="text" 
+                              className={inputClass + ' py-1 px-2 text-xs'} 
+                              placeholder="Name / Label (e.g., Powered by Razorpay)" 
+                              value={s.name || ''} 
+                              onChange={(e) => updateSponsor(s.id, 'name', e.target.value)} 
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {!(design.footerSponsors || []).length && (
+                      <p className="text-xs text-gray-400 italic">No sponsor/powered by logos added yet. Click "+ Add Logo/Name" above.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

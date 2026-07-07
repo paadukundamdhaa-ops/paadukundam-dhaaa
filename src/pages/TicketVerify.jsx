@@ -164,6 +164,9 @@ export default function TicketVerify() {
     dividerStyle: 'dashed',
     footerEnabled: false,
     footerText: '',
+    footerSponsors: [],
+    footerSponsorsBg: 'transparent',
+    footerSponsorsTitle: 'POWERED BY',
     customFields: [],
     borderRadius: '2rem',
     logoUrl: '',
@@ -299,9 +302,46 @@ export default function TicketVerify() {
         </div>
 
         {/* Footer */}
-        {d.footerEnabled && d.footerText && (
-          <div className="px-6 py-4 border-t border-gray-200 text-center" style={{ backgroundColor: d.bgColor }}>
-            <p className="text-[11px] whitespace-pre-line" style={{ color: textOnBgMuted }}>{d.footerText}</p>
+        {d.footerEnabled && (
+          <div className="border-t border-gray-200" style={{ backgroundColor: d.bgColor }}>
+            {d.footerText && (
+              <div className="px-6 pt-4 pb-3 text-center">
+                <p className="text-[11px] whitespace-pre-line" style={{ color: textOnBgMuted }}>{d.footerText}</p>
+              </div>
+            )}
+            {d.footerSponsors && d.footerSponsors.length > 0 && (
+              <div 
+                className="px-6 py-4 flex flex-col items-center gap-3 transition-all"
+                style={{ 
+                  backgroundColor: d.footerSponsorsBg || 'transparent',
+                  borderTop: d.footerText ? '1px solid rgba(0,0,0,0.05)' : 'none'
+                }}
+              >
+                {d.footerSponsorsTitle && (
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1 text-center" style={{ color: textOnBgMuted }}>
+                    {d.footerSponsorsTitle}
+                  </p>
+                )}
+                <div className="flex flex-wrap justify-center items-center gap-5 w-full">
+                  {d.footerSponsors.map((s, idx) => (
+                    <div key={s.id || idx} className="flex flex-col items-center justify-center text-center max-w-[100px]">
+                      {s.logoUrl ? (
+                        <img src={s.logoUrl} alt={s.name || ''} className="h-10 object-contain" crossOrigin="anonymous" onError={e => e.target.style.display = 'none'} />
+                      ) : (
+                        <div className="h-10 w-20 bg-gray-100 border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-[9px] text-gray-400">
+                          LOGO
+                        </div>
+                      )}
+                      {s.name && (
+                        <span className="text-[9px] mt-1.5 font-bold truncate w-full" style={{ color: textOnBgMuted }}>
+                          {s.name}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

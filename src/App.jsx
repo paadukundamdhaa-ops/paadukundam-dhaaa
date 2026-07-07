@@ -45,7 +45,10 @@ import ScannerLogin from './pages/ScannerLogin';
 import StandaloneScanner from './pages/StandaloneScanner';
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    const path = window.location.pathname;
+    return !(path.startsWith('/admin') || path.startsWith('/scanner'));
+  });
 
   useEffect(() => {
     // Session storage check temporarily disabled so the animation plays on every refresh!

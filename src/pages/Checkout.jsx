@@ -34,6 +34,7 @@ export default function Checkout() {
   const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cash'
   
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -175,7 +176,85 @@ export default function Checkout() {
       await supabase.from('profiles').upsert({ id: currentUser.id, name: fullName, email, phone });
 
       setIsProcessing(true);
-      // Initialize Secure Checkout (Reserves Tickets & Generates PhonePe Payload)
+
+      if (paymentMethod === 'cash') {
+        const cashResponse = await fetch('/api/checkout-cash', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventId: event.id,
+            selectedTickets: selectedTickets,
+            userId: currentUser.id,
+            promoCode: appliedPromo?.code || null
+          })
+        });
+
+        if (!cashResponse.ok) {
+          const errData = await cashResponse.json();
+          throw new Error(errData.error || 'Failed to complete cash checkout');
+        }
+
+        const cashData = await cashResponse.json();
+        
+        // Trigger Email Notification (same as backend does on verify-payment redirect)
+        const bookingRef = cashData.bookings?.[0]?.booking_ref || '#BK-' + Math.floor(100000 + Math.random() * 900000);
+        try {
+          fetch('/api/send-ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: email,
+              name: firstName,
+              eventTitle: event.title,
+              eventDate: event.date,
+              eventVenue: event.venue,
+              eventCity: event.city,
+              bookingRef: bookingRef,
+              qty: totalTickets,
+              amount: grandTotal,
+              subtotal: subtotalBeforeDiscount,
+              discount: promoDiscountAmount,
+              platformFee: bookingFee,
+              termsAndConditions: event.termsAndConditions
+            })
+          }).catch(err => console.error("Email send API failed:", err));
+        } catch (e) {
+          console.error("Email notification error", e);
+        }
+
+        // Increment promo usage if applicable
+        if (appliedPromo?.id) {
+          fetch('/api/increment-promo-usage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ promoCodeId: appliedPromo.id })
+          }).catch(e => console.error('Promo usage increment failed:', e));
+        }
+
+        setIsProcessing(false);
+        Swal.fire({
+          icon: 'success',
+          title: 'Booking Confirmed!',
+          text: 'Your ticket has been booked successfully (Paid with Cash).',
+          confirmButtonColor: '#22c55e',
+          timer: 2000,
+          showConfirmButton: false
+        }).then(() => {
+          navigate('/success', {
+            state: {
+              bookingRef: bookingRef,
+              event: event,
+              tickets: totalTickets,
+              amount: grandTotal,
+              email: email
+            },
+            replace: true
+          });
+        });
+        return;
+      }
+
+      // Online checkout
       const initResponse = await fetch('/api/init-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -216,12 +295,12 @@ export default function Checkout() {
       }
 
     } catch (error) {
-      console.error('Error initializing payment:', error);
+      console.error('Error initializing checkout:', error);
       setIsProcessing(false);
       Swal.fire({
         icon: 'error',
-        title: 'Payment Initialization Failed',
-        text: error.message || 'Something went wrong while starting your payment.',
+        title: 'Checkout Failed',
+        text: error.message || 'Something went wrong while completing your checkout.',
         confirmButtonColor: '#e11d48'
       });
     }
@@ -297,19 +376,70 @@ export default function Checkout() {
           <section className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
             <h2 className="text-xl font-black text-black mb-6">Payment Method</h2>
             
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
-              <div className="flex justify-center mb-4">
-                <ShieldCheck size={48} className="text-primary" />
-              </div>
-              <h3 className="font-bold text-lg text-black mb-2">Secure Payment Gateway</h3>
-              <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                Clicking "Pay Now" will securely redirect you to the PhonePe payment portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <CreditCard className="text-gray-400" size={24} />
-                <Wallet className="text-gray-400" size={24} />
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('online')}
+                className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all outline-none ${paymentMethod === 'online' ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <div className="flex items-center justify-between w-full mb-3">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className={paymentMethod === 'online' ? 'text-primary' : 'text-gray-400'} size={20} />
+                    <span className="font-bold text-sm text-black">Pay Online</span>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'online' ? 'border-primary' : 'border-gray-300'}`}>
+                    {paymentMethod === 'online' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-normal">Pay securely via UPI, Cards, Netbanking, or PhonePe Wallet.</p>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('cash')}
+                className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition-all outline-none ${paymentMethod === 'cash' ? 'border-primary bg-primary/5 shadow-md shadow-primary/5' : 'border-gray-200 hover:border-gray-300'}`}
+              >
+                <div className="flex items-center justify-between w-full mb-3">
+                  <div className="flex items-center gap-2">
+                    <Wallet className={paymentMethod === 'cash' ? 'text-primary' : 'text-gray-400'} size={20} />
+                    <span className="font-bold text-sm text-black">Cash / Testing Option</span>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${paymentMethod === 'cash' ? 'border-primary' : 'border-gray-300'}`}>
+                    {paymentMethod === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-normal">Confirm instantly. Pay cash at the event. Ideal for website testing.</p>
+              </button>
             </div>
+
+            {paymentMethod === 'online' ? (
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <ShieldCheck size={48} className="text-primary" />
+                </div>
+                <h3 className="font-bold text-lg text-black mb-2">Secure Payment Gateway</h3>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                  Clicking "Pay Now" will securely redirect you to the PhonePe payment portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <CreditCard className="text-gray-400" size={24} />
+                  <Wallet className="text-gray-400" size={24} />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <ShieldCheck size={48} className="text-green-600" />
+                </div>
+                <h3 className="font-bold text-lg text-black mb-2">Cash Payment Selection</h3>
+                <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                  You are completing checkout with the **Cash Payment** option.
+                </p>
+                <p className="text-xs text-green-700 font-bold leading-relaxed">
+                  Your ticket will be confirmed instantly. Bring the generated ticket reference to the event counter to pay by cash.
+                </p>
+              </div>
+            )}
           </section>
         </div>
 
@@ -420,8 +550,18 @@ export default function Checkout() {
               <span>Payments are secure and encrypted</span>
             </div>
 
-            <button onClick={handlePayment} className="block w-full py-4 text-center bg-primary hover:bg-primary-dark text-white font-black text-lg rounded-xl transition-all shadow-lg shadow-primary/30 transform hover:scale-[1.02] active:scale-95 flex justify-center items-center">
-              Pay ₹{grandTotal.toLocaleString()} <Ticket className="ml-2" size={20} />
+             <button 
+              onClick={handlePayment} 
+              disabled={isProcessing}
+              className="block w-full py-4 text-center bg-primary hover:bg-primary-dark text-white font-black text-lg rounded-xl transition-all shadow-lg shadow-primary/30 transform hover:scale-[1.02] active:scale-95 flex justify-center items-center disabled:opacity-50"
+            >
+              {isProcessing ? (
+                'Processing...'
+              ) : paymentMethod === 'cash' ? (
+                <>Confirm Booking (Cash) <Ticket className="ml-2" size={20} /></>
+              ) : (
+                <>Pay ₹{grandTotal.toLocaleString()} <Ticket className="ml-2" size={20} /></>
+              )}
             </button>
           </div>
         </div>

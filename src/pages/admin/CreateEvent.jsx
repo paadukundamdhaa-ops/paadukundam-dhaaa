@@ -167,6 +167,17 @@ export default function CreateEvent() {
       return;
     }
 
+    const year = parseInt(eventDate.split('-')[0], 10);
+    if (year < 2024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Date',
+        text: 'Please enter a valid year (e.g. 2024 or later).',
+        confirmButtonColor: '#000000'
+      });
+      return;
+    }
+
     if (ticketTypes.length === 0) {
       Swal.fire({
         icon: 'warning',

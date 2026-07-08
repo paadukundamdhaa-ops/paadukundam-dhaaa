@@ -23,14 +23,14 @@ export default function BookingSuccess() {
         angle: 60,
         spread: 55,
         origin: { x: 0 },
-        colors: ['#000000', '#D4AF37', '#ffffff']
+        colors: ['#000000', '#D4AF37', '#ffffff','red','orange']
       });
       confetti({
         particleCount: 5,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
-        colors: ['#000000', '#D4AF37', '#ffffff']
+        colors: ['#000000', '#D4AF37', '#ffffff','red','orange']
       });
 
       if (Date.now() < end) {

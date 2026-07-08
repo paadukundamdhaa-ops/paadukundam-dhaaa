@@ -6,12 +6,11 @@ import confetti from 'canvas-confetti';
 
 export default function BookingSuccess() {
   const location = useLocation();
-  const { bookingRef, event, totalTickets, grandTotal } = location.state || {
-    bookingRef: '#BK-000000',
-    event: { title: 'Unknown Event' },
-    totalTickets: 0,
-    grandTotal: 0
-  };
+  const state = location.state || {};
+  const bookingRef = state.bookingRef ?? '#BK-000000';
+  const event = state.event ?? { title: 'Unknown Event' };
+  const totalTickets = state.totalTickets ?? 0;
+  const grandTotal = state.grandTotal ?? 0;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -84,7 +83,7 @@ export default function BookingSuccess() {
           </div>
           <div className="flex justify-between items-center pt-4 border-t border-gray-800/50 mt-2">
             <span className="text-gray-500 text-sm font-bold uppercase tracking-widest">Total Paid</span>
-            <span className="font-black text-2xl text-white">₹{grandTotal.toLocaleString()}</span>
+            <span className="font-black text-2xl text-white">₹{(grandTotal || 0).toLocaleString()}</span>
           </div>
         </div>
 

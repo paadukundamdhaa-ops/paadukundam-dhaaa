@@ -244,8 +244,8 @@ export default function Checkout() {
             state: {
               bookingRef: bookingRef,
               event: event,
-              tickets: totalTickets,
-              amount: grandTotal,
+              totalTickets: totalTickets,
+              grandTotal: grandTotal,
               email: email
             },
             replace: true

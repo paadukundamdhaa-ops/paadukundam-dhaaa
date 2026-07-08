@@ -40,7 +40,7 @@ export default function Events() {
         const { data, error } = await supabase
           .from('events')
           .select('*, ticket_tiers(price)')
-          .in('status', ['Live', 'Upcoming', 'Active', 'Confirmed'])
+          .not('status', 'in', '("Draft","Cancelled","draft","cancelled","Hidden","hidden")')
           .order('event_date', { ascending: true });
 
         if (error) throw error;

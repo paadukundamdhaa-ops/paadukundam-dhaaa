@@ -426,47 +426,45 @@ export default function StandaloneScanner() {
         {/* Event Selector */}
         <div className="bg-zinc-900 p-4 rounded-2xl mb-6 border border-zinc-800 shadow-xl">
           <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Active Event</label>
+          <div className="flex flex-wrap items-center gap-2">
             <select 
               value={selectedEventId} 
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="bg-zinc-800 text-white text-xs py-1.5 px-3 rounded-lg border border-zinc-700 outline-none w-32 truncate"
+              className="bg-zinc-800 text-white text-xs py-2 px-3 rounded-lg border border-zinc-700 outline-none w-40 truncate"
             >
               {events.map(ev => <option key={ev.id} value={ev.id}>{ev.title}</option>)}
             </select>
 
-          {/* Sync Button */}
-          <button 
-            onClick={handleSyncData}
-            disabled={syncing}
-            className={`p-1.5 rounded-lg border transition-colors relative ${queuedScansCount > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}
-            title="Sync Data"
-          >
-            {syncing ? <RefreshCw className="animate-spin w-4 h-4" /> : <Database className="w-4 h-4" />}
-            {queuedScansCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                {queuedScansCount}
-              </span>
-            )}
-          </button>
+            {/* Sync Button */}
+            <button 
+              onClick={handleSyncData}
+              disabled={syncing}
+              className={`p-2 rounded-lg border transition-colors relative ${queuedScansCount > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}
+              title="Sync Data"
+            >
+              {syncing ? <RefreshCw className="animate-spin w-4 h-4" /> : <Database className="w-4 h-4" />}
+              {queuedScansCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-[9px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                  {queuedScansCount}
+                </span>
+              )}
+            </button>
 
-          {/* Offline Toggle */}
-          <button 
-            onClick={() => {
-              if (!offlineMode && !localStorage.getItem(`scanner_offline_data_${selectedEventId}`)) {
-                Swal.fire('No Data', 'Please click the Sync button first to download offline data for this event.', 'warning');
-                return;
-              }
-              setOfflineMode(!offlineMode);
-            }}
-            className={`p-1.5 rounded-lg border transition-colors flex items-center gap-1 ${offlineMode ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-green-500/20 text-green-400 border-green-500/50'}`}
-          >
-            {offlineMode ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
-            <span className="text-[10px] font-bold hidden sm:block">{offlineMode ? 'Offline Mode' : 'Online Mode'}</span>
-          </button>
-
-          <button onClick={handleLogout} className="p-1.5 rounded-lg bg-zinc-800 text-zinc-400 border border-zinc-700">
-            <LogOut className="w-4 h-4" />
-          </button>
+            {/* Offline Toggle */}
+            <button 
+              onClick={() => {
+                if (!offlineMode && !localStorage.getItem(`scanner_offline_data_${selectedEventId}`)) {
+                  Swal.fire('No Data', 'Please click the Sync button first to download offline data for this event.', 'warning');
+                  return;
+                }
+                setOfflineMode(!offlineMode);
+              }}
+              className={`p-2 rounded-lg border transition-colors flex items-center gap-1.5 ${offlineMode ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-green-500/20 text-green-400 border-green-500/50'}`}
+            >
+              {offlineMode ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
+              <span className="text-xs font-bold">{offlineMode ? 'Offline Mode' : 'Online Mode'}</span>
+            </button>
+          </div>
 
       {offlineMode && (
         <div className="bg-red-900/40 border-b border-red-900/50 text-red-200 text-xs py-2 text-center font-semibold">

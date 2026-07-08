@@ -78,7 +78,7 @@ VALUES
 
 -- 7. Create the RESERVATIONS table (for ticket holds during checkout)
 CREATE TABLE IF NOT EXISTS reservations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  reservation_id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   event_id UUID REFERENCES events(id) ON DELETE CASCADE,
   ticket_tier_id UUID REFERENCES ticket_tiers(id) ON DELETE CASCADE,
@@ -133,7 +133,7 @@ BEGIN
   -- Insert reservation
   INSERT INTO reservations (user_id, event_id, ticket_tier_id, quantity, amount, status, expires_at)
   VALUES (p_user_id, p_event_id, p_tier_id, p_qty, p_amount, 'Pending', NOW() + INTERVAL '10 minutes')
-  RETURNING id INTO v_reservation_id;
+  RETURNING reservation_id INTO v_reservation_id;
 
   RETURN v_reservation_id;
 END;
@@ -160,7 +160,7 @@ BEGIN
   SELECT user_id, event_id, ticket_tier_id, quantity, amount, status, expires_at
   INTO v_user_id, v_event_id, v_tier_id, v_qty, v_amount, v_status, v_expires_at
   FROM reservations
-  WHERE id = p_reservation_id;
+  WHERE reservation_id = p_reservation_id;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Reservation not found';
@@ -195,7 +195,7 @@ BEGIN
   -- Update reservation status
   UPDATE reservations
   SET status = 'Completed'
-  WHERE id = p_reservation_id;
+  WHERE reservation_id = p_reservation_id;
 
   RETURN v_booking_id;
 END;
@@ -210,6 +210,6 @@ BEGIN
   -- Mark reservation as Expired/Cancelled
   UPDATE reservations
   SET status = 'Expired'
-  WHERE id = p_reservation_id;
+  WHERE reservation_id = p_reservation_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

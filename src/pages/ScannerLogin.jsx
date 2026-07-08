@@ -1,41 +1,67 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { Mail, Lock, Key, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function ScannerLogin() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState('email');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState('');
 
-  const handleLogin = async (e) => {
+  const SCANNER_EMAILS = [
+    'paadukundam.dhaa@gmail.com'
+  ];
+
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setMessage('');
+    
+    const formattedEmail = email.toLowerCase().trim();
+    if (!SCANNER_EMAILS.includes(formattedEmail)) {
+      setError('Unauthorized email address. Access denied.');
+      return;
+    }
 
-    try {
-      const response = await fetch('/api/scanner-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+    setIsLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: formattedEmail,
+      options: { shouldCreateUser: true }
+    });
+    setIsLoading(false);
 
-      const data = await response.json();
+    if (error) {
+      setError(error.message);
+    } else {
+      setStep('otp');
+      setMessage('A secure login link and OTP have been sent to your email.');
+    }
+  };
 
-      if (response.ok && data.success) {
-        localStorage.setItem('scanner_auth', 'true');
-        localStorage.setItem('scanner_token', data.token);
-        navigate('/scanner/app');
-      } else {
-        setError(data.error || 'Invalid username or password');
-        setLoading(false);
-      }
-    } catch (err) {
-      setError('Connection error. Please check your network and try again.');
-      setLoading(false);
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email.toLowerCase().trim(),
+      token: otp.trim(),
+      type: 'email'
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+      setError(error.message);
+    } else if (data.session) {
+      // Keep existing scanner behavior by setting scanner_auth flag in local storage
+      localStorage.setItem('scanner_auth', 'true');
+      localStorage.setItem('scanner_token', data.session.access_token);
+      navigate('/scanner/app');
     }
   };
 
@@ -113,7 +139,7 @@ export default function ScannerLogin() {
           </div>
         </div>
 
-        {/* --- MOBILE HEADER (Logo & Welcome Text) --- */}
+        {/* --- MOBILE HEADER --- */}
         <div className="lg:hidden px-6 pt-10 pb-4 relative z-10">
           <div className="flex justify-between items-start mb-10">
              <Link to="/" className="flex items-center gap-2">
@@ -169,63 +195,91 @@ export default function ScannerLogin() {
               <h2 className="text-2xl font-black text-gray-900 mb-1">
                 Scanner <span className="text-[#8c1c24]">Access</span>
               </h2>
-              <p className="text-gray-500 text-xs font-medium">Log in with your assigned credentials to start scanning.</p>
+              <p className="text-gray-500 text-xs font-medium">Please verify your identity to access the scanner.</p>
             </div>
 
-            {error && (
-              <div className="bg-red-500/10 lg:bg-red-50 border border-red-500/20 lg:border-red-100 text-red-500 lg:text-red-600 p-3 rounded-xl text-sm font-bold flex items-center gap-2 mb-4">
-                <Lock size={16} /> {error}
-              </div>
+            {step === 'email' ? (
+              <form onSubmit={handleSendOtp} className="space-y-4 lg:space-y-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                    <Mail size={18} className="text-gray-500 lg:text-gray-400" />
+                  </div>
+                  <input 
+                    type="email" 
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
+                    placeholder="Enter scanner email address" 
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-500 text-sm font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-3 lg:pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Sending...' : (
+                      <>Send Magic Link & OTP <ArrowRight size={18} /></>
+                    )}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="space-y-4 lg:space-y-4">
+                {message && (
+                  <div className="text-green-500 text-sm font-medium bg-green-500/10 p-3 rounded-lg border border-green-500/20 mb-4">
+                    {message}
+                  </div>
+                )}
+                
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
+                    <Key size={18} className="text-gray-500 lg:text-gray-400" />
+                  </div>
+                  <input 
+                    type="text" 
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal tracking-widest" 
+                    placeholder="Enter OTP code" 
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-500 text-sm font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-3 lg:pt-2">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-3 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? 'Verifying...' : (
+                      <>Verify & Access Scanner <QrCode size={18} /></>
+                    )}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { setStep('email'); setOtp(''); setError(''); setMessage(''); }}
+                    className="w-full mt-3 flex items-center justify-center gap-2 text-gray-400 hover:text-white lg:text-gray-500 lg:hover:text-gray-800 text-sm font-medium transition-colors"
+                  >
+                    <ArrowLeft size={16} /> Back to Email
+                  </button>
+                </div>
+              </form>
             )}
-
-            <form onSubmit={handleLogin} className="space-y-4 lg:space-y-3">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
-                  <Mail size={18} className="text-gray-500 lg:text-gray-400" />
-                </div>
-                <input 
-                  type="text" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-4 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
-                  placeholder="Scanner ID" 
-                />
-              </div>
-              
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 lg:pl-3.5 flex items-center pointer-events-none">
-                  <Lock size={18} className="text-gray-500 lg:text-gray-400" />
-                </div>
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent lg:bg-white border border-[#2a1618] lg:border-gray-200 rounded-xl py-3 lg:py-2.5 pl-11 pr-10 text-white lg:text-gray-900 font-medium text-[14px] lg:text-sm focus:border-[#8c1c24] focus:ring-1 focus:ring-[#8c1c24] outline-none transition-all placeholder:text-gray-600 lg:placeholder:text-gray-400 placeholder:font-normal" 
-                  placeholder="Scanner Password" 
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 lg:pr-3.5 flex items-center text-gray-500 lg:text-gray-400 hover:text-gray-300 lg:hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between pt-1 lg:pt-1.5">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 lg:w-3.5 lg:h-3.5 rounded border-[#2a1618] lg:border-gray-300 bg-transparent lg:bg-white text-[#8c1c24] focus:ring-[#8c1c24] accent-[#8c1c24]" />
-                  <span className="text-[13px] lg:text-[13px] font-medium text-gray-400 lg:text-gray-700">Remember me</span>
-                </label>
-                <a href="#" className="text-[13px] lg:text-[13px] font-bold text-[#facc15] lg:text-[#8c1c24] hover:text-[#eab308] lg:hover:text-[#6b151b] transition-colors">Forgot Password?</a>
-              </div>
-
-              <div className="pt-3 lg:pt-2">
-                <button disabled={loading} type="submit" className="w-full flex items-center justify-center gap-2 bg-[#8c1c24] hover:bg-[#6b151b] text-white font-bold py-3.5 lg:py-2.5 text-[15px] lg:text-sm rounded-xl transition-all shadow-md disabled:opacity-50">
-                  {loading ? 'Authenticating...' : <><QrCode size={18} /> Start Scanning</>}
-                </button>
-              </div>
-            </form>
 
             {/* --- MOBILE BOTTOM BADGES (Inside Card) --- */}
             <div className="lg:hidden mt-8 pt-6 border-t border-[#2a1618] grid grid-cols-4 gap-2">

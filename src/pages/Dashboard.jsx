@@ -328,10 +328,10 @@ export default function Dashboard() {
                               ))}
                             </div>
                             <p className="text-gray-500 text-sm font-medium mb-4">{booking.total_qty} Ticket(s) Total</p>
-                            <div className="inline-block bg-gray-50 py-2 px-3 rounded-xl border border-gray-200 ml-auto text-center">
+                            <div className="inline-block bg-gray-50 py-2 px-3 rounded-xl border border-gray-200 ml-auto text-center min-w-[90px]">
                               <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-0.5">Ref ID</p>
-                              <p className="text-sm font-black text-black tracking-wider truncate w-24" title={booking.payment_intent_id || booking.booking_ref}>
-                                {booking.payment_intent_id ? booking.payment_intent_id.substring(0, 8) + '...' : booking.booking_ref}
+                              <p className="text-sm font-black text-black tracking-wider" title={booking.booking_ref}>
+                                {booking.booking_ref}
                               </p>
                             </div>
                           </div>

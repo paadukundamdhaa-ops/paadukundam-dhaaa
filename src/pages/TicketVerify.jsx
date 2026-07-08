@@ -293,9 +293,9 @@ export default function TicketVerify() {
 
             {/* Booking ID */}
             {d.showBookingId && (
-              <div className="border border-gray-200 rounded-xl px-4 py-2.5 bg-gray-50 w-full shadow-sm mt-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 text-center">Booking ID</p>
-                <p className="text-lg font-black text-black text-center leading-none">{booking.booking_ref}</p>
+              <div className="border border-gray-200 rounded-xl px-3 py-2 bg-gray-50 w-full shadow-sm mt-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 text-center">REF ID</p>
+                <p className="text-base font-black text-black text-center leading-tight break-all">{booking.booking_ref}</p>
               </div>
             )}
           </div>

@@ -65,6 +65,7 @@ export default function Footer() {
             <li><Link to="/terms-conditions" className="hover:text-secondary transition-colors">Terms & Conditions</Link></li>
             <li><Link to="/privacy-policy" className="hover:text-secondary transition-colors">Privacy Policy</Link></li>
             <li><Link to="/refund-policy" className="hover:text-secondary transition-colors">Refund Policy</Link></li>
+            <li><Link to="/shipping-policy" className="hover:text-secondary transition-colors">Shipping & Delivery Policy</Link></li>
           </ul>
         </div>
 

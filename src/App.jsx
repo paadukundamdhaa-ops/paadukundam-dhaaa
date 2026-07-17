@@ -23,6 +23,7 @@ import About from './pages/About';
 import TermsConditions from './pages/TermsConditions';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import RefundPolicy from './pages/RefundPolicy';
+import ShippingPolicy from './pages/ShippingPolicy';
 import NotFound from './pages/NotFound';
 import TicketVerify from './pages/TicketVerify';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -79,6 +80,7 @@ function App() {
                 <Route path="terms-conditions" element={<TermsConditions />} />
                 <Route path="privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="refund-policy" element={<RefundPolicy />} />
+                <Route path="shipping-policy" element={<ShippingPolicy />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
 

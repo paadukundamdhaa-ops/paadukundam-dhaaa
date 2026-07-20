@@ -181,6 +181,9 @@ export default function AdminEvents() {
       // 4. Ticket tiers
       await supabase.from('ticket_tiers').delete().eq('event_id', id);
 
+      // 4.5 Promo Codes
+      await supabase.from('promo_codes').delete().eq('event_id', id);
+
       // 5. Finally delete the event itself
       const { error } = await supabase.from('events').delete().eq('id', id);
       if (error) throw error;
@@ -193,11 +196,12 @@ export default function AdminEvents() {
         confirmButtonColor: '#22c55e'
       });
     } catch (err) {
-      console.error(err);
+      console.error("Delete Event Error:", err);
+      const errorMsg = err.message || err.details || 'Failed to delete event. Check console.';
       Swal.fire({
         icon: 'error',
         title: 'Delete Failed',
-        text: 'Failed to delete event. Check console.',
+        text: `Error: ${errorMsg}`,
         confirmButtonColor: '#e11d48'
       });
     }

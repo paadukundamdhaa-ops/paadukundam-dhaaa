@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase'; // USER client only
+import { useIdleTimeout } from '../utils/useIdleTimeout';
 
 const AuthContext = createContext({});
 
@@ -41,6 +42,18 @@ export const AuthProvider = ({ children }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Auto logout after 10 minutes of inactivity (only when a user is logged in)
+  const IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+  useIdleTimeout(
+    async () => {
+      if (user) {
+        console.info('[Auth] User idle for 10 mins — auto logging out.');
+        await supabase.auth.signOut();
+      }
+    },
+    IDLE_TIMEOUT_MS
+  );
 
   const signInWithGoogle = async (redirectTo = '/') => {
     const { error } = await supabase.auth.signInWithOAuth({

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, NavLink, Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabaseAdmin } from '../lib/supabase';
+import { useIdleTimeout } from '../utils/useIdleTimeout';
 import { 
   LayoutDashboard, 
   Users, 
@@ -103,10 +104,21 @@ export default function AdminLayout() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await supabaseAdmin.auth.signOut();
     navigate('/admin/login');
-  };
+  }, [navigate]);
+
+  // Auto logout after 10 minutes of admin inactivity
+  useIdleTimeout(
+    async () => {
+      if (user) {
+        console.info('[Admin] Admin idle for 10 mins — auto logging out.');
+        await handleLogout();
+      }
+    },
+    10 * 60 * 1000
+  );
 
   if (authLoading) {
     return (

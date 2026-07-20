@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Swal from 'sweetalert2';
 import { Html5Qrcode } from 'html5-qrcode';
 import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode, Flashlight, Wifi, WifiOff, RefreshCw, Database } from 'lucide-react';
+import { useIdleTimeout } from '../utils/useIdleTimeout';
 
 const playSound = (type) => {
   try {
@@ -55,6 +56,16 @@ export default function StandaloneScanner() {
     const queued = JSON.parse(localStorage.getItem('scanner_queued_scans') || '[]');
     setQueuedScansCount(queued.length);
   }, []);
+
+  // Auto logout after 10 minutes of scanner inactivity
+  const handleScannerLogout = useCallback(() => {
+    console.info('[Scanner] Idle for 10 mins — auto logging out.');
+    localStorage.removeItem('scanner_auth');
+    localStorage.removeItem('scanner_token');
+    navigate('/scanner');
+  }, [navigate]);
+
+  useIdleTimeout(handleScannerLogout, 10 * 60 * 1000);
 
   useEffect(() => {
     // Check authentication

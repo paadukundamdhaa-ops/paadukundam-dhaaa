@@ -35,6 +35,38 @@ export default function AdminHomeCMS() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingIdx, setUploadingIdx] = useState(null);
+
+  const handleTestimonialImageUpload = async (e, idx) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setUploadingIdx(idx);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `testimonial_${Date.now()}_${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('event-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('event-images')
+        .getPublicUrl(fileName);
+        
+      const newT = [...testimonials];
+      newT[idx].img = publicUrl;
+      setTestimonials(newT);
+      
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      Swal.fire('Upload Failed', 'Could not upload image.', 'error');
+    } finally {
+      setUploadingIdx(null);
+    }
+  };
 
   useEffect(() => {
     fetchCMSData();
@@ -270,11 +302,13 @@ export default function AdminHomeCMS() {
                   <div key={idx} className="bg-gray-50 p-6 rounded-xl border border-gray-200 grid grid-cols-1 md:grid-cols-12 gap-6">
                     <div className="col-span-12 md:col-span-3 flex flex-col items-center justify-center">
                       <img src={test.img} alt={test.name} className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md mb-2" />
-                      <input type="text" value={test.img} onChange={(e) => {
-                        const newT = [...testimonials];
-                        newT[idx].img = e.target.value;
-                        setTestimonials(newT);
-                      }} className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-primary text-center text-black" placeholder="Image URL" />
+                      <label className="w-full relative group cursor-pointer mt-2">
+                        <div className="w-full px-2 py-1.5 text-[11px] font-bold border border-gray-300 rounded hover:border-primary text-center text-gray-700 bg-white shadow-sm flex items-center justify-center">
+                          {uploadingIdx === idx ? <Loader2 size={12} className="animate-spin mr-1" /> : <ImageIcon size={12} className="mr-1" />}
+                          {uploadingIdx === idx ? 'Uploading...' : 'Upload Image'}
+                        </div>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleTestimonialImageUpload(e, idx)} disabled={uploadingIdx === idx} />
+                      </label>
                     </div>
                     <div className="col-span-12 md:col-span-9 space-y-4">
                       <div>

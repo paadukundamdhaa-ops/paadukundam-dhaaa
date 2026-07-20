@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabaseScanner as supabase } from '../lib/supabase';
 import Swal from 'sweetalert2';
 import { Html5Qrcode } from 'html5-qrcode';
 import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, LogOut, ShieldCheck, QrCode, Flashlight, Wifi, WifiOff, RefreshCw, Database } from 'lucide-react';
@@ -13,10 +13,10 @@ const playSound = (type) => {
     const ctx = new AudioContext();
     const osc = ctx.createOscillator();
     const gainNode = ctx.createGain();
-    
+
     osc.connect(gainNode);
     gainNode.connect(ctx.destination);
-    
+
     if (type === 'success') {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(800, ctx.currentTime);
@@ -33,7 +33,7 @@ const playSound = (type) => {
       osc.start();
       osc.stop(ctx.currentTime + 0.3);
     }
-  } catch(e) { console.error("Audio error", e) }
+  } catch (e) { console.error("Audio error", e) }
 };
 
 export default function StandaloneScanner() {
@@ -103,7 +103,7 @@ export default function StandaloneScanner() {
           data = remoteData;
         }
       }
-      
+
       if (data) {
         let total = 0;
         let checkedIn = 0;
@@ -114,7 +114,7 @@ export default function StandaloneScanner() {
         setStats({ total, checkedIn });
       }
     };
-    
+
     fetchStats();
   }, [selectedEventId, scanResult, offlineMode]);
 
@@ -155,7 +155,7 @@ export default function StandaloneScanner() {
 
       // Cache locally
       localStorage.setItem(`scanner_offline_data_${selectedEventId}`, JSON.stringify(data || []));
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Sync Complete',
@@ -196,7 +196,7 @@ export default function StandaloneScanner() {
         (decodedText) => {
           if (isProcessingRef.current) return;
           isProcessingRef.current = true;
-          
+
           if (scannerRef.current) {
             scannerRef.current.stop().then(() => {
               setScanning(false);
@@ -240,13 +240,9 @@ export default function StandaloneScanner() {
     try {
       let cleanRef = ticketUrl;
       if (ticketUrl.includes('/ticket/')) {
-        let rawRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0];
-        if (rawRef.includes('#') && !rawRef.startsWith('#')) {
-          rawRef = rawRef.split('#')[0];
-        }
-        cleanRef = rawRef;
+        cleanRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
       }
-      
+
       let searchTx = null;
       if (cleanRef.startsWith('tx_')) {
         searchTx = cleanRef.substring(3);
@@ -255,7 +251,7 @@ export default function StandaloneScanner() {
       }
 
       let bookings = [];
-      
+
       if (offlineMode) {
         // --- OFFLINE MODE LOOKUP ---
         const localData = JSON.parse(localStorage.getItem(`scanner_offline_data_${selectedEventId}`) || '[]');
@@ -338,14 +334,14 @@ export default function StandaloneScanner() {
 
   const updateCheckInStatus = async (status) => {
     if (!scanResult || !scanResult.data) return;
-    
+
     try {
       // Loop through all bookings in the group and check them in
       let remainingQtyToScan = partialQty;
-      
+
       for (const bId of scanResult.data.ids) {
         if (remainingQtyToScan <= 0) break;
-        
+
         // Fetch the current booking to know its individual qty and checked_in_qty
         let bData;
         if (offlineMode) {
@@ -356,12 +352,12 @@ export default function StandaloneScanner() {
           bData = data;
         }
         if (!bData) continue;
-        
+
         const availableInBooking = (bData.qty || 1) - (bData.checked_in_qty || 0);
         if (availableInBooking <= 0) continue;
-        
+
         const qtyToApply = Math.min(availableInBooking, remainingQtyToScan);
-        
+
         if (offlineMode) {
           // --- SAVE TO LOCAL QUEUE ---
           const queued = JSON.parse(localStorage.getItem('scanner_queued_scans') || '[]');
@@ -396,7 +392,7 @@ export default function StandaloneScanner() {
             p_qty: qtyToApply,
             p_status: status
           });
-          
+
           if (error) throw error;
         }
         remainingQtyToScan -= qtyToApply;
@@ -437,13 +433,13 @@ export default function StandaloneScanner() {
       </div>
 
       <div className="flex-1 p-4 flex flex-col max-w-lg w-full mx-auto">
-        
+
         {/* Event Selector */}
         <div className="bg-zinc-900 p-4 rounded-2xl mb-6 border border-zinc-800 shadow-xl">
           <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Active Event</label>
           <div className="flex flex-wrap items-center gap-2">
-            <select 
-              value={selectedEventId} 
+            <select
+              value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
               className="bg-zinc-800 text-white text-xs py-2 px-3 rounded-lg border border-zinc-700 outline-none w-40 truncate"
             >
@@ -451,7 +447,7 @@ export default function StandaloneScanner() {
             </select>
 
             {/* Sync Button */}
-            <button 
+            <button
               onClick={handleSyncData}
               disabled={syncing}
               className={`p-2 rounded-lg border transition-colors relative ${queuedScansCount > 0 ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}
@@ -466,7 +462,7 @@ export default function StandaloneScanner() {
             </button>
 
             {/* Offline Toggle */}
-            <button 
+            <button
               onClick={() => {
                 if (!offlineMode && !localStorage.getItem(`scanner_offline_data_${selectedEventId}`)) {
                   Swal.fire('No Data', 'Please click the Sync button first to download offline data for this event.', 'warning');
@@ -481,12 +477,12 @@ export default function StandaloneScanner() {
             </button>
           </div>
 
-      {offlineMode && (
-        <div className="bg-red-900/40 border-b border-red-900/50 text-red-200 text-xs py-2 text-center font-semibold">
-          You are scanning in OFFLINE MODE. Remember to sync when online!
-        </div>
-      )}
-          
+          {offlineMode && (
+            <div className="bg-red-900/40 border-b border-red-900/50 text-red-200 text-xs py-2 text-center font-semibold">
+              You are scanning in OFFLINE MODE. Remember to sync when online!
+            </div>
+          )}
+
           {selectedEventId && (
             <div className="mt-4 flex items-center justify-between border-t border-zinc-800 pt-4">
               <div className="text-center w-1/2 border-r border-zinc-800">
@@ -503,7 +499,7 @@ export default function StandaloneScanner() {
 
         {/* Main Area */}
         <div className="flex-1 flex flex-col items-center justify-center">
-          
+
           {!scanning && !scanResult && (
             <div className="text-center w-full">
               <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -511,7 +507,7 @@ export default function StandaloneScanner() {
               </div>
               <h2 className="text-2xl font-black mb-2">Ready to Scan</h2>
               <p className="text-zinc-400 mb-8 max-w-xs mx-auto">Point your camera at a ticket's QR code to verify entry.</p>
-              <button 
+              <button
                 onClick={startScanner}
                 className="w-full bg-primary hover:bg-primary-dark text-white font-black py-4 rounded-xl transition-all shadow-lg shadow-primary/20 text-lg"
               >
@@ -524,7 +520,7 @@ export default function StandaloneScanner() {
           <div className={`w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border-2 ${scanning ? 'border-primary' : 'hidden'}`}>
             <div id="qr-reader" className="w-full"></div>
             <div className="p-4 bg-zinc-900 text-center">
-              <button 
+              <button
                 onClick={stopScanner}
                 className="bg-zinc-800 hover:bg-zinc-700 text-white px-6 py-2 rounded-full font-bold text-sm transition-colors"
               >
@@ -536,7 +532,7 @@ export default function StandaloneScanner() {
           {/* Result View */}
           {scanResult && (
             <div className="w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              
+
               {scanResult.status === 'valid' && (
                 <div className="p-6 text-center bg-green-500/10 border-b border-green-500/20">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-2" />
@@ -548,7 +544,7 @@ export default function StandaloneScanner() {
               {scanResult.status === 'already_scanned' && (
                 <div className="p-6 text-center bg-red-600 border-b border-red-700">
                   <XCircle className="w-20 h-20 text-white mx-auto mb-3" />
-                  <h3 className="text-3xl font-black text-white leading-tight">INVALID<br/>ALL TICKETS USED</h3>
+                  <h3 className="text-3xl font-black text-white leading-tight">INVALID<br />ALL TICKETS USED</h3>
                   <p className="text-red-100 font-bold text-sm mt-3 bg-black/20 py-2 px-4 rounded-lg inline-block">
                     Total {scanResult.data.qty} of {scanResult.data.qty} people entered
                   </p>
@@ -602,7 +598,7 @@ export default function StandaloneScanner() {
                     <div className="mt-4 pt-4 border-t border-zinc-800 flex flex-col items-center">
                       <p className="text-sm font-bold text-zinc-400 mb-3">How many entering now?</p>
                       <div className="flex items-center gap-4 bg-zinc-950 p-2 rounded-2xl border border-zinc-800">
-                        <button 
+                        <button
                           onClick={() => setPartialQty(Math.max(1, partialQty - 1))}
                           className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center font-bold text-xl text-white disabled:opacity-50"
                           disabled={partialQty <= 1}
@@ -612,7 +608,7 @@ export default function StandaloneScanner() {
                         <div className="w-12 text-center text-2xl font-black text-white">
                           {partialQty}
                         </div>
-                        <button 
+                        <button
                           onClick={() => setPartialQty(Math.min(scanResult.data.qty - (scanResult.data.checked_in_qty || 0), partialQty + 1))}
                           className="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center font-bold text-xl text-white disabled:opacity-50"
                           disabled={partialQty >= scanResult.data.qty - (scanResult.data.checked_in_qty || 0)}
@@ -629,13 +625,13 @@ export default function StandaloneScanner() {
               <div className="p-4 bg-black grid grid-cols-2 gap-3">
                 {scanResult.status === 'valid' ? (
                   <>
-                    <button 
+                    <button
                       onClick={() => updateCheckInStatus('denied')}
                       className="py-4 rounded-xl font-black text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-colors"
                     >
                       DENY
                     </button>
-                    <button 
+                    <button
                       onClick={() => updateCheckInStatus('allowed')}
                       className="py-4 rounded-xl font-black text-white bg-green-500 hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20"
                     >
@@ -643,7 +639,7 @@ export default function StandaloneScanner() {
                     </button>
                   </>
                 ) : (
-                  <button 
+                  <button
                     onClick={startScanner}
                     className="col-span-2 py-4 rounded-xl font-black text-white bg-zinc-800 hover:bg-zinc-700 transition-colors"
                   >

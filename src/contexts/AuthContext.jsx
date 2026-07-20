@@ -14,7 +14,8 @@ export const AuthProvider = ({ children }) => {
     'jnaneshwarmoturi123@gmail.com',
     'iamdesign81@gmail.com',
     'balajirockzz9030@gmail.com',
-    'balajiprojects049@gmail.com'
+    'balajiprojects049@gmail.com',
+    'paadukundam.dhaa@gmail.com' // Scanner operator account
   ];
   const isAdminEmail = (email) => email && ADMIN_EMAILS.includes(email.toLowerCase());
 

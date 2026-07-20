@@ -7,28 +7,43 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Admin emails should NEVER be treated as regular users on the public site.
+  // This prevents admin logins from polluting the user panel session.
+  const ADMIN_EMAILS = [
+    'sirisairavitejateeda@gmail.com',
+    'jnaneshwarmoturi123@gmail.com',
+    'iamdesign81@gmail.com',
+    'balajirockzz9030@gmail.com',
+    'balajiprojects049@gmail.com'
+  ];
+  const isAdminEmail = (email) => email && ADMIN_EMAILS.includes(email.toLowerCase());
+
   useEffect(() => {
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const sessionUser = session?.user ?? null;
+      // If this is an admin session, don't expose it to the user panel
+      setUser(sessionUser && !isAdminEmail(sessionUser.email) ? sessionUser : null);
       setLoading(false);
     });
 
     // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
-      setUser(currentUser);
+      // Block admin sessions from appearing on the user panel
+      const publicUser = currentUser && !isAdminEmail(currentUser.email) ? currentUser : null;
+      setUser(publicUser);
       setLoading(false);
 
-      if (currentUser && (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION')) {
+      if (publicUser && (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION')) {
         try {
-          const { data: profile } = await supabase.from('profiles').select('id').eq('id', currentUser.id).single();
+          const { data: profile } = await supabase.from('profiles').select('id').eq('id', publicUser.id).single();
           if (!profile) {
             await supabase.from('profiles').upsert({
-              id: currentUser.id,
-              full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
-              email: currentUser.email,
-              phone: currentUser.user_metadata?.phone || null,
+              id: publicUser.id,
+              full_name: publicUser.user_metadata?.full_name || publicUser.email.split('@')[0],
+              email: publicUser.email,
+              phone: publicUser.user_metadata?.phone || null,
               role: 'user'
             }, { onConflict: 'id' });
           }

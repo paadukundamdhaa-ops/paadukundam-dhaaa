@@ -538,8 +538,6 @@ export default function Checkout() {
             >
               {isProcessing ? (
                 'Processing...'
-              ) : paymentMethod === 'cash' ? (
-                <>Confirm Booking (Cash) <Ticket className="ml-2" size={20} /></>
               ) : (
                 <>Pay ₹{grandTotal.toLocaleString()} <Ticket className="ml-2" size={20} /></>
               )}

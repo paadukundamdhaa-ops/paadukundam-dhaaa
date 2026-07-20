@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft, Key } from 'lucide-react';
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin } from '../../lib/supabase';
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function AdminLogin() {
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabaseAdmin.auth.signInWithOtp({
       email: formattedEmail,
       options: { shouldCreateUser: true }
     });
@@ -51,7 +51,7 @@ export default function AdminLogin() {
     setIsLoading(true);
     setError('');
 
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabaseAdmin.auth.verifyOtp({
       email: email.toLowerCase().trim(),
       token: otp.trim(),
       type: 'email'

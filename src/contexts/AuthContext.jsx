@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase'; // USER client only
 
 const AuthContext = createContext({});
 
@@ -7,44 +7,29 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Admin emails should NEVER be treated as regular users on the public site.
-  // This prevents admin logins from polluting the user panel session.
-  const ADMIN_EMAILS = [
-    'sirisairavitejateeda@gmail.com',
-    'jnaneshwarmoturi123@gmail.com',
-    'iamdesign81@gmail.com',
-    'balajirockzz9030@gmail.com',
-    'balajiprojects049@gmail.com',
-    'paadukundam.dhaa@gmail.com' // Scanner operator account
-  ];
-  const isAdminEmail = (email) => email && ADMIN_EMAILS.includes(email.toLowerCase());
-
   useEffect(() => {
-    // Check active sessions and sets the user
+    // Check active sessions on the USER client only.
+    // Admin and scanner sessions are on separate clients (supabaseAdmin/supabaseScanner)
+    // and will NEVER appear here.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const sessionUser = session?.user ?? null;
-      // If this is an admin session, don't expose it to the user panel
-      setUser(sessionUser && !isAdminEmail(sessionUser.email) ? sessionUser : null);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
-      // Block admin sessions from appearing on the user panel
-      const publicUser = currentUser && !isAdminEmail(currentUser.email) ? currentUser : null;
-      setUser(publicUser);
+      setUser(currentUser);
       setLoading(false);
 
-      if (publicUser && (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION')) {
+      if (currentUser && (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION')) {
         try {
-          const { data: profile } = await supabase.from('profiles').select('id').eq('id', publicUser.id).single();
+          const { data: profile } = await supabase.from('profiles').select('id').eq('id', currentUser.id).single();
           if (!profile) {
             await supabase.from('profiles').upsert({
-              id: publicUser.id,
-              full_name: publicUser.user_metadata?.full_name || publicUser.email.split('@')[0],
-              email: publicUser.email,
-              phone: publicUser.user_metadata?.phone || null,
+              id: currentUser.id,
+              full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+              email: currentUser.email,
+              phone: currentUser.user_metadata?.phone || null,
               role: 'user'
             }, { onConflict: 'id' });
           }
@@ -60,9 +45,7 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async (redirectTo = '/') => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: window.location.origin + redirectTo
-      }
+      options: { redirectTo: window.location.origin + redirectTo }
     });
     if (error) console.error("Error logging in with Google:", error.message);
   };
@@ -70,9 +53,7 @@ export const AuthProvider = ({ children }) => {
   const signInWithApple = async (redirectTo = '/') => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
-      options: {
-        redirectTo: window.location.origin + redirectTo
-      }
+      options: { redirectTo: window.location.origin + redirectTo }
     });
     if (error) console.error("Error logging in with Apple:", error.message);
   };
@@ -83,22 +64,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithEmail = async (email, password) => {
-    return await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    return await supabase.auth.signInWithPassword({ email, password });
   };
 
   const signUpWithEmail = async (email, password, name, phone) => {
     return await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          full_name: name,
-          phone: phone,
-        }
-      }
+      options: { data: { full_name: name, phone } }
     });
   };
 

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Key, EyeOff, Ticket, ShieldCheck, QrCode, Shield, Zap, Headphones, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabaseScanner } from '../lib/supabase';
 
 export default function ScannerLogin() {
   const navigate = useNavigate();
@@ -28,7 +28,7 @@ export default function ScannerLogin() {
     }
 
     setIsLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabaseScanner.auth.signInWithOtp({
       email: formattedEmail,
       options: { shouldCreateUser: true }
     });
@@ -47,7 +47,7 @@ export default function ScannerLogin() {
     setIsLoading(true);
     setError('');
 
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabaseScanner.auth.verifyOtp({
       email: email.toLowerCase().trim(),
       token: otp.trim(),
       type: 'email'

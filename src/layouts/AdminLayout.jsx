@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabaseAdmin } from '../lib/supabase';
 import { 
   LayoutDashboard, 
   Users, 
@@ -39,20 +38,24 @@ const navItems = [
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
-  const [roleLoading, setRoleLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const checkRole = async () => {
-      if (authLoading) return;
-      
-      if (!user) {
-        setRoleLoading(false);
+    // Use the dedicated admin Supabase client — completely separate from user sessions
+    const checkAdminSession = async () => {
+      const { data: { session } } = await supabaseAdmin.auth.getSession();
+      const adminUser = session?.user ?? null;
+
+      if (!adminUser) {
+        setAuthLoading(false);
         return;
       }
 
-      // Hardcoded Admin Emails Check (always superadmin)
+      setUser(adminUser);
+
+      // Hardcoded Admin Emails always get superadmin
       const ADMIN_EMAILS = [
         'sirisairavitejateeda@gmail.com',
         'jnaneshwarmoturi123@gmail.com',
@@ -60,43 +63,52 @@ export default function AdminLayout() {
         'balajirockzz9030@gmail.com',
         'balajiprojects049@gmail.com'
       ];
-      if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+      if (adminUser.email && ADMIN_EMAILS.includes(adminUser.email.toLowerCase())) {
         setUserRole('superadmin');
-        setRoleLoading(false);
+        setAuthLoading(false);
         return;
       }
 
+      // Otherwise check role from profiles table
       try {
-        const { data, error } = await supabase
+        const { data } = await supabaseAdmin
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('id', adminUser.id)
           .single();
 
-        if (error) throw error;
-        
-        // Map old 'admin' string to 'superadmin', otherwise use assigned role
         let assignedRole = data?.role;
         if (assignedRole === 'admin') assignedRole = 'superadmin';
-        
         setUserRole(assignedRole);
       } catch (error) {
         console.error('Error checking admin role:', error);
         setUserRole(null);
       } finally {
-        setRoleLoading(false);
+        setAuthLoading(false);
       }
     };
 
-    checkRole();
-  }, [user, authLoading]);
+    checkAdminSession();
+
+    // Listen for admin auth state changes
+    const { data: { subscription } } = supabaseAdmin.auth.onAuthStateChange(async (_event, session) => {
+      const adminUser = session?.user ?? null;
+      setUser(adminUser);
+      if (!adminUser) {
+        setUserRole(null);
+        setAuthLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
-    await signOut();
+    await supabaseAdmin.auth.signOut();
     navigate('/admin/login');
   };
 
-  if (authLoading || roleLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

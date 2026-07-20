@@ -4,6 +4,20 @@ import { Calendar, Clock, MapPin, Users, Info, ShieldCheck, Ticket, CreditCard, 
 import Swal from 'sweetalert2';
 import { supabase } from '../lib/supabase';
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function Checkout() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -255,6 +269,11 @@ export default function Checkout() {
       }
 
       // Online checkout
+      const res = await loadRazorpayScript();
+      if (!res) {
+        throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+      }
+
       const initResponse = await fetch('/api/init-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -273,26 +292,117 @@ export default function Checkout() {
 
       const initData = await initResponse.json();
       
-      // Save checkout metadata to localStorage so we can use it on the return route
-      localStorage.setItem('phonePeCheckoutData', JSON.stringify({
-        event: event,
-        totalTickets: totalTickets,
-        grandTotal: grandTotal,
-        subtotalBeforeDiscount: subtotalBeforeDiscount,
-        promoDiscountAmount: promoDiscountAmount,
-        bookingFee: bookingFee,
-        email: email,
-        firstName: firstName,
-        reservations: initData.reservations,
-        appliedPromo: appliedPromo ? { id: appliedPromo.id, code: appliedPromo.code } : null
-      }));
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: initData.amount * 100,
+        currency: initData.currency,
+        name: "PaadukundamDhaa",
+        description: `Tickets for ${event.title}`,
+        order_id: initData.orderId,
+        handler: async function (response) {
+          try {
+            const verifyResponse = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                reservations: initData.reservations
+              })
+            });
 
-      // Redirect to PhonePe
-      if (initData.redirectInfo && initData.redirectInfo.url) {
-        window.location.href = initData.redirectInfo.url;
-      } else {
-        throw new Error('No redirect URL provided by PhonePe');
-      }
+            if (!verifyResponse.ok) {
+              const errData = await verifyResponse.json();
+              throw new Error(errData.error || 'Payment verification failed');
+            }
+            
+            const verifyData = await verifyResponse.json();
+            const bookingRef = verifyData.bookings?.[0]?.booking_ref || '#BK-' + Math.floor(100000 + Math.random() * 900000);
+            
+            // Trigger Email Notification
+            try {
+              fetch('/api/send-ticket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: email,
+                  name: firstName,
+                  eventTitle: event.title,
+                  eventDate: event.date,
+                  eventVenue: event.venue,
+                  eventCity: event.city,
+                  bookingRef: bookingRef,
+                  qty: totalTickets,
+                  amount: grandTotal,
+                  subtotal: subtotalBeforeDiscount,
+                  discount: promoDiscountAmount,
+                  platformFee: bookingFee,
+                  termsAndConditions: event.termsAndConditions
+                })
+              }).catch(err => console.error("Email send API failed:", err));
+            } catch (e) {
+              console.error("Email notification error", e);
+            }
+
+            // Increment promo usage if applicable
+            if (appliedPromo?.id) {
+              fetch('/api/increment-promo-usage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ promoCodeId: appliedPromo.id })
+              }).catch(e => console.error('Promo usage increment failed:', e));
+            }
+
+            setIsProcessing(false);
+            Swal.fire({
+              icon: 'success',
+              title: 'Booking Confirmed!',
+              text: 'Your ticket has been booked successfully.',
+              confirmButtonColor: '#22c55e',
+              timer: 2000,
+              showConfirmButton: false
+            }).then(() => {
+              navigate('/success', {
+                state: {
+                  bookingRef: bookingRef,
+                  event: event,
+                  totalTickets: totalTickets,
+                  grandTotal: grandTotal,
+                  email: email
+                },
+                replace: true
+              });
+            });
+
+          } catch (err) {
+             Swal.fire({ icon: 'error', title: 'Verification Failed', text: err.message, confirmButtonColor: '#e11d48' });
+             setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: fullName,
+          email: email,
+          contact: phone
+        },
+        theme: {
+          color: "#e11d48" // primary brand color
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response){
+        setIsProcessing(false);
+        Swal.fire({
+          icon: 'error',
+          title: 'Payment Failed',
+          text: response.error.description || 'Payment was failed or cancelled.',
+          confirmButtonColor: '#e11d48'
+        });
+      });
+      
+      // Open the Razorpay Popup
+      rzp.open();
 
     } catch (error) {
       console.error('Error initializing checkout:', error);
@@ -391,7 +501,7 @@ export default function Checkout() {
                     {paymentMethod === 'online' && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                   </div>
                 </div>
-                <p className="text-[11px] text-gray-500 leading-normal">Pay securely via UPI, Cards, Netbanking, or PhonePe Wallet.</p>
+                <p className="text-[11px] text-gray-500 leading-normal">Pay securely via UPI, Cards, Netbanking, or Wallets (Razorpay).</p>
               </button>
               
               <button
@@ -419,7 +529,7 @@ export default function Checkout() {
                 </div>
                 <h3 className="font-bold text-lg text-black mb-2">Secure Payment Gateway</h3>
                 <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                  Clicking "Pay Now" will securely redirect you to the PhonePe payment portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
+                  Clicking "Pay Now" will open the secure Razorpay portal where you can pay via UPI, Credit/Debit Cards, Netbanking, or Wallets.
                 </p>
                 <div className="flex items-center justify-center gap-3">
                   <CreditCard className="text-gray-400" size={24} />

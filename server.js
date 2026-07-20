@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
+import Razorpay from 'razorpay';
 
 dotenv.config();
 
@@ -121,54 +122,28 @@ app.post('/api/init-checkout', async (req, res) => {
     const finalAmount = totalCalculatedAmount - promoDiscount + platformFee;
     const transactionId = `txn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-    const merchantId = process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT';
-    const saltKey = process.env.PHONEPE_SALT_KEY || '099eb0cd-02cf-4e2a-8aca-3e6c6aff0399';
-    const saltIndex = process.env.PHONEPE_SALT_INDEX || '1';
-    const phonepeEnv = process.env.PHONEPE_ENV || 'UAT';
-    const baseUrl = phonepeEnv === 'PROD' 
-      ? 'https://api.phonepe.com/apis/hermes' 
-      : 'https://api-preprod.phonepe.com/apis/pg-sandbox';
+    const razorpay = new Razorpay({
+      key_id: process.env.VITE_RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
 
-    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'http://localhost:5173';
-
-    const payload = {
-      merchantId: merchantId,
-      merchantTransactionId: transactionId,
-      merchantUserId: userId,
-      amount: parseInt(finalAmount * 100, 10), // in paise
-      redirectUrl: `${frontendUrl}/payment-status`,
-      redirectMode: 'REDIRECT',
-      callbackUrl: `${frontendUrl}/api/phonepe-callback`, // Not strictly used if we rely on redirect
-      paymentInstrument: {
-        type: 'PAY_PAGE'
-      }
+    const options = {
+      amount: parseInt(finalAmount * 100, 10), // amount in smallest currency unit (paise)
+      currency: "INR",
+      receipt: transactionId,
     };
 
-    const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64');
-    const checksum = crypto.createHash('sha256').update(payloadBase64 + '/pg/v1/pay' + saltKey).digest('hex') + '###' + saltIndex;
-
     try {
-      const response = await axios.post(`${baseUrl}/pg/v1/pay`, {
-        request: payloadBase64
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-VERIFY': checksum
-        }
+      const order = await razorpay.orders.create(options);
+      
+      res.status(200).json({
+        orderId: order.id,
+        amount: finalAmount,
+        currency: order.currency,
+        reservations: reservations // Send back reservation IDs to confirm later
       });
-
-      if (response.data && response.data.success) {
-        res.status(200).json({
-          transactionId: transactionId,
-          amount: finalAmount,
-          redirectInfo: response.data.data.instrumentResponse.redirectInfo,
-          reservations: reservations // Send back reservation IDs to confirm later
-        });
-      } else {
-        throw new Error(response.data.message || 'PhonePe init failed');
-      }
     } catch (apiErr) {
-      console.error("PhonePe API Error:", apiErr.response ? apiErr.response.data : apiErr.message);
+      console.error("Razorpay API Error:", apiErr);
       throw new Error('Payment gateway error');
     }
 
@@ -291,39 +266,27 @@ app.post('/api/checkout-cash', async (req, res) => {
 });
 
 app.post('/api/verify-payment', async (req, res) => {
-  const { transactionId, reservations } = req.body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, reservations } = req.body;
 
-  if (!transactionId) {
-    return res.status(400).json({ error: 'Missing transactionId' });
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    return res.status(400).json({ error: 'Missing Razorpay payment details' });
   }
 
-  const merchantId = process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT';
-  const saltKey = process.env.PHONEPE_SALT_KEY || '099eb0cd-02cf-4e2a-8aca-3e6c6aff0399';
-  const saltIndex = process.env.PHONEPE_SALT_INDEX || '1';
-  const phonepeEnv = process.env.PHONEPE_ENV || 'UAT';
-  const baseUrl = phonepeEnv === 'PROD' 
-    ? 'https://api.phonepe.com/apis/hermes' 
-    : 'https://api-preprod.phonepe.com/apis/pg-sandbox';
-
-  const checksum = crypto.createHash('sha256').update(`/pg/v1/status/${merchantId}/${transactionId}` + saltKey).digest('hex') + '###' + saltIndex;
-
   try {
-    const response = await axios.get(`${baseUrl}/pg/v1/status/${merchantId}/${transactionId}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-VERIFY': checksum,
-        'X-MERCHANT-ID': merchantId
-      }
-    });
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
 
-    if (response.data && response.data.success && response.data.code === 'PAYMENT_SUCCESS') {
+    if (expectedSignature === razorpay_signature) {
       const bookingsCreated = [];
       // Payment is legit! Confirm the reservations in database
       if (reservations && Array.isArray(reservations)) {
         for (const resId of reservations) {
           const { data: bookingId, error: confirmError } = await supabase.rpc('confirm_tickets', {
             p_reservation_id: resId,
-            p_payment_id: transactionId
+            p_payment_id: razorpay_payment_id
           });
           
           if (confirmError) throw confirmError;
@@ -344,10 +307,10 @@ app.post('/api/verify-payment', async (req, res) => {
       
       return res.status(200).json({ success: true, bookings: bookingsCreated });
     } else {
-      return res.status(400).json({ error: 'Payment failed or pending', details: response.data });
+      return res.status(400).json({ error: 'Payment signature verification failed' });
     }
   } catch (error) {
-    console.error("DB Confirmation Error:", error.response ? error.response.data : error.message);
+    console.error("DB Confirmation Error:", error.message);
     res.status(500).json({ error: 'Payment verification failed' });
   }
 });

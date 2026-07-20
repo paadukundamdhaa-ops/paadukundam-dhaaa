@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { Html5Qrcode } from 'html5-qrcode';
 import Swal from 'sweetalert2';
 import { CheckCircle, XCircle, AlertTriangle, User, Ticket, Calendar, ShieldCheck, Camera, X } from 'lucide-react';

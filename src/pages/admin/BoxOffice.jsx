@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Calendar, Clock, Ticket, CheckCircle, RefreshCw, Banknote, QrCode, CreditCard, Printer } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
 

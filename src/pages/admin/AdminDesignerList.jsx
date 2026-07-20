@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { Palette, ChevronRight, Calendar, MapPin } from 'lucide-react';
 
 export default function AdminDesignerList() {

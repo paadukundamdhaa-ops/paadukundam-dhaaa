@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, MapPin, Calendar, Clock, Edit, Trash2, Eye, X, Filter, MoreVertical, Tag, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
 export default function AdminEvents() {

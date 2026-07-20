@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Image as ImageIcon, CheckCircle, Upload, Link as LinkIcon, Loader2, ExternalLink } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
 export default function AdminGallery() {

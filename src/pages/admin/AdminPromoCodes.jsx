@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Tag, Edit, MoreVertical, Calendar } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
 export default function AdminPromoCodes() {

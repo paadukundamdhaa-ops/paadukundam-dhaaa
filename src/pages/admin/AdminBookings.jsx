@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Download, MoreVertical, CheckCircle, Clock, XCircle, ShieldCheck } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { downloadCSV } from '../../utils/csvExport';

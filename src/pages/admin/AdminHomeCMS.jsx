@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Image as ImageIcon, Type, LayoutTemplate, Star, CheckCircle, Settings, Loader2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 
 export default function AdminHomeCMS() {

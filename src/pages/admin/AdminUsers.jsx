@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MoreVertical, Edit, Trash2, UserPlus, Mail, Eye, X, Download } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 import { downloadCSV } from '../../utils/csvExport';
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, Lock, Bell, CreditCard, Loader2 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('global');

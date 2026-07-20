@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Ticket, ShoppingBag, TrendingUp, DollarSign, Calendar, Music, CheckCircle } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { ChevronLeft, Save, RotateCcw, Check, Plus, Trash2, Calendar, MapPin, UploadCloud, X } from 'lucide-react';
 import Swal from 'sweetalert2';
 

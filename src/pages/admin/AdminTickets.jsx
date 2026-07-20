@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, Tag, Settings, MoreVertical, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
+import { supabaseAdmin as supabase } from '../../lib/supabase';
 import { downloadCSV } from '../../utils/csvExport';
 
 export default function AdminTickets() {

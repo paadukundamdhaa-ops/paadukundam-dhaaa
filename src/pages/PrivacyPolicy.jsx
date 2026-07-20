@@ -28,6 +28,14 @@ export default function PrivacyPolicy() {
 
           <h2 className="text-2xl font-bold mt-8 mb-4">4. Third-Party Services</h2>
           <p className="mb-4">We do not sell your personal data. We may share necessary information with event organizers and payment processors solely for the purpose of fulfilling your booking.</p>
+
+          <h2 className="text-2xl font-bold mt-8 mb-4">5. Contact Us</h2>
+          <p className="mb-4">
+            If you have any questions about this Privacy Policy, please contact us at:<br /><br />
+            <strong>Address:</strong> Vidhyuth Nagar, SBI Officers Colony, Kakinada, Andhra Pradesh 533003, India. (68-8-17/B)<br />
+            <strong>Email:</strong> paadukundam.dhaa@gmail.com<br />
+            <strong>Phone:</strong> 80080 33573
+          </p>
         </div>
       </div>
     </div>

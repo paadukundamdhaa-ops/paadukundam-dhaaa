@@ -33,6 +33,14 @@ export default function RefundPolicy() {
 
           <h2 className="text-2xl font-bold mt-8 mb-4">4. Lost or Stolen Tickets</h2>
           <p className="mb-4">We are not responsible for lost, stolen, or duplicated tickets. The first scanned instance of a valid ticket QR code will be granted entry, and subsequent scans will be denied.</p>
+
+          <h2 className="text-2xl font-bold mt-8 mb-4">5. Contact Us</h2>
+          <p className="mb-4">
+            If you have any questions about this Refund Policy, please contact us at:<br /><br />
+            <strong>Address:</strong> Vidhyuth Nagar, SBI Officers Colony, Kakinada, Andhra Pradesh 533003, India. (68-8-17/B)<br />
+            <strong>Email:</strong> paadukundam.dhaa@gmail.com<br />
+            <strong>Phone:</strong> 80080 33573
+          </p>
         </div>
       </div>
     </div>

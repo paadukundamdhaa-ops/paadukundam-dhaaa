@@ -50,7 +50,7 @@ export default function Contact() {
             <div>
               <h3 className="text-white font-bold text-xl mb-2">Need Immediate Assistance?</h3>
               <p className="text-gray-400 text-sm mb-3">Our support team is available 24/7<br/>to help you with your queries.</p>
-              <div className="text-primary font-black text-3xl md:text-4xl tracking-tight">+91 98765 43210</div>
+              <div className="text-primary font-black text-3xl md:text-4xl tracking-tight">+91 80080 33573</div>
             </div>
           </div>
         </div>
@@ -79,9 +79,9 @@ export default function Contact() {
                 <div>
                   <h4 className="text-black font-bold text-sm mb-2">Our Location</h4>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    Live Stage Entertainment Pvt. Ltd.<br/>
-                    123, Music Boulevard, Bandra West,<br/>
-                    Mumbai, Maharashtra 400050, India
+                    Vidhyuth Nagar, SBI Officers Colony,<br/>
+                    Kakinada, Andhra Pradesh 533003, India.<br/>
+                    (68-8-17/B)
                   </p>
                 </div>
               </div>
@@ -94,8 +94,7 @@ export default function Contact() {
                 <div>
                   <h4 className="text-black font-bold text-sm mb-2">Phone</h4>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    +91 98765 43210<br/>
-                    +91 98765 43211
+                    +91 80080 33573
                   </p>
                 </div>
               </div>
@@ -108,8 +107,7 @@ export default function Contact() {
                 <div>
                   <h4 className="text-black font-bold text-sm mb-2">Email</h4>
                   <p className="text-gray-600 text-sm leading-relaxed">
-                    support@paadukundamdhaa.com<br/>
-                    bookings@paadukundamdhaa.com
+                    paadukundam.dhaa@gmail.com
                   </p>
                 </div>
               </div>

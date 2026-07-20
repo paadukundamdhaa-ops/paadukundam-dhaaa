@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import axios from 'axios';
-import crypto from 'crypto';
+import Razorpay from 'razorpay';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -78,59 +77,42 @@ export default async function handler(req, res) {
     const finalAmount = totalCalculatedAmount - promoDiscount + platformFee;
     const transactionId = `txn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-    const merchantId = process.env.PHONEPE_MERCHANT_ID || 'PGTESTPAYUAT';
-    const saltKey = process.env.PHONEPE_SALT_KEY || '099eb0cd-02cf-4e2a-8aca-3e6c6aff0399';
-    const saltIndex = process.env.PHONEPE_SALT_INDEX || '1';
-    const phonepeEnv = process.env.PHONEPE_ENV || 'UAT';
-    const baseUrl = phonepeEnv === 'PROD' 
-      ? 'https://api.phonepe.com/apis/hermes' 
-      : 'https://api-preprod.phonepe.com/apis/pg-sandbox';
+    // Verify Razorpay keys are present
+    const keyId = process.env.VITE_RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-    const frontendUrl = process.env.FRONTEND_URL || req.headers.origin || 'https://paadukundam-dhaaa.vercel.app';
+    if (!keyId || !keySecret) {
+      console.error('Razorpay keys missing. KEY_ID:', keyId ? 'present' : 'MISSING', 'SECRET:', keySecret ? 'present' : 'MISSING');
+      throw new Error('Payment gateway not configured');
+    }
 
-    const payload = {
-      merchantId: merchantId,
-      merchantTransactionId: transactionId,
-      merchantUserId: userId,
-      amount: parseInt(finalAmount * 100, 10), // in paise
-      redirectUrl: `${frontendUrl}/payment-status`,
-      redirectMode: 'REDIRECT',
-      callbackUrl: `${frontendUrl}/api/phonepe-callback`, 
-      paymentInstrument: {
-        type: 'PAY_PAGE'
-      }
+    const razorpay = new Razorpay({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+
+    const options = {
+      amount: parseInt(finalAmount * 100, 10), // amount in paise
+      currency: 'INR',
+      receipt: transactionId,
     };
 
-    const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64');
-    const checksum = crypto.createHash('sha256').update(payloadBase64 + '/pg/v1/pay' + saltKey).digest('hex') + '###' + saltIndex;
-
     try {
-      const response = await axios.post(`${baseUrl}/pg/v1/pay`, {
-        request: payloadBase64
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-VERIFY': checksum
-        }
+      const order = await razorpay.orders.create(options);
+      
+      return res.status(200).json({
+        orderId: order.id,
+        amount: finalAmount,
+        currency: order.currency,
+        reservations: reservations
       });
-
-      if (response.data && response.data.success) {
-        res.status(200).json({
-          transactionId: transactionId,
-          amount: finalAmount,
-          redirectInfo: response.data.data.instrumentResponse.redirectInfo,
-          reservations: reservations 
-        });
-      } else {
-        throw new Error(response.data.message || 'PhonePe init failed');
-      }
     } catch (apiErr) {
-      console.error("PhonePe API Error:", apiErr.response ? apiErr.response.data : apiErr.message);
-      throw new Error('Payment gateway error');
+      console.error('Razorpay API Error:', JSON.stringify(apiErr));
+      throw new Error('Payment gateway error: ' + (apiErr.error?.description || apiErr.message || 'Unknown'));
     }
 
   } catch (error) {
-    console.error("Init Checkout Error:", error);
+    console.error('Init Checkout Error:', error.message);
     res.status(400).json({ error: error.message || 'Failed to initialize checkout' });
   }
 }

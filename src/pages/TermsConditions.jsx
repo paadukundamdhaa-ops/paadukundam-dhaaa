@@ -29,7 +29,10 @@ export default function TermsConditions() {
           <h2 className="text-2xl font-bold mt-8 mb-4">4. Liability</h2>
           <p className="mb-4">PaadukundamDhaa acts solely as a ticketing platform and is not liable for any personal injury, loss, or damage to property at the venue during the event.</p>
 
-          <h2 className="text-2xl font-bold mt-8 mb-4">5. Contact Us</h2>
+          <h2 className="text-2xl font-bold mt-8 mb-4">5. Governing Law & Jurisdiction</h2>
+          <p className="mb-4">These Terms and Conditions shall be governed by and construed in accordance with the laws of India. Any disputes arising in respect of these Terms and Conditions shall be subject to the exclusive jurisdiction of the courts of Kakinada, Andhra Pradesh, India.</p>
+
+          <h2 className="text-2xl font-bold mt-8 mb-4">6. Contact Us</h2>
           <p className="mb-4">
             If you have any questions about these Terms, please contact us at:<br /><br />
             <strong>Address:</strong> Vidhyuth Nagar, SBI Officers Colony, Kakinada, Andhra Pradesh 533003, India. (68-8-17/B)<br />

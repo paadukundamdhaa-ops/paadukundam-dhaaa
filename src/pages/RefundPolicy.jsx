@@ -26,7 +26,7 @@ export default function RefundPolicy() {
           <p className="mb-4">Once a ticket is successfully purchased, it cannot be canceled, refunded, exchanged, or transferred under any circumstances.</p>
           
           <h2 className="text-2xl font-bold mt-8 mb-4">2. Event Postponement or Cancellation</h2>
-          <p className="mb-4">In the rare event that a concert or show is entirely canceled by the organizers, refund procedures will be communicated to the registered email address. However, if an event is postponed or rescheduled to a different date, tickets will remain valid for the new date and no refunds will be issued.</p>
+          <p className="mb-4">In the rare event that a concert or show is entirely canceled by the organizers, refunds will be initiated automatically. Please allow <strong>5 to 7 working days</strong> for the refunded amount to be credited back to your original method of payment. However, if an event is postponed or rescheduled to a different date, tickets will remain valid for the new date and no refunds will be issued.</p>
 
           <h2 className="text-2xl font-bold mt-8 mb-4">3. Platform Fees</h2>
           <p className="mb-4">Any platform or convenience fees charged during the booking process are strictly non-refundable.</p>

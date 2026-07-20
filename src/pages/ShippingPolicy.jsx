@@ -27,7 +27,15 @@ export default function ShippingPolicy() {
           <p className="mb-4">Digital delivery is instantaneous. You should receive your ticket confirmation email within a few minutes of successful payment. You can also view and download your tickets directly from your Dashboard on our website.</p>
 
           <h2 className="text-2xl font-bold mt-8 mb-4">4. Issues with Delivery</h2>
-          <p className="mb-4">If you do not receive your ticket confirmation email within 15 minutes of a successful payment, please check your Spam/Junk folder. If it is still not found, please contact our support team immediately at support@paadukundamdhaa.com with your transaction details.</p>
+          <p className="mb-4">If you do not receive your ticket confirmation email within 15 minutes of a successful payment, please check your Spam/Junk folder. If it is still not found, please contact our support team immediately at paadukundam.dhaa@gmail.com with your transaction details.</p>
+
+          <h2 className="text-2xl font-bold mt-8 mb-4">5. Contact Us</h2>
+          <p className="mb-4">
+            If you have any questions about this Shipping & Delivery Policy, please contact us at:<br /><br />
+            <strong>Address:</strong> Vidhyuth Nagar, SBI Officers Colony, Kakinada, Andhra Pradesh 533003, India. (68-8-17/B)<br />
+            <strong>Email:</strong> paadukundam.dhaa@gmail.com<br />
+            <strong>Phone:</strong> 80080 33573
+          </p>
         </div>
       </div>
     </div>

@@ -50,8 +50,8 @@ export default function AdminDashboard() {
       ? allBookings 
       : allBookings.filter(b => b.event_id === selectedEventId);
 
-    const revenue = filteredBookings.reduce((sum, b) => b.status === 'Completed' ? sum + (b.total_amount || 0) : sum, 0);
-    const sold = filteredBookings.reduce((sum, b) => b.status === 'Completed' ? sum + (b.qty || 1) : sum, 0);
+    const revenue = filteredBookings.reduce((sum, b) => (b.status || b.payment_status)?.toLowerCase() === 'completed' ? sum + (b.total_amount || 0) : sum, 0);
+    const sold = filteredBookings.reduce((sum, b) => (b.status || b.payment_status)?.toLowerCase() === 'completed' ? sum + (b.qty || 1) : sum, 0);
     const checkedIn = filteredBookings.reduce((sum, b) => {
       if (b.checked_in_qty > 0) return sum + b.checked_in_qty;
       if (b.check_in_status === 'allowed' || b.check_in_status === 'checked_in') return sum + (b.qty || 1);
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
       event: b.events?.title || 'Unknown Event',
       date: new Date(b.created_at).toLocaleDateString(),
       amount: `₹${b.total_amount}`,
-      status: (b.check_in_status === 'checked_in' || b.check_in_status === 'allowed') ? 'Checked In' : b.status || 'Pending'
+      status: (b.check_in_status === 'checked_in' || b.check_in_status === 'allowed') ? 'Checked In' : (b.status || b.payment_status || 'Pending')
     }));
     setRecentBookings(formattedBookings);
   }, [allBookings, selectedEventId, eventsList]);
@@ -144,8 +144,8 @@ export default function AdminDashboard() {
                     <td className="p-4 text-gray-500 text-xs">{booking.date}</td>
                     <td className="p-4 font-bold text-black">{booking.amount}</td>
                     <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        booking.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        booking.status?.toLowerCase() === 'completed' || booking.status?.toLowerCase() === 'checked in' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                       }`}>
                         {booking.status}
                       </span>

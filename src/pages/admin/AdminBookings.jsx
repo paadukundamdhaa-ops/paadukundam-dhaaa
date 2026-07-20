@@ -77,7 +77,7 @@ export default function AdminBookings() {
 
     // Status Filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(b => b.status === statusFilter);
+      filtered = filtered.filter(b => (b.status || b.payment_status) === statusFilter);
     }
 
     // Event Filter
@@ -179,7 +179,7 @@ export default function AdminBookings() {
         ticketType,
         qty.toString(),
         `Rs. ${amount}`,
-        booking.status.toUpperCase(),
+        (booking.status || booking.payment_status || 'PENDING').toUpperCase(),
         checkInText
       ];
       tableRows.push(bookingData);
@@ -395,10 +395,10 @@ export default function AdminBookings() {
                       <td className="p-4">
                         <div className="flex flex-col gap-2 items-start">
                           <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            booking.status === 'completed' || booking.status === 'success' ? 'bg-green-100 text-green-700' : 
-                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                            (booking.status || booking.payment_status) === 'completed' || (booking.status || booking.payment_status) === 'success' ? 'bg-green-100 text-green-700' : 
+                            (booking.status || booking.payment_status) === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
                           }`}>
-                            {booking.status}
+                            {booking.status || booking.payment_status || 'pending'}
                           </div>
                           
                           {/* Check-in Status Badge */}

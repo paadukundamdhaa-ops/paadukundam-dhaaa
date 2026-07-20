@@ -98,11 +98,12 @@ export default function AdminScanner() {
       if (decodedText.includes('/ticket/')) {
         let rawRef = decodedText.split('/ticket/')[1].split('/')[0].split('?')[0];
         if (rawRef.includes('#') && !rawRef.startsWith('#')) {
-          rawRef = rawRef.split('#')[0];
+          cleanRef = rawRef.split('#')[0];
+        } else {
+          cleanRef = rawRef;
         }
-        cleanRef = rawRef;
       }
-      
+
       let searchTx = null;
       if (cleanRef.startsWith('tx_')) {
         searchTx = cleanRef.substring(3);
@@ -129,9 +130,9 @@ export default function AdminScanner() {
 
       // CHECK 1: FAKE TICKET (Not found)
       if (bookings.length === 0) {
-        setScanResult({ 
-          status: 'error', 
-          type: 'fake', 
+        setScanResult({
+          status: 'error',
+          type: 'fake',
           message: 'FAKE TICKET! Not found in database.',
           bookingRef: cleanRef
         });
@@ -140,28 +141,28 @@ export default function AdminScanner() {
 
       const firstBooking = bookings[0];
       const allCheckedIn = bookings.every(b => b.check_in_status === 'checked_in');
-      
+
       const combinedBooking = {
-         id: searchTx ? bookings.map(b => b.id) : firstBooking.id,
-         event_id: firstBooking.event_id,
-         events: firstBooking.events,
-         profiles: firstBooking.profiles,
-         check_in_status: allCheckedIn ? 'checked_in' : 'allowed',
-         checked_in_at: firstBooking.checked_in_at,
-         booking_ref: searchTx ? `tx_${searchTx}` : firstBooking.booking_ref,
-         qty: bookings.reduce((sum, b) => sum + (b.qty || 1), 0),
-         ticket_tiers: { 
-           tier_name: searchTx 
-             ? bookings.map(b => `${b.qty || 1}x ${b.ticket_tiers?.tier_name || 'General'}`).join(', ') 
-             : (firstBooking.ticket_tiers?.tier_name || 'General')
-         }
+        id: searchTx ? bookings.map(b => b.id) : firstBooking.id,
+        event_id: firstBooking.event_id,
+        events: firstBooking.events,
+        profiles: firstBooking.profiles,
+        check_in_status: allCheckedIn ? 'checked_in' : 'allowed',
+        checked_in_at: firstBooking.checked_in_at,
+        booking_ref: searchTx ? `tx_${searchTx}` : firstBooking.booking_ref,
+        qty: bookings.reduce((sum, b) => sum + (b.qty || 1), 0),
+        ticket_tiers: {
+          tier_name: searchTx
+            ? bookings.map(b => `${b.qty || 1}x ${b.ticket_tiers?.tier_name || 'General'}`).join(', ')
+            : (firstBooking.ticket_tiers?.tier_name || 'General')
+        }
       };
 
       // CHECK 2: WRONG EVENT
       if (combinedBooking.event_id !== selectedEventId) {
-        setScanResult({ 
-          status: 'error', 
-          type: 'wrong_event', 
+        setScanResult({
+          status: 'error',
+          type: 'wrong_event',
           message: `INVALID EVENT! This ticket is for ${combinedBooking.events?.title}.`,
           booking: combinedBooking
         });
@@ -170,9 +171,9 @@ export default function AdminScanner() {
 
       // CHECK 3: ALREADY USED
       if (combinedBooking.check_in_status === 'checked_in') {
-        setScanResult({ 
-          status: 'error', 
-          type: 'used', 
+        setScanResult({
+          status: 'error',
+          type: 'used',
           message: `ALREADY USED! Scanned at ${combinedBooking.checked_in_at ? new Date(combinedBooking.checked_in_at).toLocaleTimeString() : 'unknown time'}`,
           booking: combinedBooking
         });
@@ -180,9 +181,9 @@ export default function AdminScanner() {
       }
 
       // CHECK 4: VALID!
-      setScanResult({ 
-        status: 'success', 
-        booking: combinedBooking 
+      setScanResult({
+        status: 'success',
+        booking: combinedBooking
       });
 
     } catch (err) {
@@ -193,12 +194,12 @@ export default function AdminScanner() {
 
   const handleAllow = async (bookingIdOrIds) => {
     const ids = Array.isArray(bookingIdOrIds) ? bookingIdOrIds : [bookingIdOrIds];
-    
+
     const { error } = await supabase
       .from('bookings')
-      .update({ 
-        check_in_status: 'checked_in', 
-        checked_in_at: new Date().toISOString() 
+      .update({
+        check_in_status: 'checked_in',
+        checked_in_at: new Date().toISOString()
       })
       .in('id', ids);
 
@@ -219,12 +220,12 @@ export default function AdminScanner() {
 
   const handleDeny = async (bookingIdOrIds) => {
     const ids = Array.isArray(bookingIdOrIds) ? bookingIdOrIds : [bookingIdOrIds];
-    
+
     const { error } = await supabase
       .from('bookings')
       .update({ check_in_status: 'denied' })
       .in('id', ids);
-      
+
     if (error) {
       Swal.fire({
         icon: 'error',
@@ -245,7 +246,7 @@ export default function AdminScanner() {
         <div className="bg-white rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-sm flex items-center justify-between">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
-              <ShieldCheck className="text-[#8c1c24]" /> 
+              <ShieldCheck className="text-[#8c1c24]" />
               Secure Scanner
             </h1>
             <p className="text-gray-500 text-xs sm:text-sm mt-1">Scan and verify event tickets.</p>
@@ -259,7 +260,7 @@ export default function AdminScanner() {
         {!scanning && !scanResult && (
           <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
             <label className="block text-sm font-bold text-gray-700 mb-2">Select Active Event</label>
-            <select 
+            <select
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
               className="w-full border-gray-200 rounded-xl focus:ring-[#8c1c24] focus:border-[#8c1c24] p-3 text-sm font-medium bg-gray-50 text-gray-900 mb-6"
@@ -270,14 +271,13 @@ export default function AdminScanner() {
               ))}
             </select>
 
-            <button 
+            <button
               onClick={startScanner}
               disabled={!selectedEventId}
-              className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-                selectedEventId 
-                  ? 'bg-black text-white hover:bg-gray-900 shadow-md' 
+              className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${selectedEventId
+                  ? 'bg-black text-white hover:bg-gray-900 shadow-md'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+                }`}
             >
               <Camera size={20} />
               Start Camera Scanner
@@ -294,9 +294,9 @@ export default function AdminScanner() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <div id="reader" className="w-full rounded-xl overflow-hidden border-2 border-[#8c1c24]"></div>
-            
+
             <div className="mt-4 text-center text-sm text-gray-500">
               Point camera at the attendee's ticket QR code.
             </div>
@@ -306,7 +306,7 @@ export default function AdminScanner() {
         {/* Scan Results */}
         {scanResult && (
           <div className="space-y-4">
-            
+
             {scanResult.status === 'loading' && (
               <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8c1c24] mx-auto mb-4"></div>
@@ -316,27 +316,24 @@ export default function AdminScanner() {
 
             {/* ERROR STATES (Red/Orange Flashes) */}
             {scanResult.status === 'error' && (
-              <div className={`rounded-2xl p-8 border shadow-lg text-center animate-in zoom-in-95 duration-300 ${
-                scanResult.type === 'wrong_event' 
-                  ? 'bg-orange-50 border-orange-200' 
+              <div className={`rounded-2xl p-8 border shadow-lg text-center animate-in zoom-in-95 duration-300 ${scanResult.type === 'wrong_event'
+                  ? 'bg-orange-50 border-orange-200'
                   : 'bg-red-50 border-red-200'
-              }`}>
+                }`}>
                 {scanResult.type === 'wrong_event' ? (
                   <AlertTriangle className="w-20 h-20 text-orange-500 mx-auto mb-4" />
                 ) : (
                   <XCircle className="w-20 h-20 text-red-600 mx-auto mb-4" />
                 )}
-                
-                <h2 className={`text-3xl font-black mb-2 ${
-                  scanResult.type === 'wrong_event' ? 'text-orange-700' : 'text-red-700'
-                }`}>
-                  {scanResult.type === 'fake' ? 'FAKE TICKET!' : 
-                   scanResult.type === 'used' ? 'ALREADY USED!' : 'INVALID EVENT!'}
+
+                <h2 className={`text-3xl font-black mb-2 ${scanResult.type === 'wrong_event' ? 'text-orange-700' : 'text-red-700'
+                  }`}>
+                  {scanResult.type === 'fake' ? 'FAKE TICKET!' :
+                    scanResult.type === 'used' ? 'ALREADY USED!' : 'INVALID EVENT!'}
                 </h2>
-                
-                <p className={`text-lg font-medium ${
-                  scanResult.type === 'wrong_event' ? 'text-orange-600' : 'text-red-600'
-                }`}>
+
+                <p className={`text-lg font-medium ${scanResult.type === 'wrong_event' ? 'text-orange-600' : 'text-red-600'
+                  }`}>
                   {scanResult.message}
                 </p>
 
@@ -352,7 +349,7 @@ export default function AdminScanner() {
                   </div>
                 )}
 
-                <button 
+                <button
                   onClick={() => setScanResult(null)}
                   className="mt-8 w-full bg-white text-gray-900 border border-gray-200 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
                 >
@@ -381,7 +378,7 @@ export default function AdminScanner() {
                       <p className="text-sm text-gray-600">{scanResult.booking.profiles?.email}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <Ticket className="text-gray-400" size={20} />
                     <div>
@@ -393,13 +390,13 @@ export default function AdminScanner() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <button 
+                  <button
                     onClick={() => handleDeny(scanResult.booking.id)}
                     className="py-4 rounded-xl font-bold border-2 border-red-100 text-red-600 hover:bg-red-50 transition-colors"
                   >
                     DENY
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleAllow(scanResult.booking.id)}
                     className="py-4 rounded-xl font-black bg-green-500 text-white hover:bg-green-600 transition-colors shadow-md shadow-green-500/20"
                   >
@@ -415,7 +412,7 @@ export default function AdminScanner() {
                 <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-4" />
                 <h2 className="text-3xl font-black text-green-700 mb-2">ENTRY ALLOWED</h2>
                 <p className="text-green-600 font-medium mb-8">Ticket has been marked as checked-in.</p>
-                <button 
+                <button
                   onClick={() => setScanResult(null)}
                   className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md shadow-green-600/20"
                 >

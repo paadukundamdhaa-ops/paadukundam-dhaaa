@@ -240,7 +240,11 @@ export default function StandaloneScanner() {
     try {
       let cleanRef = ticketUrl;
       if (ticketUrl.includes('/ticket/')) {
-        cleanRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
+        let rawRef = ticketUrl.split('/ticket/')[1].split('/')[0].split('?')[0];
+        if (rawRef.includes('#') && !rawRef.startsWith('#')) {
+          rawRef = rawRef.split('#')[0];
+        }
+        cleanRef = rawRef;
       }
       
       let searchTx = null;

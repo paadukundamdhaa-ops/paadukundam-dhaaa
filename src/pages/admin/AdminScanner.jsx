@@ -96,7 +96,11 @@ export default function AdminScanner() {
       // 1. Extract the booking ID from the URL
       let cleanRef = decodedText;
       if (decodedText.includes('/ticket/')) {
-        cleanRef = decodedText.split('/ticket/')[1].split('/')[0].split('?')[0].split('#')[0];
+        let rawRef = decodedText.split('/ticket/')[1].split('/')[0].split('?')[0];
+        if (rawRef.includes('#') && !rawRef.startsWith('#')) {
+          rawRef = rawRef.split('#')[0];
+        }
+        cleanRef = rawRef;
       }
       
       let searchTx = null;

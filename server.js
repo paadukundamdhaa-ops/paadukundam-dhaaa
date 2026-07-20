@@ -115,8 +115,8 @@ app.post('/api/init-checkout', async (req, res) => {
       }
     }
 
-    // Add platform fee (₹15 per ticket) — calculated server-side
-    const platformFee = totalTicketCount * 15;
+    // Add platform fee (₹10 per ticket) — calculated server-side
+    const platformFee = totalTicketCount * 10;
 
     // Final amount is fully calculated on the backend — never from frontend
     const finalAmount = totalCalculatedAmount - promoDiscount + platformFee;
@@ -222,7 +222,7 @@ app.post('/api/checkout-cash', async (req, res) => {
       }
     }
 
-    const platformFee = totalTicketCount * 15;
+    const platformFee = totalTicketCount * 10;
     const finalAmount = totalCalculatedAmount - promoDiscount + platformFee;
     const transactionId = `CASH_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 

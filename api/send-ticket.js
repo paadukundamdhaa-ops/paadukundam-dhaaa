@@ -79,7 +79,7 @@ export default async function handler(req, res) {
             </tr>
             <tr>
               <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Platform Fee</td>
-              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">₹${platformFee || 15}</td>
+              <td style="padding: 8px 0; color: #0f172a; font-weight: bold; text-align: right;">₹${platformFee || 10}</td>
             </tr>
             ${discount > 0 ? `
             <tr>

@@ -80,7 +80,9 @@ export default function BoxOffice() {
   }, [selectedEventId, events]);
 
   const selectedTier = tiers.find(t => t.id === selectedTierId);
-  const totalAmount = selectedTier ? selectedTier.price * qty : 0;
+  const subtotal = selectedTier ? selectedTier.price * qty : 0;
+  const platformFee = selectedTier ? 10 * qty : 0;
+  const totalAmount = subtotal + platformFee;
   
   // Calculate remaining availability
   const availableTickets = selectedTier ? (selectedTier.total_capacity - (selectedTier.tickets_sold || 0) - (selectedTier.reserved_capacity || 0)) : 0;
@@ -192,9 +194,9 @@ export default function BoxOffice() {
                 bookingRef: result.bookingRef,
                 qty: qty,
                 amount: totalAmount,
-                subtotal: totalAmount,
+                subtotal: subtotal,
                 discount: 0,
-                platformFee: 0,
+                platformFee: platformFee,
                 termsAndConditions: selectedEvent.terms_and_conditions
               })
             });
@@ -556,6 +558,7 @@ export default function BoxOffice() {
           <div>
             <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Total to collect</p>
             <p className="text-3xl font-black text-black">₹{totalAmount}</p>
+            {selectedTier && <p className="text-xs text-gray-500 font-bold mt-1">Includes ₹{platformFee} platform fee</p>}
           </div>
           
           <button 

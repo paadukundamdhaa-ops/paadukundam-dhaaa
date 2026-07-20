@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const platformFee = totalTicketCount * 15;
+    const platformFee = totalTicketCount * 10;
     const finalAmount = totalCalculatedAmount - promoDiscount + platformFee;
     const transactionId = `txn_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 

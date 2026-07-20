@@ -95,7 +95,7 @@ export default function Checkout() {
   const discountedSubtotal = subtotalBeforeDiscount - promoDiscountAmount;
 
   // Calculate fees
-  const bookingFee = 15 * totalTickets; // ₹15 flat fee per ticket
+  const bookingFee = 10 * totalTickets; // ₹10 flat fee per ticket
   const grandTotal = discountedSubtotal + bookingFee;
 
   const handleApplyPromo = async () => {
@@ -514,8 +514,8 @@ export default function Checkout() {
                   <span className="font-bold">-₹{promoDiscountAmount.toLocaleString()}</span>
                 </div>
               )}
-              <div className="flex justify-between text-gray-600 font-bold">
-                <span>Platform Fee (₹15 × {totalTickets})</span>
+              <div className="flex justify-between items-center text-sm text-gray-500 py-1">
+                <span>Platform Fee (₹10 × {totalTickets})</span>
                 <span className="font-bold text-black">₹{bookingFee.toLocaleString()}</span>
               </div>
             </div>

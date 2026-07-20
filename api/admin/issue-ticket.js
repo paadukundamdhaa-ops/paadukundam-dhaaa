@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -12,7 +13,8 @@ export default async function handler(req, res) {
 
   const { 
     event_id, tier_id, qty, amount_paid, payment_method, 
-    customer_name, customer_email, customer_phone, auto_checkin 
+    customer_name, customer_email, customer_phone, auto_checkin,
+    razorpay_payment_id, razorpay_order_id, razorpay_signature
   } = req.body;
 
   if (!event_id || !tier_id || !qty || amount_paid === undefined) {
@@ -20,6 +22,21 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Verify Razorpay signature if it's an online payment
+    if (payment_method === 'razorpay' && razorpay_payment_id) {
+      const secret = process.env.RAZORPAY_KEY_SECRET;
+      if (!secret) throw new Error('Razorpay secret not configured');
+
+      const generatedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(razorpay_order_id + '|' + razorpay_payment_id)
+        .digest('hex');
+
+      if (generatedSignature !== razorpay_signature) {
+        return res.status(400).json({ error: 'Invalid payment signature' });
+      }
+    }
+
     const { data: bookingId, error } = await supabase.rpc('issue_box_office_ticket', {
       p_event_id: event_id,
       p_tier_id: tier_id,

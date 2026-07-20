@@ -1,8 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Calendar, Clock, Ticket, CheckCircle, RefreshCw, Banknote, QrCode, CreditCard, Printer } from 'lucide-react';
 import { supabaseAdmin as supabase } from '../../lib/supabase';
 import Swal from 'sweetalert2';
+import html2canvas from 'html2canvas';
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 export default function BoxOffice() {
   const [events, setEvents] = useState([]);
@@ -13,9 +27,14 @@ export default function BoxOffice() {
   const [selectedTierId, setSelectedTierId] = useState('');
   
   const [qty, setQty] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState('cash'); // cash, upi, pos
+  const [paymentMethod, setPaymentMethod] = useState('cash'); // cash, razorpay, pos
   const [autoCheckin, setAutoCheckin] = useState(false);
+  const [sendEmail, setSendEmail] = useState(false);
   const [lastBooking, setLastBooking] = useState(null);
+  
+  // State for JPG ticket generation
+  const [generatedTicketImg, setGeneratedTicketImg] = useState(null);
+  const ticketRef = useRef(null);
   
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -68,29 +87,87 @@ export default function BoxOffice() {
 
   const handleIssueTicket = async (e) => {
     e.preventDefault();
-    if (!selectedEventId || !selectedTierId || qty < 1) return;
+    if (!selectedTierId || qty < 1 || !selectedEventId) return;
 
-    if (qty > availableTickets) {
-      Swal.fire('Error', 'Not enough tickets available in this tier.', 'error');
-      return;
+    if (paymentMethod === 'razorpay') {
+      try {
+        setLoading(true);
+        const res = await loadRazorpayScript();
+        if (!res) throw new Error('Razorpay SDK failed to load. Please check your internet connection.');
+
+        // Initialize Razorpay payment
+        const initResponse = await fetch('/api/admin/init-boxoffice-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: totalAmount }),
+        });
+
+        if (!initResponse.ok) {
+          const errData = await initResponse.json();
+          throw new Error(errData.error || 'Failed to initialize payment');
+        }
+
+        const initData = await initResponse.json();
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+          amount: initData.amount,
+          currency: initData.currency,
+          name: "PaadukundamDhaa Box Office",
+          description: `Tickets for ${selectedEvent.title}`,
+          order_id: initData.orderId,
+          handler: async function (response) {
+            await completeTicketIssuance(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature);
+          },
+          prefill: {
+            name: customerName || 'Walk-in Guest',
+            email: customerEmail || '',
+            contact: customerPhone || ''
+          },
+          theme: { color: "#cc0000" }
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          Swal.fire('Payment Failed', response.error.description, 'error');
+          setLoading(false);
+        });
+        rzp.open();
+      } catch (error) {
+        Swal.fire('Error', error.message || 'Payment initialization failed', 'error');
+        setLoading(false);
+      }
+    } else {
+      // Offline payment
+      await completeTicketIssuance();
     }
+  };
 
-    setLoading(true);
+  const completeTicketIssuance = async (razorpay_payment_id = null, razorpay_order_id = null, razorpay_signature = null) => {
     try {
+      setLoading(true);
+      const payload = {
+        event_id: selectedEventId,
+        tier_id: selectedTierId,
+        qty: qty,
+        amount_paid: totalAmount,
+        payment_method: paymentMethod,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        auto_checkin: autoCheckin
+      };
+
+      if (razorpay_payment_id) {
+        payload.razorpay_payment_id = razorpay_payment_id;
+        payload.razorpay_order_id = razorpay_order_id;
+        payload.razorpay_signature = razorpay_signature;
+      }
+
       const response = await fetch('/api/admin/issue-ticket', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event_id: selectedEventId,
-          tier_id: selectedTierId,
-          qty: qty,
-          amount_paid: totalAmount,
-          payment_method: paymentMethod,
-          customer_name: customerName,
-          customer_email: customerEmail,
-          customer_phone: customerPhone,
-          auto_checkin: autoCheckin
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
@@ -100,7 +177,7 @@ export default function BoxOffice() {
       const result = await response.json();
 
       if (result.success) {
-        if (customerEmail && result.bookingRef) {
+        if (sendEmail && customerEmail && result.bookingRef) {
           try {
             await fetch('/api/send-ticket', {
               method: 'POST',
@@ -126,19 +203,69 @@ export default function BoxOffice() {
           }
         }
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Ticket Issued!',
-          text: `Booking successfully created.${customerEmail ? ' Email sent to customer.' : ''}`,
-          confirmButtonColor: '#10b981',
-          showCancelButton: true,
-          confirmButtonText: 'Print Receipt',
-          cancelButtonText: 'Close'
-        }).then((res) => {
-          if (res.isConfirmed) {
-            handlePrintReceipt();
+        // Save last booking info
+        const bookingInfo = {
+          bookingRef: result.bookingRef,
+          customerName: customerName || 'Walk-in Guest',
+          eventName: selectedEvent.title,
+          tierName: selectedTier.tier_name,
+          qty,
+          totalAmount,
+          paymentMethod,
+          date: new Date().toLocaleString()
+        };
+        setLastBooking(bookingInfo);
+
+        // Generate JPG Ticket
+        setTimeout(async () => {
+          if (ticketRef.current) {
+            try {
+              const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true, backgroundColor: null });
+              const imgData = canvas.toDataURL('image/jpeg', 0.9);
+              setGeneratedTicketImg(imgData);
+              
+              Swal.fire({
+                title: 'Ticket Issued Successfully!',
+                html: `
+                  <div style="display:flex; flex-direction:column; align-items:center;">
+                    <p style="margin-bottom:15px; color:#666;">${sendEmail && customerEmail ? 'Email sent to customer.' : ''}</p>
+                    <img src="${imgData}" style="max-width:100%; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+                  </div>
+                `,
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonColor: '#10b981',
+                denyButtonColor: '#3b82f6',
+                confirmButtonText: 'Print Thermal Receipt',
+                denyButtonText: 'Download JPG Ticket',
+                cancelButtonText: 'Close',
+                width: '600px'
+              }).then((res) => {
+                if (res.isConfirmed) {
+                  handlePrintReceipt();
+                } else if (res.isDenied) {
+                  const link = document.createElement('a');
+                  link.href = imgData;
+                  link.download = `Ticket_${result.bookingRef}.jpg`;
+                  link.click();
+                }
+              });
+            } catch (err) {
+              console.error("html2canvas error:", err);
+              // Fallback if JPG fails
+              Swal.fire({
+                icon: 'success',
+                title: 'Ticket Issued!',
+                confirmButtonColor: '#10b981',
+                showCancelButton: true,
+                confirmButtonText: 'Print Receipt',
+                cancelButtonText: 'Close'
+              }).then((res) => {
+                if (res.isConfirmed) handlePrintReceipt();
+              });
+            }
           }
-        });
+        }, 300);
         
         // Save last booking for print receipt
         setLastBooking({
@@ -198,6 +325,42 @@ export default function BoxOffice() {
         @page { margin: 0; size: 80mm auto; }
       }
     `}} />
+
+    {/* HIDDEN VISUAL TICKET FOR HTML2CANVAS */}
+    {lastBooking && (
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        <div 
+          ref={ticketRef}
+          style={{ width: '400px', backgroundColor: '#ffffff', borderRadius: '16px', overflow: 'hidden', padding: '24px', fontFamily: 'sans-serif' }}
+        >
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+             <img src="/images/LOGO __ Option 02.png" alt="Logo" style={{ height: '50px', margin: '0 auto', objectFit: 'contain' }} crossOrigin="anonymous" />
+          </div>
+          <div style={{ backgroundColor: '#cc0000', color: 'white', padding: '15px', borderRadius: '12px', marginBottom: '20px' }}>
+             <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{lastBooking.eventName}</h2>
+             <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>{lastBooking.date}</p>
+          </div>
+          <div style={{ marginBottom: '15px', padding: '0 5px' }}>
+             <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>TICKET HOLDER</p>
+             <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{lastBooking.customerName}</p>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px dashed #eee', borderBottom: '2px dashed #eee', padding: '15px 5px', marginBottom: '20px' }}>
+             <div>
+               <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>TICKET TYPE</p>
+               <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>{lastBooking.qty}x {lastBooking.tierName}</p>
+             </div>
+             <div style={{ textAlign: 'right' }}>
+               <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666' }}>TOTAL PAID</p>
+               <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>₹{lastBooking.totalAmount}</p>
+             </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+             <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://paadukundam-dhaaa.vercel.app/ticket/' + lastBooking.bookingRef.replace('#', ''))}`} alt="QR" style={{ width: '120px', height: '120px', margin: '0 auto', border: '1px solid #eee', padding: '5px', borderRadius: '8px' }} />
+             <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#666', fontWeight: 'bold', letterSpacing: '2px' }}>{lastBooking.bookingRef}</p>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* THERMAL RECEIPT (Hidden on screen) */}
     {lastBooking && (
@@ -344,12 +507,12 @@ export default function BoxOffice() {
                 </button>
                 <button 
                   type="button"
-                  onClick={() => setPaymentMethod('upi')}
+                  onClick={() => setPaymentMethod('razorpay')}
                   className={`flex flex-col items-center justify-center py-3 rounded-lg border text-xs font-bold transition-colors ${
-                    paymentMethod === 'upi' ? 'bg-black text-white border-black' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    paymentMethod === 'razorpay' ? 'bg-black text-white border-black' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  <QrCode size={18} className="mb-1" /> UPI Scanner
+                  <QrCode size={18} className="mb-1" /> Online (Razorpay)
                 </button>
                 <button 
                   type="button"
@@ -362,7 +525,7 @@ export default function BoxOffice() {
                 </button>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input 
                     type="checkbox" 
@@ -371,6 +534,17 @@ export default function BoxOffice() {
                     className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" 
                   />
                   <span className="text-sm font-bold text-gray-700">Auto Check-in <span className="text-xs font-normal text-gray-500">(Admit instantly)</span></span>
+                </label>
+                
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
+                    disabled={!customerEmail}
+                    className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" 
+                  />
+                  <span className={`text-sm font-bold ${customerEmail ? 'text-gray-700' : 'text-gray-400'}`}>Send Ticket via Email <span className="text-xs font-normal text-gray-500">(Requires Email Address)</span></span>
                 </label>
               </div>
             </div>

@@ -388,9 +388,7 @@ export default function CreateEvent() {
                 </div>
                 <div className="w-1/3">
                   <label className="block text-[13px] font-bold text-gray-700 mb-1.5">Category *</label>
-                  <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
-                    <option>Concert</option><option>EDM</option><option>Comedy</option>
-                  </select>
+                  <input type="text" value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" placeholder="e.g. Concert" />
                 </div>
               </div>
               <div>

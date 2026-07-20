@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Calendar, MapPin, Clock, ArrowRight, Heart, ShieldCheck, Zap, Ticket, Star, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Music, Users, Smile, GraduationCap, Crown, Ticket as TicketIcon, Disc, Image as ImageIcon } from 'lucide-react';
+import { useWishlist } from '../contexts/WishlistContext';
 import { supabase } from '../lib/supabase';
 import { ProtectedImage } from '../components/ProtectedImage';
 
 export default function Home() {
+  const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [activeFaq, setActiveFaq] = useState(null);
   
@@ -557,7 +559,18 @@ export default function Home() {
                   <span className="text-[10px] uppercase font-bold">{event.month}</span>
                 </div>
                 {/* Heart */}
-                <button className="absolute top-4 right-4 text-white/50 hover:text-white z-10" onClick={(e) => e.preventDefault()}><Heart size={20} /></button>
+                <button 
+                  className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleWishlist(event);
+                  }}
+                >
+                  <Heart 
+                    size={20} 
+                    className={`transition-colors ${isInWishlist(event.id) ? 'fill-red-500 text-red-500' : 'text-white/80 hover:text-white'}`} 
+                  />
+                </button>
                 
                 <div className="h-48 overflow-hidden relative">
                   {event.displayStatus === 'COMPLETED' && (

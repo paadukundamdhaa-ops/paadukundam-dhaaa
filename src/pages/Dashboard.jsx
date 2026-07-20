@@ -1,6 +1,8 @@
 import { Ticket, User, Heart, Settings, LogOut, Download, MapPin, Calendar, Clock, Loader2, CheckCircle, XCircle, Share2, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useWishlist } from '../contexts/WishlistContext';
+import { ProtectedImage } from '../components/ProtectedImage';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import html2canvas from 'html2canvas';
@@ -10,6 +12,7 @@ import Swal from 'sweetalert2';
 
 export default function Dashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
+  const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -475,15 +478,49 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'Wishlist' && (
-          <div className="bg-white p-12 rounded-3xl border border-gray-100 shadow-sm text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart size={40} className="text-gray-400" />
-            </div>
-            <h2 className="text-xl font-black text-black mb-2">Your wishlist is empty</h2>
-            <p className="text-gray-500 mb-8 max-w-sm mx-auto">Save your favorite events here so you don't miss out on tickets.</p>
-            <Link to="/events" className="inline-flex items-center justify-center px-8 py-3 bg-gray-100 hover:bg-gray-200 text-black font-bold rounded-xl transition-all">
-              Browse Events
-            </Link>
+          <div className="bg-white p-6 md:p-10 rounded-3xl border border-gray-100 shadow-sm">
+            <h2 className="text-2xl font-black text-black mb-6">Your Wishlist</h2>
+            
+            {wishlist.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Heart size={40} className="text-gray-400" />
+                </div>
+                <h3 className="text-xl font-black text-black mb-2">Your wishlist is empty</h3>
+                <p className="text-gray-500 mb-8 max-w-sm mx-auto">Save your favorite events here so you don't miss out on tickets.</p>
+                <Link to="/events" className="inline-flex items-center justify-center px-8 py-3 bg-gray-100 hover:bg-gray-200 text-black font-bold rounded-xl transition-all">
+                  Browse Events
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wishlist.map((event) => (
+                  <Link to={`/events/${event.id}`} key={event.id} className="bg-white border border-gray-200 shadow-sm hover:shadow-xl rounded-2xl overflow-hidden relative group transition-all">
+                    <button 
+                      className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleWishlist(event);
+                      }}
+                    >
+                      <Heart 
+                        size={20} 
+                        className={`transition-colors ${isInWishlist(event.id) ? 'fill-red-500 text-red-500' : 'text-white/80 hover:text-white'}`} 
+                      />
+                    </button>
+                    
+                    <div className="h-40 overflow-hidden relative">
+                      <ProtectedImage src={event.img} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-bold text-lg mb-1 truncate text-black">{event.title}</h3>
+                      <p className="text-gray-600 text-sm mb-4 truncate">{event.venue}</p>
+                      <p className="font-semibold text-sm text-black">From ₹{event.price}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

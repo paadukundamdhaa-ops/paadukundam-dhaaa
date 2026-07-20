@@ -3,10 +3,12 @@ import { Search, MapPin, Calendar, SlidersHorizontal, Grid, List, ChevronLeft, C
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '../lib/supabase';
+import { useWishlist } from '../contexts/WishlistContext';
 
 export default function Events() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   
   // State Management
   const [view, setView] = useState('grid');
@@ -432,8 +434,26 @@ export default function Events() {
                     </div>
 
                     {/* Heart (Hidden on tiny mobile list to save space) */}
-                    <button className={`absolute right-2 text-white/80 hover:text-primary transition-colors drop-shadow-md z-10 ${view === 'grid' ? 'top-2.5' : 'hidden sm:block top-2 md:top-2.5'}`}>
-                      <Heart size={view === 'grid' ? 18 : 16} className="stroke-[2.5]" />
+                    <button 
+                      className={`absolute right-2 z-10 p-2 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40 transition-colors drop-shadow-md ${view === 'grid' ? 'top-2.5' : 'hidden sm:block top-2 md:top-2.5'}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleWishlist({
+                          id: event.id,
+                          title: event.title,
+                          date: event.dateBadge.day,
+                          month: event.dateBadge.month,
+                          img: event.imageUrl,
+                          venue: event.venue,
+                          price: event.price,
+                          displayStatus: event.status
+                        });
+                      }}
+                    >
+                      <Heart 
+                        size={view === 'grid' ? 18 : 16} 
+                        className={`transition-colors ${isInWishlist(event.id) ? 'fill-red-500 text-red-500' : 'text-white/80 hover:text-white'}`} 
+                      />
                     </button>
 
                     {/* Status Badge */}

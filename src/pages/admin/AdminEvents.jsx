@@ -161,16 +161,34 @@ export default function AdminEvents() {
     if (!result.isConfirmed) return;
 
     try {
-      // First delete associated ticket_tiers to avoid foreign key violations
-      const { error: tierError } = await supabase.from('ticket_tiers').delete().eq('event_id', id);
-      if (tierError) throw tierError;
+      // Delete in order: child tables first, then parent event
+      // 1. Reservations (references event_id and ticket_tier_id)
+      await supabase.from('reservations').delete().eq('event_id', id);
 
+      // 2. Tickets (issued tickets linked to bookings for this event)
+      const { data: bookingIds } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('event_id', id);
+      if (bookingIds && bookingIds.length > 0) {
+        const ids = bookingIds.map(b => b.id);
+        await supabase.from('tickets').delete().in('booking_id', ids);
+      }
+
+      // 3. Bookings
+      await supabase.from('bookings').delete().eq('event_id', id);
+
+      // 4. Ticket tiers
+      await supabase.from('ticket_tiers').delete().eq('event_id', id);
+
+      // 5. Finally delete the event itself
       const { error } = await supabase.from('events').delete().eq('id', id);
       if (error) throw error;
+
       setEvents(events.filter(e => e.id !== id));
       Swal.fire({
         title: 'Deleted!',
-        text: 'Event has been deleted.',
+        text: 'Event and all related data has been deleted.',
         icon: 'success',
         confirmButtonColor: '#22c55e'
       });

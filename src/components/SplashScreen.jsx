@@ -46,7 +46,7 @@ export default function SplashScreen({ onComplete }) {
       {isVisible && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+          exit={{ opacity: 0, scale: 1.1 }}
           transition={{ duration: 0.8, ease: "easeInOut" }}
           className="fixed inset-0 z-[9999] bg-[#0a0a0a] flex items-center justify-center overflow-hidden"
         >
@@ -77,8 +77,8 @@ export default function SplashScreen({ onComplete }) {
         {/* Central Glowing Content */}
         <div className="relative z-10 flex flex-col items-center">
           <motion.div
-            initial={{ scale: 0.5, opacity: 0, filter: "blur(20px)" }}
-            animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
             className="relative"
           >

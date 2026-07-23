@@ -88,8 +88,8 @@ export default function Gallery() {
   }, []);
 
   useEffect(() => {
-    // Prevent right click
-    const handleContextMenu = (e) => e.preventDefault();
+    // Prevent right click (Removed for inspect)
+    // const handleContextMenu = (e) => e.preventDefault();
     
     // Prevent screenshot shortcuts
     const handleKeyDown = (e) => {
@@ -98,15 +98,15 @@ export default function Gallery() {
         (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5' || e.key === 's')) ||
         (e.ctrlKey && e.key === 'p')
       ) {
-        e.preventDefault();
+        // e.preventDefault(); // Unlocked
       }
     };
 
-    document.addEventListener('contextmenu', handleContextMenu);
+    // document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.removeEventListener('contextmenu', handleContextMenu);
+      // document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);

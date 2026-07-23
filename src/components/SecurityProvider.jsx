@@ -9,38 +9,13 @@ export const SecurityProvider = ({ children }) => {
   const [warningMessage, setWarningMessage] = useState("");
 
   useEffect(() => {
-    // 1. Disable Right Click (Context Menu)
+    // 1. Disable Right Click (Context Menu) - Removed for inspect access
     const handleContextMenu = (e) => {
-      e.preventDefault();
+      // e.preventDefault();
     };
 
     // 2. Disable Specific Keyboard Shortcuts
     const handleKeyDown = (e) => {
-      // F12
-      if (e.key === 'F12') {
-        e.preventDefault();
-      }
-      
-      // Ctrl/Cmd + Shift + I/J/C
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
-        e.preventDefault();
-      }
-
-      // Ctrl/Cmd + U (View Source)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) {
-        e.preventDefault();
-      }
-
-      // Ctrl/Cmd + S (Save)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) {
-        e.preventDefault();
-      }
-
-      // Ctrl/Cmd + P (Print)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'P' || e.key === 'p')) {
-        e.preventDefault();
-      }
-
       // Print Screen
       if (e.key === 'PrintScreen') {
         navigator.clipboard.writeText(''); // Attempt to clear clipboard
@@ -66,19 +41,9 @@ export const SecurityProvider = ({ children }) => {
       }
     };
 
-    // 5. DevTools Detection (Simple Width/Height Delta heuristic)
+    // 5. DevTools Detection - Removed for inspect access
     const detectDevTools = () => {
-      const threshold = 160;
-      const widthDelta = window.outerWidth - window.innerWidth > threshold;
-      const heightDelta = window.outerHeight - window.innerHeight > threshold;
-      
-      if (widthDelta || heightDelta) {
-        setIsBlurred(true);
-        setWarningMessage("Developer Mode Detected. Content Protected.");
-      } else if (!document.hidden) {
-        // Only unblur if not hidden and no devtools
-        setIsBlurred(false);
-      }
+      // Intentionally left blank to allow DevTools
     };
 
     window.addEventListener('contextmenu', handleContextMenu);
@@ -103,12 +68,12 @@ export const SecurityProvider = ({ children }) => {
       <div 
         className={`min-h-screen transition-all duration-300 ${isBlurred ? 'blur-xl select-none pointer-events-none' : ''}`}
         style={{
-          WebkitTouchCallout: 'none', 
-          WebkitUserSelect: 'none',
-          KhtmlUserSelect: 'none',
-          MozUserSelect: 'none',
-          msUserSelect: 'none',
-          userSelect: 'none'
+          // WebkitTouchCallout: 'none', 
+          // WebkitUserSelect: 'none',
+          // KhtmlUserSelect: 'none',
+          // MozUserSelect: 'none',
+          // msUserSelect: 'none',
+          // userSelect: 'none'
         }}
       >
         {isBlurred && (

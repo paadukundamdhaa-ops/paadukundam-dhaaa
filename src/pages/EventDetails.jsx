@@ -52,7 +52,7 @@ export default function EventDetails() {
               id: t.id,
               name: t.tier_name,
               price: Number(t.price),
-              description: `Total Capacity: ${t.total_capacity}`,
+              description: '',
               availableCount: availableCount,
               available: availableCount > 0,
               originalTierData: t // Keep for reference
@@ -484,8 +484,8 @@ export default function EventDetails() {
                     <div>
                       <h4 className={`font-bold text-base ${ticket.available ? 'text-black' : 'text-gray-400'}`}>{ticket.name}</h4>
                       <p className={`text-xs ${ticket.available ? 'text-gray-500' : 'text-gray-400'}`}>{ticket.description}</p>
-                      {ticket.available && ticket.availableCount > 0 && (
-                         <p className="text-xs font-bold text-green-600 mt-1">{ticket.availableCount} Tickets Left</p>
+                      {ticket.available && ticket.availableCount > 0 && ticket.availableCount <= 20 && (
+                         <p className="text-xs font-bold text-orange-600 mt-1">Only {ticket.availableCount} Tickets Left!</p>
                       )}
                       <p className="text-[10px] text-red-500 font-bold mt-1">* Non-refundable</p>
                     </div>

@@ -463,9 +463,9 @@ export default function EventDetails() {
                         if (isAvailable) handleTicketChange(ticket.id, 1);
                       }}
                     >
-                      <span className="font-bold text-sm">{ticket.name}</span>
-                      <span className="text-[10px] uppercase tracking-widest font-black mt-1">
-                        {isAvailable ? `${ticket.availableCount} Left` : 'Sold Out'}
+                      <span className="font-black text-xl">{ticket.name}</span>
+                      <span className="text-sm uppercase tracking-widest font-black mt-1">
+                        {isAvailable ? (ticket.price === 0 ? 'Free' : `₹${ticket.price.toLocaleString()}`) : 'Sold Out'}
                       </span>
                     </div>
                   );
